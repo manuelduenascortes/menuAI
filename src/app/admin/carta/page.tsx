@@ -1,6 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 import CartaManager from '@/components/admin/CartaManager'
+import CartaPageClient from './CartaPageClient'
 
 export default async function CartaPage() {
   const supabase = await createServerSupabase()
@@ -40,7 +41,7 @@ export default async function CartaPage() {
         <h1 className="text-3xl font-bold text-gray-900">Gestión de Carta</h1>
         <p className="text-gray-500 mt-1">Añade y edita categorías, platos, ingredientes y alergenos</p>
       </div>
-      <CartaManager
+      <CartaPageClient
         restaurant={restaurant}
         initialCategories={categoriesRes.data ?? []}
         allergens={allergenRes.data ?? []}

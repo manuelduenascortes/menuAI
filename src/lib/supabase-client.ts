@@ -1,9 +1,9 @@
 'use client'
 
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
-// Solo para uso en Client Components (browser)
-export const supabase = createClient(
+// Browser client — stores auth in cookies (syncs with server/proxy)
+export const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
