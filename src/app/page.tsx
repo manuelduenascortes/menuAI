@@ -44,7 +44,7 @@ export default function HomePage() {
         </div>
 
         {/* Bottom row: description | stats | CTA */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start border-t border-border pt-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center md:items-start border-t border-border pt-16">
           {/* Description */}
           <div className="animate-fade-up delay-2 md:col-span-1">
             <p className="text-base text-muted-foreground leading-relaxed">
@@ -71,17 +71,17 @@ export default function HomePage() {
           </div>
 
           {/* CTAs */}
-          <div className="animate-fade-up delay-4 flex flex-col sm:flex-row md:flex-col lg:flex-row items-start gap-3">
+          <div className="animate-fade-up delay-4 flex flex-col sm:flex-row md:flex-col lg:flex-row items-start gap-4">
             <Link
               href="/admin/login"
-              className="group inline-flex items-center gap-2 bg-foreground text-background px-7 py-3.5 rounded-full text-sm font-medium transition-all hover:opacity-80 active:scale-[0.98] cursor-pointer"
+              className="group inline-flex items-center gap-2 bg-foreground text-background px-8 py-4 rounded-full text-base font-medium transition-all hover:opacity-80 active:scale-[0.98] cursor-pointer"
             >
               Empieza gratis
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
               href="#como-funciona"
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground px-7 py-3.5 rounded-full border border-border transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 text-base text-muted-foreground hover:text-foreground px-8 py-4 rounded-full border border-border transition-colors cursor-pointer"
             >
               Cómo funciona
             </a>
