@@ -34,12 +34,14 @@ export default function HomePage() {
         </div>
 
         {/* Full-width headline */}
-        <h1 className="animate-fade-up delay-1 font-serif text-[clamp(3.5rem,9vw,8rem)] leading-[0.92] tracking-tight mb-12">
-          Tu carta,{" "}
-          <span className="text-primary">más</span>
-          <br />
-          inteligente
-        </h1>
+        <div className="flex justify-between items-center mb-12 gap-8 w-full">
+          <h1 className="animate-fade-up delay-1 font-serif text-[clamp(3.5rem,6.5vw,7.5rem)] leading-[0.92] tracking-tight whitespace-nowrap">
+            Tu carta, <span className="text-primary">más</span> inteligente
+          </h1>
+          <div className="hidden md:flex flex-1 justify-center animate-fade-up delay-1">
+            <UtensilsCrossed strokeWidth={1} className="w-32 h-32 md:w-48 md:h-48 text-primary" />
+          </div>
+        </div>
 
         {/* Bottom row: description | stats | CTA */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start border-t border-border pt-10">
@@ -77,12 +79,12 @@ export default function HomePage() {
               Empieza gratis
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
-            <Link
+            <a
               href="#como-funciona"
               className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground px-7 py-3.5 rounded-full border border-border transition-colors cursor-pointer"
             >
               Cómo funciona
-            </Link>
+            </a>
           </div>
         </div>
       </section>
