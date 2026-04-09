@@ -35,8 +35,8 @@ export default function HomePage() {
 
         {/* Full-width headline */}
         <div className="flex justify-between items-center mb-12 gap-8 w-full">
-          <h1 className="animate-fade-up delay-1 font-serif text-[clamp(3.5rem,6.5vw,7.5rem)] leading-[0.92] tracking-tight whitespace-nowrap">
-            Tu carta, <span className="text-primary">más</span> inteligente
+          <h1 className="animate-fade-up delay-1 font-serif text-[clamp(2.5rem,8vw,7.5rem)] leading-[0.92] tracking-tight">
+            Tu carta, <br className="md:hidden" /><span className="text-primary">más</span> inteligente
           </h1>
           <div className="hidden md:flex flex-1 justify-center animate-fade-up delay-1">
             <UtensilsCrossed strokeWidth={1} className="w-32 h-32 md:w-48 md:h-48 text-primary" />
@@ -71,17 +71,17 @@ export default function HomePage() {
           </div>
 
           {/* CTAs */}
-          <div className="animate-fade-up delay-4 flex flex-col sm:flex-row md:flex-col lg:flex-row items-start gap-4">
+          <div className="animate-fade-up delay-4 flex flex-col sm:flex-row md:flex-col lg:flex-row items-center sm:items-start gap-4 w-full">
             <Link
               href="/admin/login"
-              className="group inline-flex items-center gap-2 bg-foreground text-background px-8 py-4 rounded-full text-base font-medium transition-all hover:opacity-80 active:scale-[0.98] cursor-pointer"
+              className="group inline-flex w-full sm:w-auto justify-center items-center gap-2 bg-foreground text-background px-8 py-4 rounded-full text-base font-medium transition-all hover:opacity-80 active:scale-[0.98] cursor-pointer"
             >
               Empieza gratis
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
               href="#como-funciona"
-              className="inline-flex items-center gap-2 text-base text-muted-foreground hover:text-foreground px-8 py-4 rounded-full border border-border transition-colors cursor-pointer"
+              className="inline-flex w-full sm:w-auto justify-center items-center gap-2 text-base text-muted-foreground hover:text-foreground px-8 py-4 rounded-full border border-border transition-colors cursor-pointer"
             >
               Cómo funciona
             </a>
