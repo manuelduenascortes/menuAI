@@ -1,0 +1,83 @@
+export interface Restaurant {
+  id: string
+  user_id: string
+  name: string
+  slug: string
+  description?: string
+  logo_url?: string
+  address?: string
+  phone?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Table {
+  id: string
+  restaurant_id: string
+  number: number
+  label?: string
+  qr_code_url?: string
+  created_at: string
+}
+
+export interface Category {
+  id: string
+  restaurant_id: string
+  name: string
+  description?: string
+  emoji?: string
+  display_order: number
+  created_at: string
+  menu_items?: MenuItem[]
+}
+
+export interface Allergen {
+  id: string
+  name: string
+  icon?: string
+}
+
+export interface DietaryTag {
+  id: string
+  name: string
+  icon?: string
+  color?: string
+}
+
+export interface Ingredient {
+  id: string
+  menu_item_id: string
+  name: string
+}
+
+export interface MenuItem {
+  id: string
+  category_id: string
+  name: string
+  description?: string
+  price: number
+  image_url?: string
+  available: boolean
+  display_order: number
+  created_at: string
+  updated_at: string
+  ingredients?: Ingredient[]
+  allergens?: Allergen[]
+  dietary_tags?: DietaryTag[]
+}
+
+export interface FullMenu {
+  restaurant: Restaurant
+  categories: (Category & {
+    menu_items: (MenuItem & {
+      ingredients: Ingredient[]
+      allergens: Allergen[]
+      dietary_tags: DietaryTag[]
+    })[]
+  })[]
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
