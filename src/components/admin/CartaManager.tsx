@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
+import { Plus, Trash2, X, AlertTriangle, Leaf } from 'lucide-react'
 import type { Restaurant, Allergen, DietaryTag } from '@/lib/types'
 
 interface Props {
@@ -98,18 +99,24 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
 
   return (
     <div className="space-y-6">
-      {/* Botón añadir categoría */}
+      {/* Header bar */}
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-500">{categories.length} categorías · {categories.reduce((acc, c) => acc + c.menu_items.length, 0)} platos</p>
-        <Button onClick={() => setAddingCategory(!addingCategory)}>
-          + Añadir categoría
+        <p className="text-sm text-muted-foreground">
+          {categories.length} categorías · {categories.reduce((acc, c) => acc + c.menu_items.length, 0)} platos
+        </p>
+        <Button
+          onClick={() => setAddingCategory(!addingCategory)}
+          className="cursor-pointer"
+        >
+          <Plus className="w-4 h-4 mr-1.5" />
+          Añadir categoría
         </Button>
       </div>
 
-      {/* Form nueva categoría */}
+      {/* New category form */}
       {addingCategory && (
-        <Card className="border-dashed border-2 border-orange-300">
-          <CardContent className="pt-4 space-y-3">
+        <Card className="border-dashed border-2 border-primary/30">
+          <CardContent className="pt-5 space-y-3">
             <div className="flex gap-2">
               <Input
                 placeholder="Emoji (ej: 🍕)"
@@ -130,31 +137,37 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
               onChange={e => setNewCategory({ ...newCategory, description: e.target.value })}
             />
             <div className="flex gap-2">
-              <Button onClick={addCategory} disabled={loadingCategory || !newCategory.name.trim()}>
+              <Button onClick={addCategory} disabled={loadingCategory || !newCategory.name.trim()} className="cursor-pointer">
                 {loadingCategory ? 'Guardando...' : 'Guardar categoría'}
               </Button>
-              <Button variant="outline" onClick={() => setAddingCategory(false)}>Cancelar</Button>
+              <Button variant="outline" onClick={() => setAddingCategory(false)} className="cursor-pointer">
+                Cancelar
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Lista de categorías */}
+      {/* Empty state */}
       {categories.length === 0 && !addingCategory && (
-        <div className="text-center py-12 text-gray-400">
-          <div className="text-4xl mb-3">📋</div>
-          <p>No hay categorías aún. ¡Añade la primera!</p>
+        <div className="text-center py-16 text-muted-foreground">
+          <BookOpenIcon className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="font-medium">No hay categorías aún</p>
+          <p className="text-sm mt-1">¡Añade la primera!</p>
         </div>
       )}
 
+      {/* Category list */}
       {categories.map(category => (
         <Card key={category.id}>
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-xl">
+              <CardTitle className="flex items-center gap-2 font-serif text-xl">
                 {category.emoji && <span>{category.emoji}</span>}
                 {category.name}
-                <Badge variant="secondary">{category.menu_items.length} platos</Badge>
+                <Badge variant="secondary" className="text-xs font-normal">
+                  {category.menu_items.length} platos
+                </Badge>
               </CardTitle>
               <div className="flex gap-2">
                 <AddItemDialog
@@ -168,47 +181,51 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-red-500 hover:text-red-700"
+                  className="text-destructive hover:text-destructive cursor-pointer"
                   onClick={() => deleteCategory(category.id)}
                 >
-                  Eliminar
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>
             {category.description && (
-              <p className="text-sm text-gray-500">{category.description}</p>
+              <p className="text-sm text-muted-foreground">{category.description}</p>
             )}
           </CardHeader>
           <CardContent>
             {category.menu_items.length === 0 ? (
-              <p className="text-sm text-gray-400 py-4 text-center">Sin platos en esta categoría</p>
+              <p className="text-sm text-muted-foreground py-6 text-center">Sin platos en esta categoría</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {category.menu_items.map(item => (
-                  <div key={item.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={item.id} className="flex items-start justify-between p-3 bg-muted/50 rounded-lg">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium">{item.name}</span>
-                        <span className="text-orange-600 font-semibold">{item.price.toFixed(2)}€</span>
-                        {!item.available && <Badge variant="destructive">No disponible</Badge>}
+                        <span className="font-medium text-foreground">{item.name}</span>
+                        <span className="text-primary font-semibold tabular-nums">{item.price.toFixed(2)}€</span>
+                        {!item.available && (
+                          <Badge variant="destructive" className="text-xs">No disponible</Badge>
+                        )}
                       </div>
                       {item.description && (
-                        <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                       )}
                       <div className="flex flex-wrap gap-1 mt-2">
                         {item.menu_item_allergens.map(ma => (
                           <Badge key={ma.allergen_id} variant="outline" className="text-xs">
-                            {ma.allergens.icon} {ma.allergens.name}
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            {ma.allergens.name}
                           </Badge>
                         ))}
                         {item.menu_item_tags.map(mt => (
-                          <Badge key={mt.tag_id} className="text-xs bg-green-100 text-green-800 border-green-200">
-                            {mt.dietary_tags.icon} {mt.dietary_tags.name}
+                          <Badge key={mt.tag_id} className="text-xs bg-secondary text-secondary-foreground border-0">
+                            <Leaf className="w-3 h-3 mr-1" />
+                            {mt.dietary_tags.name}
                           </Badge>
                         ))}
                       </div>
                       {item.ingredients.length > 0 && (
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1.5">
                           {item.ingredients.map(i => i.name).join(', ')}
                         </p>
                       )}
@@ -221,10 +238,10 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-red-500 hover:text-red-700 h-7 px-2"
+                        className="text-destructive hover:text-destructive h-7 w-7 p-0 cursor-pointer"
                         onClick={() => deleteItem(item.id, category.id)}
                       >
-                        ✕
+                        <X className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -235,6 +252,15 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
         </Card>
       ))}
     </div>
+  )
+}
+
+/* Inline icon for empty state — avoids separate import */
+function BookOpenIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+    </svg>
   )
 }
 
@@ -340,13 +366,14 @@ function AddItemDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>
-        <button className="inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3">
-          + Plato
+        <button className="inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3 cursor-pointer">
+          <Plus className="w-3.5 h-3.5 mr-1" />
+          Plato
         </button>
       </DialogTrigger>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Añadir plato</DialogTitle>
+          <DialogTitle className="font-serif text-xl">Añadir plato</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -429,10 +456,10 @@ function AddItemDialog({
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading} className="flex-1 cursor-pointer">
               {loading ? 'Guardando...' : 'Añadir plato'}
             </Button>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="cursor-pointer">
               Cancelar
             </Button>
           </div>

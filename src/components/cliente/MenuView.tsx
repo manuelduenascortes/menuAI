@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { MessageCircle, X, ChevronDown, AlertTriangle, Leaf, Search } from 'lucide-react'
 import ChatInterface from './ChatInterface'
 import type { Restaurant } from '@/lib/types'
 
@@ -53,32 +52,43 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-white border-b shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      {/* ─── HEADER ─── */}
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="max-w-2xl mx-auto px-5 pt-4 pb-3">
+          {/* Restaurant name + table */}
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="font-bold text-lg text-gray-900">{restaurant.name}</h1>
+              <h1 className="font-serif text-xl text-foreground">{restaurant.name}</h1>
               {tableNumber && (
-                <p className="text-xs text-gray-500">Mesa {tableNumber}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Mesa {tableNumber}</p>
               )}
             </div>
-            {restaurant.logo_url && (
-              <img src={restaurant.logo_url} alt={restaurant.name} className="h-10 w-10 rounded-full object-cover" />
+            {restaurant.logo_url ? (
+              <img
+                src={restaurant.logo_url}
+                alt={restaurant.name}
+                className="h-10 w-10 rounded-full object-cover border border-border"
+              />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center">
+                <span className="font-serif text-sm text-primary">
+                  {restaurant.name.charAt(0)}
+                </span>
+              </div>
             )}
           </div>
 
-          {/* Filtros rápidos */}
-          <div className="flex gap-2 mt-2 overflow-x-auto pb-1 scrollbar-hide">
+          {/* Dietary filters */}
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {FILTER_TAGS.map(tag => (
               <button
                 key={tag}
                 onClick={() => toggleFilter(tag)}
-                className={`shrink-0 text-xs px-3 py-1 rounded-full border transition-colors ${
+                className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
                   activeFilters.includes(tag)
-                    ? 'bg-green-600 text-white border-green-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-green-400'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-card text-muted-foreground border-border hover:border-primary/40'
                 }`}
               >
                 {tag}
@@ -86,8 +96,8 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
             ))}
           </div>
 
-          {/* Nav categorías */}
-          <div className="flex gap-2 mt-2 overflow-x-auto pb-1 scrollbar-hide">
+          {/* Category navigation */}
+          <div className="flex gap-1.5 mt-2.5 overflow-x-auto pb-0.5 scrollbar-hide">
             {filteredCategories.map(cat => (
               <button
                 key={cat.id}
@@ -95,37 +105,46 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
                   setActiveCategory(cat.id)
                   document.getElementById(`cat-${cat.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }}
-                className={`shrink-0 text-sm px-3 py-1 rounded-full transition-colors ${
+                className={`shrink-0 text-sm px-3.5 py-1.5 rounded-full transition-colors cursor-pointer ${
                   activeCategory === cat.id
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-foreground text-background font-medium'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {cat.emoji} {cat.name}
+                {cat.emoji && <span className="mr-1">{cat.emoji}</span>}
+                {cat.name}
               </button>
             ))}
           </div>
         </div>
       </header>
 
-      {/* Carta */}
-      <main className="max-w-2xl mx-auto px-4 py-4 pb-28 space-y-8">
+      {/* ─── MENU CONTENT ─── */}
+      <main className="max-w-2xl mx-auto px-5 py-6 pb-28 space-y-10">
         {filteredCategories.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <div className="text-4xl mb-3">🔍</div>
-            <p>No hay platos con los filtros seleccionados</p>
-            <button onClick={() => setActiveFilters([])} className="text-sm text-orange-500 mt-2 underline">
+          <div className="text-center py-20 text-muted-foreground">
+            <Search className="w-8 h-8 mx-auto mb-3 opacity-40" />
+            <p className="font-medium">No hay platos con los filtros seleccionados</p>
+            <button
+              onClick={() => setActiveFilters([])}
+              className="text-sm text-primary mt-3 underline underline-offset-4 cursor-pointer"
+            >
               Quitar filtros
             </button>
           </div>
         ) : (
           filteredCategories.map(cat => (
-            <section key={cat.id} id={`cat-${cat.id}`}>
-              <h2 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                {cat.emoji && <span>{cat.emoji}</span>}
-                {cat.name}
-              </h2>
-              {cat.description && <p className="text-sm text-gray-500 mb-3">{cat.description}</p>}
+            <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-36">
+              <div className="mb-4">
+                <h2 className="font-serif text-2xl text-foreground flex items-center gap-2">
+                  {cat.emoji && <span>{cat.emoji}</span>}
+                  {cat.name}
+                </h2>
+                {cat.description && (
+                  <p className="text-sm text-muted-foreground mt-1">{cat.description}</p>
+                )}
+              </div>
+
               <div className="space-y-3">
                 {cat.menu_items.map(item => (
                   <MenuItemCard key={item.id} item={item} />
@@ -136,18 +155,19 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
         )}
       </main>
 
-      {/* Botón flotante chatbot */}
-      <div className="fixed bottom-6 right-4 z-40">
+      {/* ─── FAB Chatbot ─── */}
+      <div className="fixed bottom-6 right-5 z-40">
         <button
           onClick={() => setChatOpen(true)}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-full shadow-lg transition-all active:scale-95"
+          className="flex items-center gap-2.5 bg-foreground text-background px-5 py-3 rounded-full shadow-lg transition-all active:scale-[0.97] cursor-pointer hover:opacity-90"
+          aria-label="Abrir asistente IA"
         >
-          <span className="text-xl">🤖</span>
-          <span className="font-medium text-sm">¿Te ayudo a elegir?</span>
+          <MessageCircle className="w-5 h-5" />
+          <span className="font-medium text-sm">¿Te ayudo?</span>
         </button>
       </div>
 
-      {/* Chatbot */}
+      {/* ─── CHAT OVERLAY ─── */}
       {chatOpen && (
         <ChatInterface
           restaurantSlug={restaurant.slug}
@@ -159,60 +179,98 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
   )
 }
 
+/* ─── MENU ITEM CARD ─── */
 function MenuItemCard({ item }: { item: MenuItem }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
     <div
-      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer active:scale-[0.99] transition-transform"
+      className="bg-card rounded-xl border border-border overflow-hidden cursor-pointer transition-colors hover:border-primary/20 active:scale-[0.995]"
       onClick={() => setExpanded(!expanded)}
+      role="button"
+      tabIndex={0}
+      aria-expanded={expanded}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(!expanded) } }}
     >
       <div className="flex">
         {item.image_url && (
-          <img src={item.image_url} alt={item.name} className="w-24 h-24 object-cover shrink-0" />
+          <img
+            src={item.image_url}
+            alt={item.name}
+            className="w-24 h-24 object-cover shrink-0"
+          />
         )}
-        <div className="p-3 flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-gray-900 leading-tight">{item.name}</h3>
-            <span className="text-orange-600 font-bold shrink-0">{item.price.toFixed(2)}€</span>
+        <div className="p-4 flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-medium text-foreground leading-snug">{item.name}</h3>
+            <span className="text-primary font-semibold shrink-0 tabular-nums">
+              {item.price.toFixed(2)}€
+            </span>
           </div>
 
           {item.description && (
-            <p className="text-sm text-gray-500 mt-1 leading-snug line-clamp-2">{item.description}</p>
+            <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed line-clamp-2">
+              {item.description}
+            </p>
           )}
 
-          <div className="flex flex-wrap gap-1 mt-2">
-            {item.menu_item_tags.map(mt => (
-              <span key={mt.tag_id} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-200">
-                {mt.dietary_tags.icon} {mt.dietary_tags.name}
-              </span>
-            ))}
-            {item.menu_item_allergens.slice(0, 3).map(ma => (
-              <span key={ma.allergen_id} className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">
-                {ma.allergens.icon} {ma.allergens.name}
-              </span>
-            ))}
-            {item.menu_item_allergens.length > 3 && (
-              <span className="text-xs text-gray-400">+{item.menu_item_allergens.length - 3} alergenos</span>
-            )}
-          </div>
+          {/* Tags row */}
+          {(item.menu_item_tags.length > 0 || item.menu_item_allergens.length > 0) && (
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
+              {item.menu_item_tags.map(mt => (
+                <span
+                  key={mt.tag_id}
+                  className="inline-flex items-center gap-1 text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full"
+                >
+                  <Leaf className="w-3 h-3" />
+                  {mt.dietary_tags.name}
+                </span>
+              ))}
+              {item.menu_item_allergens.slice(0, 3).map(ma => (
+                <span
+                  key={ma.allergen_id}
+                  className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full"
+                >
+                  <AlertTriangle className="w-3 h-3" />
+                  {ma.allergens.name}
+                </span>
+              ))}
+              {item.menu_item_allergens.length > 3 && (
+                <span className="text-xs text-muted-foreground">
+                  +{item.menu_item_allergens.length - 3}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Expanded detail */}
       {expanded && (
-        <div className="px-3 pb-3 border-t border-gray-100 pt-2 space-y-2">
+        <div className="px-4 pb-4 border-t border-border pt-3 space-y-3 animate-fade-in">
           {item.ingredients.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Ingredientes</p>
-              <p className="text-sm text-gray-700">{item.ingredients.map(i => i.name).join(', ')}</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                Ingredientes
+              </p>
+              <p className="text-sm text-foreground/80">
+                {item.ingredients.map(i => i.name).join(', ')}
+              </p>
             </div>
           )}
           {item.menu_item_allergens.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">⚠️ Alergenos</p>
-              <div className="flex flex-wrap gap-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                Alérgenos
+              </p>
+              <div className="flex flex-wrap gap-1.5">
                 {item.menu_item_allergens.map(ma => (
-                  <Badge key={ma.allergen_id} variant="outline" className="text-xs">
+                  <Badge
+                    key={ma.allergen_id}
+                    variant="outline"
+                    className="text-xs"
+                  >
                     {ma.allergens.icon} {ma.allergens.name}
                   </Badge>
                 ))}

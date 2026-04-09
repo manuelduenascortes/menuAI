@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import CartaManager from '@/components/admin/CartaManager'
 import MenuImport from '@/components/admin/MenuImport'
 import { Button } from '@/components/ui/button'
+import { Sparkles, X } from 'lucide-react'
 import type { Restaurant, Allergen, DietaryTag } from '@/lib/types'
 
 interface CategoryWithItems {
@@ -47,8 +48,19 @@ export default function CartaPageClient({
         <Button
           variant={showImport ? 'outline' : 'default'}
           onClick={() => setShowImport(!showImport)}
+          className="cursor-pointer"
         >
-          {showImport ? '✕ Cerrar importador' : '📸 Importar carta con IA'}
+          {showImport ? (
+            <>
+              <X className="w-4 h-4 mr-1.5" />
+              Cerrar importador
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 mr-1.5" />
+              Importar carta con IA
+            </>
+          )}
         </Button>
       </div>
 

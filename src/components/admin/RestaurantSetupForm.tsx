@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Loader2 } from 'lucide-react'
 
 function slugify(text: string) {
   return text
@@ -56,24 +57,24 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre del restaurante *</Label>
+        <Label htmlFor="setup-name">Nombre del restaurante *</Label>
         <Input
-          id="name"
+          id="setup-name"
           placeholder="Ej: Bar La Malagueña"
           value={form.name}
           onChange={e => setForm({ ...form, name: e.target.value })}
           required
         />
         {form.name && (
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             URL: <span className="font-mono">/{slugify(form.name)}</span>
           </p>
         )}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="description">Descripción</Label>
+        <Label htmlFor="setup-description">Descripción</Label>
         <Textarea
-          id="description"
+          id="setup-description"
           placeholder="Cocina mediterránea con productos de temporada..."
           value={form.description}
           onChange={e => setForm({ ...form, description: e.target.value })}
@@ -81,28 +82,28 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="address">Dirección</Label>
+        <Label htmlFor="setup-address">Dirección</Label>
         <Input
-          id="address"
+          id="setup-address"
           placeholder="Calle Mayor 1, Málaga"
           value={form.address}
           onChange={e => setForm({ ...form, address: e.target.value })}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="phone">Teléfono</Label>
+        <Label htmlFor="setup-phone">Teléfono</Label>
         <Input
-          id="phone"
+          id="setup-phone"
           placeholder="952 123 456"
           value={form.phone}
           onChange={e => setForm({ ...form, phone: e.target.value })}
         />
       </div>
 
-      {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</p>}
+      {error && <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>}
 
-      <Button type="submit" disabled={loading} className="w-full">
-        {loading ? 'Creando...' : 'Crear restaurante'}
+      <Button type="submit" disabled={loading} className="w-full cursor-pointer">
+        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Crear restaurante'}
       </Button>
     </form>
   )

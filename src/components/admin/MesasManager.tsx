@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import QRCode from 'qrcode'
+import { Download, Trash2, Plus, QrCode } from 'lucide-react'
+import QRCodeLib from 'qrcode'
 import type { Restaurant, Table } from '@/lib/types'
 
 interface Props {
@@ -31,10 +32,10 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
 
   async function generateQR(tableId: string): Promise<string> {
     const url = getTableUrl(tableId)
-    return QRCode.toDataURL(url, {
+    return QRCodeLib.toDataURL(url, {
       width: 300,
       margin: 2,
-      color: { dark: '#1a1a1a', light: '#ffffff' },
+      color: { dark: '#1C1917', light: '#ffffff' },
     })
   }
 
@@ -44,7 +45,6 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
     setLoading(true)
     setError('')
 
-    // Generar QR
     const tableIdTemp = crypto.randomUUID()
     const qrDataUrl = await generateQR(tableIdTemp)
 
@@ -64,7 +64,6 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
       return
     }
 
-    // Actualizar con QR real usando el ID real
     const realQr = await generateQR(data.id)
     await supabase.from('tables').update({ qr_code_url: realQr }).eq('id', data.id)
 
@@ -114,11 +113,11 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Añadir mesa */}
+      {/* Add table form */}
       <Card>
-        <CardContent className="pt-4">
+        <CardContent className="pt-5">
           <div className="flex gap-3 items-end flex-wrap">
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <Label>Número de mesa</Label>
               <Input
                 type="number"
@@ -129,7 +128,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                 className="w-28"
               />
             </div>
-            <div className="space-y-1 flex-1 min-w-32">
+            <div className="space-y-1.5 flex-1 min-w-32">
               <Label>Etiqueta (opcional)</Label>
               <Input
                 placeholder="Ej: Terraza, VIP..."
@@ -137,73 +136,77 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                 onChange={e => setNewLabel(e.target.value)}
               />
             </div>
-            <Button onClick={addTable} disabled={loading || !newNumber}>
-              {loading ? 'Generando...' : '+ Añadir mesa'}
+            <Button onClick={addTable} disabled={loading || !newNumber} className="cursor-pointer">
+              <Plus className="w-4 h-4 mr-1.5" />
+              {loading ? 'Generando...' : 'Añadir mesa'}
             </Button>
-            <Button variant="outline" onClick={addMultipleTables} disabled={loading}>
-              + Añadir varias
+            <Button variant="outline" onClick={addMultipleTables} disabled={loading} className="cursor-pointer">
+              <Plus className="w-4 h-4 mr-1.5" />
+              Añadir varias
             </Button>
           </div>
-          {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+          {error && <p className="text-sm text-destructive mt-2">{error}</p>}
         </CardContent>
       </Card>
 
       {/* Info */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">{tables.length} mesas configuradas</p>
-        <p className="text-xs text-gray-400">
-          URL formato: <span className="font-mono">{baseUrl}/{restaurant.slug}/mesa/[id]</span>
+        <p className="text-sm text-muted-foreground">{tables.length} mesas configuradas</p>
+        <p className="text-xs text-muted-foreground">
+          URL: <span className="font-mono">{baseUrl}/{restaurant.slug}/mesa/[id]</span>
         </p>
       </div>
 
-      {/* Grid de mesas */}
+      {/* Table grid */}
       {tables.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <div className="text-4xl mb-3">🪑</div>
-          <p>No hay mesas configuradas. Añade la primera.</p>
+        <div className="text-center py-16 text-muted-foreground">
+          <QrCode className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="font-medium">No hay mesas configuradas</p>
+          <p className="text-sm mt-1">Añade la primera.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {tables.map(table => (
             <Card key={table.id} className="overflow-hidden">
-              <div className="bg-orange-50 p-4 text-center border-b">
-                <div className="text-2xl font-bold text-orange-700">Mesa {table.number}</div>
-                {table.label && <Badge variant="secondary" className="mt-1">{table.label}</Badge>}
+              <div className="bg-secondary p-4 text-center border-b border-border">
+                <div className="font-serif text-xl text-foreground">Mesa {table.number}</div>
+                {table.label && <Badge variant="secondary" className="mt-1.5 text-xs">{table.label}</Badge>}
               </div>
-              <CardContent className="p-3 space-y-3">
+              <CardContent className="p-4 space-y-3">
                 {table.qr_code_url ? (
                   <div className="flex justify-center">
                     <img
                       src={table.qr_code_url}
                       alt={`QR Mesa ${table.number}`}
-                      className="w-32 h-32 rounded"
+                      className="w-32 h-32 rounded-lg"
                     />
                   </div>
                 ) : (
-                  <div className="w-32 h-32 bg-gray-100 rounded mx-auto flex items-center justify-center text-gray-400 text-sm">
+                  <div className="w-32 h-32 bg-muted rounded-lg mx-auto flex items-center justify-center text-muted-foreground text-sm">
                     Sin QR
                   </div>
                 )}
-                <p className="text-xs text-gray-400 text-center font-mono break-all">
+                <p className="text-[10px] text-muted-foreground text-center font-mono break-all leading-relaxed">
                   {getTableUrl(table.id)}
                 </p>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 cursor-pointer"
                     onClick={() => downloadQR(table)}
                     disabled={!table.qr_code_url}
                   >
-                    ⬇ Descargar
+                    <Download className="w-3.5 h-3.5 mr-1.5" />
+                    Descargar
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-red-500 hover:text-red-700"
+                    className="text-destructive hover:text-destructive cursor-pointer"
                     onClick={() => deleteTable(table.id)}
                   >
-                    ✕
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </CardContent>

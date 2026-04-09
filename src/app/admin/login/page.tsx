@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase-client'
+import { UtensilsCrossed, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -40,61 +41,76 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100 p-4">
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="text-center">
-          <div className="text-4xl mb-2">🍽️</div>
-          <CardTitle className="text-2xl font-bold">MenuAI</CardTitle>
-          <CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-background p-5">
+      <div className="w-full max-w-sm animate-fade-up">
+        {/* Brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary mb-4">
+            <UtensilsCrossed className="w-6 h-6 text-primary" />
+          </div>
+          <h1 className="font-serif text-2xl text-foreground">MenuAI</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {mode === 'login' ? 'Accede a tu panel de gestión' : 'Crea tu cuenta de restaurante'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="restaurante@ejemplo.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-              />
-            </div>
+          </p>
+        </div>
 
-            {error && (
-              <p className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</p>
-            )}
+        {/* Form card */}
+        <Card className="border-border">
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="login-email">Email</Label>
+                <Input
+                  id="login-email"
+                  type="email"
+                  placeholder="restaurante@ejemplo.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="login-password">Contraseña</Label>
+                <Input
+                  id="login-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                />
+              </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Cargando...' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
-            </Button>
+              {error && (
+                <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
+                  {error}
+                </p>
+              )}
 
-            <p className="text-center text-sm text-muted-foreground">
-              {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
-              <button
-                type="button"
-                className="underline text-primary font-medium"
-                onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-              >
-                {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}
-              </button>
-            </p>
-          </form>
-        </CardContent>
-      </Card>
+              <Button type="submit" className="w-full cursor-pointer" disabled={loading}>
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'
+                )}
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
+                <button
+                  type="button"
+                  className="text-primary font-medium underline underline-offset-4 cursor-pointer"
+                  onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+                >
+                  {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}
+                </button>
+              </p>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

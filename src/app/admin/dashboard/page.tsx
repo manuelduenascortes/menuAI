@@ -2,8 +2,8 @@ import { createServerSupabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import RestaurantSetupForm from '@/components/admin/RestaurantSetupForm'
+import { BookOpen, QrCode, CheckCircle2, ExternalLink, MapPin, Phone, Store } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabase()
@@ -33,17 +33,18 @@ export default async function DashboardPage() {
     .eq('restaurant_id', restaurant?.id ?? '')
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">Gestiona tu restaurante desde aquí</p>
+    <div className="max-w-5xl mx-auto px-5 py-10">
+      {/* Page header */}
+      <div className="mb-10">
+        <h1 className="font-serif text-3xl text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground mt-1">Gestiona tu restaurante desde aquí</p>
       </div>
 
       {!restaurant ? (
-        <div className="max-w-2xl">
+        <div className="max-w-xl">
           <Card>
             <CardHeader>
-              <CardTitle>Configura tu restaurante</CardTitle>
+              <CardTitle className="font-serif text-xl">Configura tu restaurante</CardTitle>
               <CardDescription>
                 Para comenzar, necesitas configurar los datos de tu establecimiento.
               </CardDescription>
@@ -54,73 +55,124 @@ export default async function DashboardPage() {
           </Card>
         </div>
       ) : (
-        <>
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="space-y-8">
+          {/* ─── STATS ─── */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
-              <CardContent className="pt-6">
-                <div className="text-3xl font-bold text-orange-600">{itemCount ?? 0}</div>
-                <div className="text-sm text-gray-500 mt-1">Platos en carta</div>
+              <CardContent className="pt-6 pb-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-3xl font-semibold text-foreground tabular-nums">{itemCount ?? 0}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Platos en carta</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-primary" />
+                  </div>
+                </div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="pt-6">
-                <div className="text-3xl font-bold text-orange-600">{tableCount ?? 0}</div>
-                <div className="text-sm text-gray-500 mt-1">Mesas con QR</div>
+              <CardContent className="pt-6 pb-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-3xl font-semibold text-foreground tabular-nums">{tableCount ?? 0}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Mesas con QR</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                    <QrCode className="w-5 h-5 text-primary" />
+                  </div>
+                </div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="pt-6">
-                <div className="text-3xl font-bold text-green-600">✓</div>
-                <div className="text-sm text-gray-500 mt-1">Chatbot activo</div>
+              <CardContent className="pt-6 pb-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-3xl font-semibold text-foreground">Activo</p>
+                    <p className="text-sm text-muted-foreground mt-1">Chatbot IA</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Restaurant info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span>🏪</span> {restaurant.name}
+          {/* ─── RESTAURANT INFO + QUICK ACTIONS ─── */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {/* Restaurant info — 3 cols */}
+            <Card className="md:col-span-3">
+              <CardHeader className="pb-3">
+                <CardTitle className="font-serif text-xl flex items-center gap-2">
+                  <Store className="w-5 h-5 text-primary" />
+                  {restaurant.name}
                 </CardTitle>
                 {restaurant.description && (
-                  <CardDescription>{restaurant.description}</CardDescription>
+                  <CardDescription className="mt-1">{restaurant.description}</CardDescription>
                 )}
               </CardHeader>
-              <CardContent className="space-y-2 text-sm text-gray-600">
-                {restaurant.address && <p>📍 {restaurant.address}</p>}
-                {restaurant.phone && <p>📞 {restaurant.phone}</p>}
-                <p className="text-xs text-gray-400">
+              <CardContent className="space-y-2 text-sm text-muted-foreground">
+                {restaurant.address && (
+                  <p className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 shrink-0" />
+                    {restaurant.address}
+                  </p>
+                )}
+                {restaurant.phone && (
+                  <p className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 shrink-0" />
+                    {restaurant.phone}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground pt-1">
                   URL pública: <span className="font-mono">/{restaurant.slug}</span>
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Acceso rápido</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Link href="/admin/carta" className="block">
-                  <Button variant="outline" className="w-full justify-start gap-2">
-                    📋 Gestionar carta
-                  </Button>
-                </Link>
-                <Link href="/admin/mesas" className="block">
-                  <Button variant="outline" className="w-full justify-start gap-2">
-                    🪑 Gestionar mesas y QRs
-                  </Button>
-                </Link>
-                <Link href={`/${restaurant.slug}`} target="_blank" className="block">
-                  <Button variant="outline" className="w-full justify-start gap-2">
-                    👁️ Ver carta como cliente
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+            {/* Quick actions — 2 cols */}
+            <div className="md:col-span-2 flex flex-col gap-3">
+              <Link
+                href="/admin/carta"
+                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/20 transition-colors cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <BookOpen className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Gestionar carta</p>
+                  <p className="text-xs text-muted-foreground">Categorías, platos e ingredientes</p>
+                </div>
+              </Link>
+              <Link
+                href="/admin/mesas"
+                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/20 transition-colors cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <QrCode className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Gestionar mesas</p>
+                  <p className="text-xs text-muted-foreground">Códigos QR y etiquetas</p>
+                </div>
+              </Link>
+              <Link
+                href={`/${restaurant.slug}`}
+                target="_blank"
+                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/20 transition-colors cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <ExternalLink className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Ver como cliente</p>
+                  <p className="text-xs text-muted-foreground">Abre la carta pública</p>
+                </div>
+              </Link>
+            </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   )

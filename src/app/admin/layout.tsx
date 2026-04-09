@@ -12,9 +12,9 @@ export default async function AdminLayout({
 
   // /admin/login no necesita layout con nav
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {user && <AdminNav user={user} />}
-      <main className={user ? 'pt-16' : ''}>
+      <main className={user ? 'pt-14' : ''}>
         {children}
       </main>
     </div>

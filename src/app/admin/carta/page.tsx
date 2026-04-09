@@ -1,6 +1,5 @@
 import { createServerSupabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
-import CartaManager from '@/components/admin/CartaManager'
 import CartaPageClient from './CartaPageClient'
 
 export default async function CartaPage() {
@@ -36,10 +35,10 @@ export default async function CartaPage() {
   ])
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Gestión de Carta</h1>
-        <p className="text-gray-500 mt-1">Añade y edita categorías, platos, ingredientes y alergenos</p>
+    <div className="max-w-5xl mx-auto px-5 py-10">
+      <div className="mb-8">
+        <h1 className="font-serif text-3xl text-foreground">Gestión de Carta</h1>
+        <p className="text-muted-foreground mt-1">Añade y edita categorías, platos, ingredientes y alérgenos</p>
       </div>
       <CartaPageClient
         restaurant={restaurant}

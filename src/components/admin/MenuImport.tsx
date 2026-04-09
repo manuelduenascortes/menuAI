@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Camera, FileText, Sparkles, Trash2, ArrowLeft, Save, Loader2, CheckCircle2, X } from 'lucide-react'
 
 interface ExtractedItem {
   name: string
@@ -117,7 +118,6 @@ export default function MenuImport({ restaurantId, onComplete }: {
       for (let i = 0; i < extracted.categories.length; i++) {
         const cat = extracted.categories[i]
 
-        // Create category
         const { data: catData, error: catErr } = await supabase
           .from('categories')
           .insert({
@@ -131,7 +131,6 @@ export default function MenuImport({ restaurantId, onComplete }: {
 
         if (catErr || !catData) continue
 
-        // Create items in this category
         for (let j = 0; j < cat.items.length; j++) {
           const item = cat.items[j]
 
@@ -150,7 +149,6 @@ export default function MenuImport({ restaurantId, onComplete }: {
 
           if (itemErr || !itemData) continue
 
-          // Add ingredients
           if (item.ingredients?.length) {
             await supabase.from('ingredients').insert(
               item.ingredients.map(name => ({
@@ -172,12 +170,13 @@ export default function MenuImport({ restaurantId, onComplete }: {
   // ─── STEP: INPUT ───
   if (step === 'input') {
     return (
-      <Card className="border-2 border-dashed border-orange-300 bg-orange-50/50">
+      <Card className="border-dashed border-2 border-primary/20">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            📸 Importar carta con IA
+          <CardTitle className="flex items-center gap-2 font-serif text-xl">
+            <Sparkles className="w-5 h-5 text-primary" />
+            Importar carta con IA
           </CardTitle>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Sube una foto de tu carta en papel o pega el texto. La IA extraerá los platos automáticamente.
           </p>
         </CardHeader>
@@ -188,15 +187,19 @@ export default function MenuImport({ restaurantId, onComplete }: {
               variant={mode === 'image' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setMode('image')}
+              className="cursor-pointer"
             >
-              📷 Foto de carta
+              <Camera className="w-4 h-4 mr-1.5" />
+              Foto de carta
             </Button>
             <Button
               variant={mode === 'text' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setMode('text')}
+              className="cursor-pointer"
             >
-              📝 Pegar texto
+              <FileText className="w-4 h-4 mr-1.5" />
+              Pegar texto
             </Button>
           </div>
 
@@ -215,13 +218,13 @@ export default function MenuImport({ restaurantId, onComplete }: {
                   <img
                     src={imagePreview}
                     alt="Preview carta"
-                    className="max-h-64 rounded-lg border object-contain mx-auto"
+                    className="max-h-64 rounded-lg border border-border object-contain mx-auto"
                   />
                   <button
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs"
+                    className="absolute top-2 right-2 bg-destructive text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
                     onClick={() => { setImagePreview(null); if (fileRef.current) fileRef.current.value = '' }}
                   >
-                    ✕
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
@@ -240,16 +243,17 @@ export default function MenuImport({ restaurantId, onComplete }: {
           )}
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</p>
+            <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>
           )}
 
           <Button
             onClick={handleExtract}
             disabled={mode === 'image' ? !imagePreview : !textContent.trim()}
-            className="w-full"
+            className="w-full cursor-pointer"
             size="lg"
           >
-            🤖 Extraer carta con IA
+            <Sparkles className="w-4 h-4 mr-2" />
+            Extraer carta con IA
           </Button>
         </CardContent>
       </Card>
@@ -259,11 +263,11 @@ export default function MenuImport({ restaurantId, onComplete }: {
   // ─── STEP: LOADING ───
   if (step === 'loading') {
     return (
-      <Card className="border-2 border-orange-300">
-        <CardContent className="py-16 text-center">
-          <div className="text-5xl mb-4 animate-bounce">🤖</div>
-          <p className="text-lg font-medium">Analizando tu carta...</p>
-          <p className="text-sm text-gray-500 mt-2">La IA está extrayendo los platos. Esto puede tardar unos segundos.</p>
+      <Card>
+        <CardContent className="py-20 text-center">
+          <Loader2 className="w-10 h-10 mx-auto mb-4 text-primary animate-spin" />
+          <p className="text-lg font-medium text-foreground">Analizando tu carta...</p>
+          <p className="text-sm text-muted-foreground mt-2">La IA está extrayendo los platos. Esto puede tardar unos segundos.</p>
         </CardContent>
       </Card>
     )
@@ -275,23 +279,26 @@ export default function MenuImport({ restaurantId, onComplete }: {
 
     return (
       <div className="space-y-4">
-        <Card className="border-green-300 bg-green-50/50">
+        <Card className="border-primary/20">
           <CardContent className="py-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <p className="font-medium text-green-800">
-                  ✅ Se encontraron {extracted.categories.length} categorías y {totalItems} platos
+                <p className="font-medium text-foreground flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                  Se encontraron {extracted.categories.length} categorías y {totalItems} platos
                 </p>
-                <p className="text-sm text-green-600">
+                <p className="text-sm text-muted-foreground">
                   Revisa el resultado. Puedes eliminar lo que no quieras antes de guardar.
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => { setStep('input'); setExtracted(null) }}>
-                  ← Volver
+                <Button variant="outline" onClick={() => { setStep('input'); setExtracted(null) }} className="cursor-pointer">
+                  <ArrowLeft className="w-4 h-4 mr-1.5" />
+                  Volver
                 </Button>
-                <Button onClick={handleSave} size="lg">
-                  💾 Guardar todo
+                <Button onClick={handleSave} className="cursor-pointer">
+                  <Save className="w-4 h-4 mr-1.5" />
+                  Guardar todo
                 </Button>
               </div>
             </div>
@@ -302,17 +309,18 @@ export default function MenuImport({ restaurantId, onComplete }: {
           <Card key={catIdx}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
+                <CardTitle className="text-lg font-serif flex items-center gap-2">
                   {cat.emoji} {cat.name}
-                  <Badge variant="secondary">{cat.items.length} platos</Badge>
+                  <Badge variant="secondary" className="text-xs font-normal">{cat.items.length} platos</Badge>
                 </CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-red-500 hover:text-red-700"
+                  className="text-destructive hover:text-destructive cursor-pointer"
                   onClick={() => removeCategory(catIdx)}
                 >
-                  Eliminar categoría
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Eliminar
                 </Button>
               </div>
             </CardHeader>
@@ -321,29 +329,29 @@ export default function MenuImport({ restaurantId, onComplete }: {
                 {cat.items.map((item, itemIdx) => (
                   <div
                     key={itemIdx}
-                    className="flex items-start justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex items-start justify-between p-3 bg-muted/50 rounded-lg"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium">{item.name}</span>
+                        <span className="font-medium text-foreground">{item.name}</span>
                         {item.price > 0 && (
-                          <span className="text-orange-600 font-semibold">{item.price.toFixed(2)}€</span>
+                          <span className="text-primary font-semibold tabular-nums">{item.price.toFixed(2)}€</span>
                         )}
                       </div>
                       {item.description && (
-                        <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                       )}
                       {item.ingredients?.length > 0 && (
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {item.ingredients.join(', ')}
                         </p>
                       )}
                     </div>
                     <button
-                      className="text-red-400 hover:text-red-600 ml-2 shrink-0"
+                      className="text-muted-foreground hover:text-destructive ml-2 shrink-0 cursor-pointer transition-colors"
                       onClick={() => removeItem(catIdx, itemIdx)}
                     >
-                      ✕
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
@@ -353,11 +361,13 @@ export default function MenuImport({ restaurantId, onComplete }: {
         ))}
 
         <div className="flex gap-2 justify-end">
-          <Button variant="outline" onClick={() => { setStep('input'); setExtracted(null) }}>
-            ← Volver
+          <Button variant="outline" onClick={() => { setStep('input'); setExtracted(null) }} className="cursor-pointer">
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            Volver
           </Button>
-          <Button onClick={handleSave} size="lg">
-            💾 Guardar {totalItems} platos
+          <Button onClick={handleSave} className="cursor-pointer">
+            <Save className="w-4 h-4 mr-1.5" />
+            Guardar {totalItems} platos
           </Button>
         </div>
       </div>
@@ -368,9 +378,9 @@ export default function MenuImport({ restaurantId, onComplete }: {
   if (step === 'saving') {
     return (
       <Card>
-        <CardContent className="py-16 text-center">
-          <div className="text-5xl mb-4 animate-spin">💾</div>
-          <p className="text-lg font-medium">Guardando carta...</p>
+        <CardContent className="py-20 text-center">
+          <Loader2 className="w-10 h-10 mx-auto mb-4 text-primary animate-spin" />
+          <p className="text-lg font-medium text-foreground">Guardando carta...</p>
         </CardContent>
       </Card>
     )
@@ -378,14 +388,14 @@ export default function MenuImport({ restaurantId, onComplete }: {
 
   // ─── STEP: DONE ───
   return (
-    <Card className="border-green-300 bg-green-50/50">
-      <CardContent className="py-12 text-center">
-        <div className="text-5xl mb-4">🎉</div>
-        <p className="text-xl font-bold text-green-800">¡Carta importada!</p>
-        <p className="text-sm text-green-600 mt-2">
+    <Card className="border-primary/20">
+      <CardContent className="py-16 text-center">
+        <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-primary" />
+        <p className="text-xl font-serif text-foreground">¡Carta importada!</p>
+        <p className="text-sm text-muted-foreground mt-2">
           Todos los platos se han guardado correctamente.
         </p>
-        <Button className="mt-6" onClick={onComplete}>
+        <Button className="mt-6 cursor-pointer" onClick={onComplete}>
           Ver mi carta
         </Button>
       </CardContent>
