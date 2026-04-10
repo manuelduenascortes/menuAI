@@ -13,6 +13,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function HomePage() {
   return (
@@ -23,12 +24,15 @@ export default function HomePage() {
           <UtensilsCrossed className="w-5 h-5 text-primary" />
           <span className="font-serif text-xl">MenuAI</span>
         </div>
-        <Link
-          href="/admin/login"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-        >
-          Iniciar sesión
-        </Link>
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <Link
+            href="/admin/login"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            Iniciar sesión
+          </Link>
+        </div>
       </nav>
 
       {/* ─── HERO ─── */}

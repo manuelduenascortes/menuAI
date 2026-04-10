@@ -18,9 +18,27 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { Plus, Trash2, X, AlertTriangle, Leaf, Pencil } from 'lucide-react'
+import { Plus, Trash2, X, AlertTriangle, Leaf, Pencil, GripVertical } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Restaurant, Allergen, DietaryTag } from '@/lib/types'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 
 interface Props {
   restaurant: Restaurant
@@ -62,6 +80,30 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
     description: string
     onConfirm: () => void
   }>({ open: false, title: '', description: '', onConfirm: () => {} })
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setCategories((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id)
+        const newIndex = items.findIndex((i) => i.id === over.id)
+        const newArray = arrayMove(items, oldIndex, newIndex)
+        
+        newArray.forEach((cat, idx) => {
+          supabase.from('categories').update({ display_order: idx }).eq('id', cat.id).then(({ error }) => {
+            if (error) toast.error('Error al guardar el nuevo orden de ' + cat.name)
+          })
+        })
+
+        return newArray.map((cat, idx) => ({ ...cat, display_order: idx }))
+      })
+    }
+  }
 
   async function addCategory() {
     if (!newCategory.name.trim()) return
@@ -218,17 +260,30 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
       </AlertDialog>
 
       {/* Category list */}
-      {categories.map(category => (
-        <Card key={category.id}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 font-serif text-xl">
-                {category.emoji && <span>{category.emoji}</span>}
-                {category.name}
-                <Badge variant="secondary" className="text-xs font-normal">
-                  {category.menu_items.length} platos
-                </Badge>
-              </CardTitle>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        modifiers={[restrictToVerticalAxis]}
+      >
+        <SortableContext items={categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-6">
+            {categories.map(category => (
+              <SortableCategory key={category.id} categoryId={category.id}>
+                {(dragHandleProps) => (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2 font-serif text-xl">
+                          <div {...dragHandleProps} className="cursor-grab hover:bg-muted p-1 rounded md:-ml-2 text-muted-foreground mr-1">
+                            <GripVertical className="w-5 h-5" />
+                          </div>
+                          {category.emoji && <span>{category.emoji}</span>}
+                          {category.name}
+                          <Badge variant="secondary" className="text-xs font-normal">
+                            {category.menu_items.length} platos
+                          </Badge>
+                        </CardTitle>
               <div className="flex gap-2">
                 <AddItemDialog
                   categoryId={category.id}
@@ -347,7 +402,12 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
             )}
           </CardContent>
         </Card>
+        )}
+        </SortableCategory>
       ))}
+      </div>
+      </SortableContext>
+      </DndContext>
     </div>
   )
 }
@@ -798,5 +858,21 @@ function EditItemDialog({
         </DialogContent>
       </Dialog>
     </>
+  )
+}
+
+function SortableCategory({ categoryId, children }: { categoryId: string, children: (dragHandleProps: any) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: categoryId })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    position: 'relative' as const,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className={isDragging ? 'opacity-50' : ''}>
+      {children({ ...attributes, ...listeners })}
+    </div>
   )
 }

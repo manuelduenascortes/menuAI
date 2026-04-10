@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase-client'
 import { UtensilsCrossed, LayoutDashboard, BookOpen, QrCode, LogOut, Menu, X } from 'lucide-react'
+import ThemeToggle from '@/components/ThemeToggle'
 import type { User } from '@supabase/supabase-js'
 
 interface AdminNavProps {
@@ -63,6 +64,7 @@ export default function AdminNav({ user }: AdminNavProps) {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <span className="hidden md:block text-sm text-muted-foreground truncate max-w-[200px]">
             {user.email}
           </span>
