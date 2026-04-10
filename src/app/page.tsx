@@ -237,20 +237,20 @@ export default function HomePage() {
             Precios simples y transparentes
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
             {/* Mensual */}
-            <div className="p-8 rounded-2xl border border-border bg-background shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex flex-col h-full p-8 rounded-2xl border border-border bg-background shadow-sm hover:shadow-md transition-shadow">
               <h3 className="font-serif text-2xl mb-2">Mensual</h3>
               <div className="mb-4">
                 <span className="text-4xl font-serif font-bold tracking-tight">19,99 €</span>
                 <span className="text-muted-foreground">/mes</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-6">Facturación mes a mes</p>
-              <div className="h-[28px] mb-4"></div> {/* spacer to align with other cards that have saving badges */}
-              <Link href="/admin/login" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors">
+              <p className="text-sm text-muted-foreground mb-2">Facturación mes a mes</p>
+              <div className="inline-flex items-center px-2.5 py-0.5 invisible text-xs font-medium rounded-full mb-4" aria-hidden="true">Ahorra spacer</div>
+              <Link href="/admin/login" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
                 Empezar prueba gratis
               </Link>
-              <ul className="space-y-3 text-sm text-muted-foreground mb-4">
+              <ul className="flex-1 space-y-3 text-sm text-muted-foreground mb-6">
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Carta digital ilimitada</li>
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> QR por mesa</li>
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Chatbot IA para clientes</li>
@@ -258,11 +258,11 @@ export default function HomePage() {
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Panel de administración</li>
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Soporte por email</li>
               </ul>
-              <p className="text-xs text-center text-muted-foreground mt-6">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
+              <p className="text-xs text-center text-muted-foreground mt-auto">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
             </div>
 
             {/* Semestral */}
-            <div className="p-8 rounded-2xl border border-border bg-background shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex flex-col h-full p-8 rounded-2xl border border-border bg-background shadow-sm hover:shadow-md transition-shadow">
               <h3 className="font-serif text-2xl mb-2">Semestral</h3>
               <div className="mb-4">
                 <span className="text-4xl font-serif font-bold tracking-tight">14,99 €</span>
@@ -270,18 +270,18 @@ export default function HomePage() {
               </div>
               <p className="text-sm text-muted-foreground mb-2">89,94 € cada 6 meses</p>
               <div className="inline-flex items-center px-2.5 py-0.5 bg-green-100/50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full mb-4">Ahorra 25%</div>
-              <Link href="/admin/login" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors">
+              <Link href="/admin/login" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
                 Empezar prueba gratis
               </Link>
-              <ul className="space-y-3 text-sm text-muted-foreground mb-4">
+              <ul className="flex-1 space-y-3 text-sm text-muted-foreground mb-6">
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Todo lo del plan Mensual</li>
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Soporte prioritario</li>
               </ul>
-              <p className="text-xs text-center text-muted-foreground mt-6">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
+              <p className="text-xs text-center text-muted-foreground mt-auto">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
             </div>
 
             {/* Anual */}
-            <div className="p-8 rounded-2xl border-2 border-primary bg-background relative shadow-lg scale-100 md:scale-105 z-10">
+            <div className="flex flex-col h-full p-8 rounded-2xl border-2 border-primary bg-background relative shadow-lg scale-100 md:scale-105 z-10">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap">
                 Más popular
               </div>
@@ -292,14 +292,14 @@ export default function HomePage() {
               </div>
               <p className="text-sm text-muted-foreground mb-2">119,88 € al año</p>
               <div className="inline-flex items-center px-2.5 py-0.5 bg-green-100/50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full mb-4">Ahorra 50%</div>
-              <Link href="/admin/login" className="flex justify-center w-full bg-foreground text-background hover:bg-foreground/90 px-4 py-3 rounded-full mb-8 font-medium transition-colors">
+              <Link href="/admin/login" className="flex justify-center w-full bg-foreground text-background hover:bg-foreground/90 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
                 Empezar prueba gratis
               </Link>
-              <ul className="space-y-3 text-sm text-foreground mb-4">
+              <ul className="flex-1 space-y-3 text-sm text-foreground mb-6">
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> <span className="font-medium">Todo lo del plan Mensual</span></li>
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> <span className="font-medium">Soporte prioritario</span></li>
               </ul>
-              <p className="text-xs text-center text-muted-foreground mt-6">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
+              <p className="text-xs text-center text-muted-foreground mt-auto">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
             </div>
           </div>
         </div>
