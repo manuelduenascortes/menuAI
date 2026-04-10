@@ -1,6 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 import CartaPageClient from './CartaPageClient'
+import Breadcrumbs from '@/components/admin/Breadcrumbs'
 
 export default async function CartaPage() {
   const supabase = await createServerSupabase()
@@ -36,6 +37,10 @@ export default async function CartaPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-10">
+      <Breadcrumbs items={[
+        { label: 'Dashboard', href: '/admin/dashboard' },
+        { label: 'Carta' },
+      ]} />
       <div className="mb-8">
         <h1 className="font-serif text-3xl text-foreground">Gestión de Carta</h1>
         <p className="text-muted-foreground mt-1">Añade y edita categorías, platos, ingredientes y alérgenos</p>

@@ -8,7 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Progress } from '@/components/ui/progress'
 import { Camera, FileText, Sparkles, Trash2, ArrowLeft, Save, Loader2, CheckCircle2, X } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface ExtractedItem {
   name: string
@@ -39,6 +41,7 @@ export default function MenuImport({ restaurantId, onComplete }: {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [extracted, setExtracted] = useState<ExtractedMenu | null>(null)
   const [error, setError] = useState('')
+  const [saveProgress, setSaveProgress] = useState({ catIdx: 0, itemIdx: 0, totalCats: 0, totalItems: 0 })
   const fileRef = useRef<HTMLInputElement>(null)
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -87,7 +90,9 @@ export default function MenuImport({ restaurantId, onComplete }: {
       setExtracted(data)
       setStep('preview')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido')
+      const msg = err instanceof Error ? err.message : 'Error desconocido'
+      setError(msg)
+      toast.error(msg)
       setStep('input')
     }
   }
@@ -112,11 +117,15 @@ export default function MenuImport({ restaurantId, onComplete }: {
 
   async function handleSave() {
     if (!extracted) return
+    const totalItems = extracted.categories.reduce((acc, c) => acc + c.items.length, 0)
+    setSaveProgress({ catIdx: 0, itemIdx: 0, totalCats: extracted.categories.length, totalItems })
     setStep('saving')
 
     try {
+      let itemsDone = 0
       for (let i = 0; i < extracted.categories.length; i++) {
         const cat = extracted.categories[i]
+        setSaveProgress(prev => ({ ...prev, catIdx: i + 1 }))
 
         const { data: catData, error: catErr } = await supabase
           .from('categories')
@@ -133,6 +142,8 @@ export default function MenuImport({ restaurantId, onComplete }: {
 
         for (let j = 0; j < cat.items.length; j++) {
           const item = cat.items[j]
+          itemsDone++
+          setSaveProgress(prev => ({ ...prev, itemIdx: itemsDone }))
 
           const { data: itemData, error: itemErr } = await supabase
             .from('menu_items')
@@ -160,8 +171,10 @@ export default function MenuImport({ restaurantId, onComplete }: {
         }
       }
 
+      toast.success('Carta importada correctamente ✓')
       setStep('done')
     } catch {
+      toast.error('Error guardando en base de datos')
       setError('Error guardando en base de datos')
       setStep('preview')
     }
@@ -376,11 +389,26 @@ export default function MenuImport({ restaurantId, onComplete }: {
 
   // ─── STEP: SAVING ───
   if (step === 'saving') {
+    const pct = saveProgress.totalItems > 0
+      ? Math.round((saveProgress.itemIdx / saveProgress.totalItems) * 100)
+      : 0
+
     return (
       <Card>
-        <CardContent className="py-20 text-center">
-          <Loader2 className="w-10 h-10 mx-auto mb-4 text-primary animate-spin" />
-          <p className="text-lg font-medium text-foreground">Guardando carta...</p>
+        <CardContent className="py-16 space-y-6">
+          <div className="text-center">
+            <Loader2 className="w-10 h-10 mx-auto mb-4 text-primary animate-spin" />
+            <p className="text-lg font-medium text-foreground">Guardando carta...</p>
+          </div>
+          <div className="max-w-md mx-auto space-y-3">
+            <Progress value={pct} className="h-2" />
+            <p className="text-sm text-muted-foreground text-center">
+              Guardando categoría {saveProgress.catIdx} de {saveProgress.totalCats}
+              {saveProgress.totalItems > 0 && (
+                <> · plato {saveProgress.itemIdx} de {saveProgress.totalItems}</>
+              )}
+            </p>
+          </div>
         </CardContent>
       </Card>
     )

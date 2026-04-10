@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 function slugify(text: string) {
   return text
@@ -46,11 +47,14 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
     })
 
     if (error) {
-      setError(error.message.includes('slug') ? 'Ya existe un restaurante con ese nombre.' : error.message)
+      const msg = error.message.includes('slug') ? 'Ya existe un restaurante con ese nombre.' : error.message
+      setError(msg)
+      toast.error(msg)
       setLoading(false)
       return
     }
 
+    toast.success('Restaurante creado ✓')
     router.refresh()
   }
 

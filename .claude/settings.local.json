@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npm run:*)",
       "Bash(ls -la \"C\"*)",
-      "WebFetch(domain:claude.com)"
+      "WebFetch(domain:claude.com)",
+      "Bash(npx shadcn@latest add alert-dialog -y)",
+      "Bash(npx shadcn@latest add tooltip -y)",
+      "Bash(npx next:*)",
+      "Bash(npx shadcn@latest add skeleton accordion progress -y)"
     ]
   }
 }

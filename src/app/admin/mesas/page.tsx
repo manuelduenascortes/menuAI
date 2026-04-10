@@ -1,6 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 import MesasManager from '@/components/admin/MesasManager'
+import Breadcrumbs from '@/components/admin/Breadcrumbs'
 
 export default async function MesasPage() {
   const supabase = await createServerSupabase()
@@ -24,6 +25,10 @@ export default async function MesasPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-10">
+      <Breadcrumbs items={[
+        { label: 'Dashboard', href: '/admin/dashboard' },
+        { label: 'Mesas & QR' },
+      ]} />
       <div className="mb-8">
         <h1 className="font-serif text-3xl text-foreground">Mesas & Códigos QR</h1>
         <p className="text-muted-foreground mt-1">Gestiona las mesas y genera los QR para cada una</p>

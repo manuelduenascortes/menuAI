@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Serif_Display, Outfit, Geist_Mono } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 const dmSerif = DM_Serif_Display({
@@ -50,7 +52,7 @@ export default function RootLayout({
       className={`${dmSerif.variable} ${outfit.variable} ${geistMono.variable} h-full`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col"><TooltipProvider>{children}</TooltipProvider><Toaster richColors position="bottom-right" /></body>
     </html>
   );
 }

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import RestaurantSetupForm from '@/components/admin/RestaurantSetupForm'
+import OnboardingChecklist from '@/components/admin/OnboardingChecklist'
 import { BookOpen, QrCode, CheckCircle2, ExternalLink, MapPin, Phone, Store } from 'lucide-react'
 
 export default async function DashboardPage() {
@@ -98,6 +99,13 @@ export default async function DashboardPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* ─── ONBOARDING ─── */}
+          <OnboardingChecklist
+            hasRestaurant={true}
+            hasItems={(itemCount ?? 0) > 0}
+            hasTables={(tableCount ?? 0) > 0}
+          />
 
           {/* ─── RESTAURANT INFO + QUICK ACTIONS ─── */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
