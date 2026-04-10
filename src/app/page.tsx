@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Link from "next/link";
 import {
   UtensilsCrossed,
@@ -6,6 +9,9 @@ import {
   Settings,
   ArrowRight,
   Sparkles,
+  CheckCircle2,
+  Menu,
+  X
 } from "lucide-react";
 import {
   Accordion,
@@ -16,27 +22,85 @@ import {
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function HomePage() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* ─── NAV ─── */}
-      <nav className="px-[6vw] h-16 flex items-center justify-between border-b border-border">
+      <nav className="fixed top-0 left-0 right-0 z-50 px-[6vw] h-16 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur-md">
         <div className="flex items-center gap-2">
           <UtensilsCrossed className="w-5 h-5 text-primary" />
           <span className="font-serif text-xl">MenuAI</span>
         </div>
-        <div className="flex items-center gap-4">
+        
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center gap-6">
+          <a href="#como-funciona" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Cómo funciona</a>
+          <a href="#planes" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Planes</a>
+          <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Preguntas frecuentes</a>
+        </div>
+
+        <div className="hidden md:flex items-center gap-4">
           <ThemeToggle />
           <Link
             href="/admin/login"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer group flex items-center gap-1"
           >
-            Iniciar sesión
+            Iniciar sesión <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </Link>
+        </div>
+
+        {/* Mobile Menu Toggle */}
+        <div className="flex items-center gap-4 md:hidden">
+          <ThemeToggle />
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="text-foreground p-1"
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
       </nav>
 
+      {/* Mobile Menu Dropdown */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-40 bg-background pt-16 md:hidden">
+          <div className="flex flex-col p-6 gap-6">
+            <a 
+              href="#como-funciona" 
+              className="text-lg font-medium text-foreground py-2 border-b border-border/50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Cómo funciona
+            </a>
+            <a 
+              href="#planes" 
+              className="text-lg font-medium text-foreground py-2 border-b border-border/50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Planes
+            </a>
+            <a 
+              href="#faq" 
+              className="text-lg font-medium text-foreground py-2 border-b border-border/50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Preguntas frecuentes
+            </a>
+            <Link 
+              href="/admin/login" 
+              className="text-lg font-medium text-primary py-2 flex items-center gap-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Iniciar sesión <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* ─── HERO ─── */}
-      <section className="px-[6vw] pt-16 pb-20 border-b border-border">
+      <section className="px-[6vw] pt-32 pb-20 border-b border-border">
         {/* Badge */}
         <div className="animate-fade-up inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-card mb-10 text-sm text-muted-foreground">
           <UtensilsCrossed className="w-3.5 h-3.5 text-primary" />
@@ -71,30 +135,24 @@ export default function HomePage() {
               <p className="text-xs text-muted-foreground mt-1 leading-snug">Tu carta digital lista</p>
             </div>
             <div>
-              <p className="font-serif text-3xl text-foreground">0 €</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-snug">Sin cuotas ni comisiones</p>
+              <p className="font-serif text-3xl text-foreground">14</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">Alérgenos EU cubiertos</p>
             </div>
             <div>
               <p className="font-serif text-3xl text-foreground">0 apps</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-snug">Sin instalar nada</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">Tus clientes no instalan nada</p>
             </div>
           </div>
 
           {/* CTAs */}
-          <div className="animate-fade-up delay-4 flex flex-col sm:flex-row md:flex-col lg:flex-row items-center sm:items-start gap-4 w-full">
+          <div className="animate-fade-up delay-4 flex items-center md:justify-end w-full md:col-span-1">
             <Link
               href="/admin/login"
               className="group inline-flex w-full sm:w-auto justify-center items-center gap-2 bg-foreground text-background px-8 py-4 rounded-full text-base font-medium transition-all hover:opacity-80 active:scale-[0.98] cursor-pointer"
             >
-              Empieza gratis
+              Prueba gratis
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
-            <a
-              href="#como-funciona"
-              className="inline-flex w-full sm:w-auto justify-center items-center gap-2 text-base text-muted-foreground hover:text-foreground px-8 py-4 rounded-full border border-border transition-colors cursor-pointer"
-            >
-              Cómo funciona
-            </a>
           </div>
         </div>
       </section>
@@ -102,7 +160,7 @@ export default function HomePage() {
       {/* ─── FEATURES ─── */}
       <section
         id="como-funciona"
-        className="px-[6vw] py-20"
+        className="px-[6vw] py-24 scroll-mt-16"
       >
         {/* Section header */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-[6vw] gap-y-4 items-center mb-14">
@@ -169,8 +227,86 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── PLANES ─── */}
+      <section id="planes" className="px-[6vw] py-24 bg-card/50 border-y border-border scroll-mt-16">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-xs font-medium text-primary tracking-widest uppercase mb-3 text-center">
+            Planes
+          </p>
+          <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight text-center mb-16">
+            Precios simples y transparentes
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            {/* Mensual */}
+            <div className="p-8 rounded-2xl border border-border bg-background shadow-sm hover:shadow-md transition-shadow">
+              <h3 className="font-serif text-2xl mb-2">Mensual</h3>
+              <div className="mb-4">
+                <span className="text-4xl font-serif font-bold tracking-tight">19,99 €</span>
+                <span className="text-muted-foreground">/mes</span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-6">Facturación mes a mes</p>
+              <div className="h-[28px] mb-4"></div> {/* spacer to align with other cards that have saving badges */}
+              <Link href="/admin/login" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors">
+                Empezar prueba gratis
+              </Link>
+              <ul className="space-y-3 text-sm text-muted-foreground mb-4">
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Carta digital ilimitada</li>
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> QR por mesa</li>
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Chatbot IA para clientes</li>
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Importación inteligente</li>
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Panel de administración</li>
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Soporte por email</li>
+              </ul>
+              <p className="text-xs text-center text-muted-foreground mt-6">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
+            </div>
+
+            {/* Semestral */}
+            <div className="p-8 rounded-2xl border border-border bg-background shadow-sm hover:shadow-md transition-shadow">
+              <h3 className="font-serif text-2xl mb-2">Semestral</h3>
+              <div className="mb-4">
+                <span className="text-4xl font-serif font-bold tracking-tight">14,99 €</span>
+                <span className="text-muted-foreground">/mes</span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-2">89,94 € cada 6 meses</p>
+              <div className="inline-flex items-center px-2.5 py-0.5 bg-green-100/50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full mb-4">Ahorra 25%</div>
+              <Link href="/admin/login" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors">
+                Empezar prueba gratis
+              </Link>
+              <ul className="space-y-3 text-sm text-muted-foreground mb-4">
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Todo lo del plan Mensual</li>
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Soporte prioritario</li>
+              </ul>
+              <p className="text-xs text-center text-muted-foreground mt-6">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
+            </div>
+
+            {/* Anual */}
+            <div className="p-8 rounded-2xl border-2 border-primary bg-background relative shadow-lg scale-100 md:scale-105 z-10">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                Más popular
+              </div>
+              <h3 className="font-serif text-2xl mb-2">Anual</h3>
+              <div className="mb-4">
+                <span className="text-4xl font-serif font-bold tracking-tight">9,99 €</span>
+                <span className="text-muted-foreground">/mes</span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-2">119,88 € al año</p>
+              <div className="inline-flex items-center px-2.5 py-0.5 bg-green-100/50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full mb-4">Ahorra 50%</div>
+              <Link href="/admin/login" className="flex justify-center w-full bg-foreground text-background hover:bg-foreground/90 px-4 py-3 rounded-full mb-8 font-medium transition-colors">
+                Empezar prueba gratis
+              </Link>
+              <ul className="space-y-3 text-sm text-foreground mb-4">
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> <span className="font-medium">Todo lo del plan Mensual</span></li>
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> <span className="font-medium">Soporte prioritario</span></li>
+              </ul>
+              <p className="text-xs text-center text-muted-foreground mt-6">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── FAQ ─── */}
-      <section className="px-[6vw] py-20 border-t border-border">
+      <section id="faq" className="px-[6vw] py-24 scroll-mt-16">
         <div className="max-w-3xl mx-auto">
           <p className="text-xs font-medium text-primary tracking-widest uppercase mb-3 text-center">
             FAQ
@@ -178,39 +314,39 @@ export default function HomePage() {
           <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight text-center mb-12">
             Preguntas frecuentes
           </h2>
-          <Accordion>
+          <Accordion type="single" collapsible className="w-full">
             {[
               {
-                q: "¿Es gratis?",
-                a: "Sí, MenuAI es completamente gratuito. No hay cuotas mensuales, ni comisiones, ni costes ocultos. Creemos que digitalizar la hostelería debe ser accesible para todos.",
+                q: "¿Cuánto dura la prueba gratuita?",
+                a: "La prueba gratuita dura 14 días. Durante ese tiempo tienes acceso completo a todas las funcionalidades. No se requiere tarjeta de crédito para empezar.",
               },
               {
                 q: "¿Mis clientes necesitan instalar alguna app?",
-                a: "No, solo escanean el QR con la cámara de su móvil y acceden directamente a tu carta desde el navegador. Funciona al instante, sin descargas ni registros.",
+                a: "No. Tus clientes simplemente escanean el código QR con la cámara de su móvil y acceden a tu carta digital al instante desde el navegador.",
               },
               {
-                q: "¿Cómo funcionan las recomendaciones de alérgenos?",
-                a: "Nuestro chatbot IA conoce cada ingrediente y alérgeno de todos tus platos. Cuando un cliente pregunta, el asistente filtra y recomienda opciones seguras en tiempo real.",
+                q: "¿Cómo funcionan las recomendaciones del chatbot?",
+                a: "Nuestro asistente IA conoce cada plato de tu carta, sus ingredientes y alérgenos. Pregunta al cliente sus preferencias o restricciones y le recomienda platos personalizados en tiempo real.",
               },
               {
-                q: "¿Puedo cambiar mi carta después?",
-                a: "Sí, puedes editarla en cualquier momento desde el panel de administración. Añade, modifica o elimina categorías, platos, precios e ingredientes cuando quieras.",
+                q: "¿Puedo cambiar mi carta en cualquier momento?",
+                a: "Sí. Puedes añadir, editar o eliminar categorías y platos desde el panel de administración sin límite. Los cambios se reflejan al instante en la carta pública.",
+              },
+              {
+                q: "¿Puedo cancelar mi suscripción?",
+                a: "Sí, puedes cancelar en cualquier momento. Si cancelas, mantendrás el acceso hasta el final de tu período de facturación.",
               },
               {
                 q: "¿Funciona en cualquier dispositivo?",
-                a: "Sí, es una web responsive que se adapta a móviles, tablets y ordenadores. No importa qué dispositivo use tu cliente, la experiencia será perfecta.",
-              },
-              {
-                q: "¿Qué pasa si mi restaurante cierra?",
-                a: "Tus datos son tuyos. Puedes eliminar tu cuenta y toda la información asociada en cualquier momento desde el panel de administración.",
+                a: "Sí. La carta digital es una web responsive que se adapta a cualquier smartphone, tablet u ordenador. Compatible con iOS y Android.",
               },
             ].map((faq, i) => (
               <AccordionItem key={i} value={`faq-${i}`}>
-                <AccordionTrigger className="text-base font-medium text-left">
+                <AccordionTrigger className="text-lg font-medium text-left hover:text-primary transition-colors">
                   {faq.q}
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p className="text-muted-foreground leading-relaxed">{faq.a}</p>
+                  <p className="text-muted-foreground leading-relaxed text-base">{faq.a}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -229,52 +365,58 @@ export default function HomePage() {
           </p>
           <Link
             href="/admin/login"
-            className="group inline-flex items-center gap-2 bg-foreground text-background px-10 py-4 rounded-full text-base font-medium transition-all hover:opacity-80 active:scale-[0.98] cursor-pointer"
+            className="group inline-flex items-center gap-2 bg-foreground text-background px-10 py-4 rounded-full text-base font-medium transition-all hover:opacity-80 active:scale-[0.98] cursor-pointer shadow-lg"
           >
-            Empieza gratis
+            Prueba gratis
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
       </section>
 
       {/* ─── FOOTER ─── */}
-      <footer className="px-[6vw] py-12 border-t border-border">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+      <footer className="px-[6vw] py-16 border-t border-border bg-card/30">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <UtensilsCrossed className="w-5 h-5 text-primary" />
-              <span className="font-serif text-lg text-foreground">MenuAI</span>
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-2 mb-4">
+              <UtensilsCrossed className="w-6 h-6 text-primary" />
+              <span className="font-serif text-2xl text-foreground">MenuAI</span>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Carta digital inteligente para hostelería.
+            <p className="text-base text-muted-foreground leading-relaxed max-w-sm mb-6">
+              Carta digital inteligente para hostelería. Revoluciona la experiencia de tus clientes con nuestro recomendador IA integrado.
             </p>
+            <a href="mailto:hola@menuai.es" className="inline-flex items-center text-sm font-medium text-foreground hover:text-primary transition-colors">
+              hola@menuai.es
+            </a>
           </div>
 
           {/* Links */}
           <div>
-            <p className="font-medium text-sm text-foreground mb-3">Enlaces</p>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+            <p className="font-serif text-lg text-foreground mb-6">Producto</p>
+            <ul className="space-y-4 text-sm font-medium text-muted-foreground">
               <li><a href="#como-funciona" className="hover:text-foreground transition-colors">Cómo funciona</a></li>
+              <li><a href="#planes" className="hover:text-foreground transition-colors">Planes</a></li>
+              <li><a href="#faq" className="hover:text-foreground transition-colors">Preguntas frecuentes</a></li>
               <li><Link href="/admin/login" className="hover:text-foreground transition-colors">Iniciar sesión</Link></li>
-              <li><a href="mailto:hola@menuai.es" className="hover:text-foreground transition-colors">Contacto</a></li>
             </ul>
           </div>
 
           {/* Legal */}
           <div>
-            <p className="font-medium text-sm text-foreground mb-3">Legal</p>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">Privacidad</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Términos</a></li>
+            <p className="font-serif text-lg text-foreground mb-6">Legal</p>
+            <ul className="space-y-4 text-sm font-medium text-muted-foreground">
+              <li><a href="#" className="hover:text-foreground transition-colors">Política de Privacidad</a></li>
+              <li><a href="#" className="hover:text-foreground transition-colors">Términos y Condiciones</a></li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-border pt-6 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} MenuAI. Hecho con ❤️ en Málaga.
+        <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+          <p>© {new Date().getFullYear()} MenuAI. Todos los derechos reservados.</p>
+          <p>Hecho con ❤️ en Málaga.</p>
         </div>
       </footer>
     </div>
   );
 }
+

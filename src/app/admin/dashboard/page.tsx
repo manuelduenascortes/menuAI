@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import RestaurantSetupForm from '@/components/admin/RestaurantSetupForm'
 import OnboardingChecklist from '@/components/admin/OnboardingChecklist'
-import { BookOpen, QrCode, CheckCircle2, ExternalLink, MapPin, Phone, Store } from 'lucide-react'
+import { BookOpen, QrCode, CheckCircle2, ExternalLink, MapPin, Phone, Store, Pencil } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabase()
@@ -59,33 +59,37 @@ export default async function DashboardPage() {
         <div className="space-y-8">
           {/* ─── STATS ─── */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="pt-6 pb-5">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-3xl font-semibold text-foreground tabular-nums">{itemCount ?? 0}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Platos en carta</p>
+            <Link href="/admin/carta" className="block outline-none cursor-pointer">
+              <Card className="transition-all hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5">
+                <CardContent className="pt-6 pb-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-3xl font-semibold text-foreground tabular-nums">{itemCount ?? 0}</p>
+                      <p className="text-sm text-muted-foreground mt-1">Platos en carta</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-primary" />
+                    </div>
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-primary" />
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/admin/mesas" className="block outline-none cursor-pointer">
+              <Card className="transition-all hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5">
+                <CardContent className="pt-6 pb-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-3xl font-semibold text-foreground tabular-nums">{tableCount ?? 0}</p>
+                      <p className="text-sm text-muted-foreground mt-1">Mesas con QR</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                      <QrCode className="w-5 h-5 text-primary" />
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6 pb-5">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-3xl font-semibold text-foreground tabular-nums">{tableCount ?? 0}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Mesas con QR</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                    <QrCode className="w-5 h-5 text-primary" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
+                </CardContent>
+              </Card>
+            </Link>
+            <Card className="transition-all hover:border-primary/30 hover:shadow-md">
               <CardContent className="pt-6 pb-5">
                 <div className="flex items-start justify-between">
                   <div>
@@ -110,12 +114,17 @@ export default async function DashboardPage() {
           {/* ─── RESTAURANT INFO + QUICK ACTIONS ─── */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {/* Restaurant info — 3 cols */}
-            <Card className="md:col-span-3">
+            <Card className="md:col-span-3 transition-all hover:border-primary/30 hover:shadow-md">
               <CardHeader className="pb-3">
-                <CardTitle className="font-serif text-xl flex items-center gap-2">
-                  <Store className="w-5 h-5 text-primary" />
-                  {restaurant.name}
-                </CardTitle>
+                <div className="flex items-start justify-between">
+                  <CardTitle className="font-serif text-xl flex items-center gap-2">
+                    <Store className="w-5 h-5 text-primary" />
+                    {restaurant.name}
+                  </CardTitle>
+                  <Link href="/admin/ajustes" className="p-2 -mt-2 -mr-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-all duration-200" title="Editar datos del negocio">
+                    <Pencil className="w-4 h-4" />
+                  </Link>
+                </div>
                 {restaurant.description && (
                   <CardDescription className="mt-1">{restaurant.description}</CardDescription>
                 )}
@@ -143,7 +152,7 @@ export default async function DashboardPage() {
             <div className="md:col-span-2 flex flex-col gap-3">
               <Link
                 href="/admin/carta"
-                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/20 transition-colors cursor-pointer group"
+                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
               >
                 <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
                   <BookOpen className="w-4 h-4 text-primary" />
@@ -155,7 +164,7 @@ export default async function DashboardPage() {
               </Link>
               <Link
                 href="/admin/mesas"
-                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/20 transition-colors cursor-pointer group"
+                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
               >
                 <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
                   <QrCode className="w-4 h-4 text-primary" />
@@ -168,7 +177,7 @@ export default async function DashboardPage() {
               <Link
                 href={`/${restaurant.slug}`}
                 target="_blank"
-                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/20 transition-colors cursor-pointer group"
+                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
               >
                 <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
                   <ExternalLink className="w-4 h-4 text-primary" />
