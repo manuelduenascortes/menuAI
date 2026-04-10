@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm run:*)",
-      "Bash(ls -la \"C\"*)"
+      "Bash(ls -la \"C\"*)",
+      "WebFetch(domain:claude.com)"
     ]
   }
 }
