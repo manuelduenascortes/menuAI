@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Send, X, MessageCircle } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import rehypeSanitize from 'rehype-sanitize'
 import type { ChatMessage } from '@/lib/types'
 
 const GREETING = '¡Hola! 👋 Soy el asistente de este restaurante. Estoy aquí para ayudarte a elegir el plato perfecto.\n\n¿Tienes alguna **alergia**, intolerancia o restricción alimentaria? (Por ejemplo: gluten, lactosa, frutos secos, eres vegetariano/vegano, etc.)\n\nO si lo prefieres, cuéntame qué te apetece comer y te hago sugerencias 😊'
@@ -110,13 +112,16 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
             style={{ animationDelay: `${Math.min(i * 0.05, 0.3)}s` }}
           >
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap [&_strong]:font-bold ${
                 msg.role === 'user'
                   ? 'bg-foreground text-background rounded-br-md'
                   : 'bg-secondary text-foreground rounded-bl-md'
               }`}
-              dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }}
-            />
+            >
+              <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
+                {msg.content}
+              </ReactMarkdown>
+            </div>
           </div>
         ))}
 
@@ -164,9 +169,3 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
   )
 }
 
-function formatMessage(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/\n/g, '<br>')
-}

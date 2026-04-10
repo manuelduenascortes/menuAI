@@ -1,12 +1,45 @@
 import { NextRequest } from 'next/server'
 import { groq, GROQ_MODEL } from '@/lib/groq'
 import { createAdminSupabase } from '@/lib/supabase'
-import { buildMenuSystemPrompt } from '@/lib/menu-context'
+import { buildMenuSystemPromptV2 } from '@/lib/menu-context'
 import type { FullMenu } from '@/lib/types'
+import { z } from 'zod'
+
+const ChatReq = z.object({
+  restaurantSlug: z.string().min(1).max(80).regex(/^[a-z0-9-]+$/),
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string().min(1).max(1200),
+  })).min(1).max(20),
+})
 
 // Cache simple en memoria (se resetea con cada deploy)
 const menuCache = new Map<string, { data: FullMenu; ts: number }>()
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutos
+
+// Rate limit en memoria simple (IP + Slug)
+const rateLimitCache = new Map<string, { count: number; ts: number }>()
+const RATE_LIMIT_TTL = 60 * 1000 // 1 minuto
+const MAX_REQUESTS_PER_MIN = 10
+
+function checkRateLimit(ip: string, slug: string): boolean {
+  const key = `ratelimit:${slug}:${ip}`
+  const now = Date.now()
+  const current = rateLimitCache.get(key)
+  
+  if (!current || now - current.ts > RATE_LIMIT_TTL) {
+    rateLimitCache.set(key, { count: 1, ts: now })
+    return true
+  }
+  
+  if (current.count >= MAX_REQUESTS_PER_MIN) {
+    return false
+  }
+  
+  current.count += 1
+  rateLimitCache.set(key, current)
+  return true
+}
 
 async function getFullMenu(slug: string): Promise<FullMenu | null> {
   const cached = menuCache.get(slug)
@@ -36,23 +69,70 @@ async function getFullMenu(slug: string): Promise<FullMenu | null> {
     .eq('restaurant_id', restaurant.id)
     .order('display_order')
 
-  const menu: FullMenu = { restaurant, categories: categories ?? [] }
+  const normalizedCategories = (categories ?? []).map((c: any) => ({
+    ...c,
+    menu_items: (c.menu_items ?? []).map((i: any) => ({
+      ...i,
+      allergens: (i.menu_item_allergens ?? []).map((x: any) => x.allergens).filter(Boolean),
+      dietary_tags: (i.menu_item_tags ?? []).map((x: any) => x.dietary_tags).filter(Boolean),
+    })),
+  }))
+
+  const menu: FullMenu = { restaurant, categories: normalizedCategories }
   menuCache.set(slug, { data: menu, ts: Date.now() })
   return menu
 }
 
 export async function POST(req: NextRequest) {
-  try {
-    const { messages, restaurantSlug } = await req.json()
+  const startTime = Date.now()
+  let restaurantSlugForLogs = 'unknown'
+  let charsIn = 0
+  let charsOut = 0
 
-    if (!restaurantSlug || !messages?.length) {
-      return new Response('Missing params', { status: 400 })
+  try {
+    const rawBody = await req.json()
+    const parsed = ChatReq.safeParse(rawBody)
+
+    if (!parsed.success) {
+      return new Response('Bad request', { status: 400 })
+    }
+
+    const { messages, restaurantSlug } = parsed.data
+    restaurantSlugForLogs = restaurantSlug
+    
+    // Aproximar y sumar los caracteres de entrada
+    charsIn = messages.reduce((acc, msg) => acc + msg.content.length, 0)
+    
+    // Validación de Rate Limit
+    const ip = req.headers.get('x-forwarded-for') || 'unknown-ip'
+    if (!checkRateLimit(ip, restaurantSlug)) {
+      console.warn(JSON.stringify({
+        event: 'chat_rate_limit',
+        slug: restaurantSlug,
+        ip,
+        timestamp: new Date().toISOString()
+      }))
+      return new Response('Too Many Requests', { status: 429 })
     }
 
     const menu = await getFullMenu(restaurantSlug)
-    if (!menu) return new Response('Restaurant not found', { status: 404 })
+    if (!menu) {
+      console.warn(JSON.stringify({
+        event: 'chat_error',
+        slug: restaurantSlug,
+        error: 'Restaurant not found',
+        latency_ms: Date.now() - startTime
+      }))
+      return new Response('Restaurant not found', { status: 404 })
+    }
 
-    const systemPrompt = buildMenuSystemPrompt(menu)
+    const systemPrompt = buildMenuSystemPromptV2(menu)
+
+    // Agregamos un abort controller para manejar timeout/cancelaciones de stream
+    const abortController = new AbortController()
+
+    // Si el request se cancela del lado cliente, abortamos a Groq
+    req.signal.addEventListener('abort', () => abortController.abort())
 
     const stream = await groq.chat.completions.create({
       model: GROQ_MODEL,
@@ -63,19 +143,59 @@ export async function POST(req: NextRequest) {
       stream: true,
       max_tokens: 1024,
       temperature: 0.7,
-    })
+    }, { signal: abortController.signal })
 
     const encoder = new TextEncoder()
     const readable = new ReadableStream({
       async start(controller) {
-        for await (const chunk of stream) {
-          const text = chunk.choices[0]?.delta?.content ?? ''
-          if (text) {
-            controller.enqueue(encoder.encode(text))
+        try {
+          for await (const chunk of stream) {
+            if (req.signal.aborted) {
+              break; // Abortamos inmediatamente si el usuario canceló
+            }
+            const text = chunk.choices[0]?.delta?.content ?? ''
+            if (text) {
+              charsOut += text.length
+              controller.enqueue(encoder.encode(text))
+            }
+          }
+        } catch (streamError: any) {
+          if (streamError.name !== 'AbortError') {
+            console.error(JSON.stringify({
+              event: 'chat_stream_error',
+              slug: restaurantSlugForLogs,
+              error: String(streamError),
+              latency_ms: Date.now() - startTime
+            }))
+          }
+        } finally {
+          controller.close()
+          
+          if (req.signal.aborted) {
+            console.log(JSON.stringify({
+              event: 'chat_aborted',
+              slug: restaurantSlugForLogs,
+              latency_ms: Date.now() - startTime,
+              chars_in: charsIn,
+              chars_out: charsOut,
+              approx_tokens: Math.round((charsIn + charsOut) / 4)
+            }))
+          } else {
+            console.log(JSON.stringify({
+              event: 'chat_success',
+              slug: restaurantSlugForLogs,
+              latency_ms: Date.now() - startTime,
+              chars_in: charsIn,
+              chars_out: charsOut,
+              approx_tokens: Math.round((charsIn + charsOut) / 4)
+            }))
           }
         }
-        controller.close()
       },
+      cancel() {
+        // En caso que Next.js cancele el reader
+        abortController.abort()
+      }
     })
 
     return new Response(readable, {
@@ -84,8 +204,18 @@ export async function POST(req: NextRequest) {
         'Transfer-Encoding': 'chunked',
       },
     })
-  } catch (error) {
-    console.error('Chat error:', error)
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+       // Operación cancelada por timeout/cliente. Ya se loguea en stream/abort.
+       return new Response('Aborted', { status: 499 })
+    }
+    
+    console.error(JSON.stringify({
+      event: 'chat_error',
+      slug: restaurantSlugForLogs,
+      error: error instanceof Error ? error.message : String(error),
+      latency_ms: Date.now() - startTime
+    }))
     return new Response('Error interno', { status: 500 })
   }
 }
