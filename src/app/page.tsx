@@ -147,7 +147,7 @@ export default function HomePage() {
           {/* CTAs */}
           <div className="animate-fade-up delay-4 flex items-center md:justify-end w-full md:col-span-1">
             <Link
-              href="/admin/login"
+              href="/admin/login?trial=1"
               className="group inline-flex w-full sm:w-auto justify-center items-center gap-2 bg-foreground text-background px-8 py-4 rounded-full text-base font-medium transition-all hover:opacity-80 active:scale-[0.98] cursor-pointer"
             >
               Prueba gratis
@@ -247,7 +247,7 @@ export default function HomePage() {
               </div>
               <p className="text-sm text-muted-foreground mb-2">Facturación mes a mes</p>
               <div className="inline-flex items-center px-2.5 py-0.5 invisible text-xs font-medium rounded-full mb-4" aria-hidden="true">Ahorra spacer</div>
-              <Link href="/admin/login" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
+              <Link href="/admin/login?trial=1" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
                 Empezar prueba gratis
               </Link>
               <ul className="flex-1 space-y-3 text-sm text-muted-foreground mb-6">
@@ -270,7 +270,7 @@ export default function HomePage() {
               </div>
               <p className="text-sm text-muted-foreground mb-2">89,94 € cada 6 meses</p>
               <div className="inline-flex items-center px-2.5 py-0.5 bg-green-100/50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full mb-4">Ahorra 25%</div>
-              <Link href="/admin/login" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
+              <Link href="/admin/login?trial=1" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
                 Empezar prueba gratis
               </Link>
               <ul className="flex-1 space-y-3 text-sm text-muted-foreground mb-6">
@@ -292,7 +292,7 @@ export default function HomePage() {
               </div>
               <p className="text-sm text-muted-foreground mb-2">119,88 € al año</p>
               <div className="inline-flex items-center px-2.5 py-0.5 bg-green-100/50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full mb-4">Ahorra 50%</div>
-              <Link href="/admin/login" className="flex justify-center w-full bg-foreground text-background hover:bg-foreground/90 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
+              <Link href="/admin/login?trial=1" className="flex justify-center w-full bg-foreground text-background hover:bg-foreground/90 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
                 Empezar prueba gratis
               </Link>
               <ul className="flex-1 space-y-3 text-sm text-foreground mb-6">
@@ -364,7 +364,7 @@ export default function HomePage() {
             En menos de 5 minutos tu restaurante tendrá carta digital con IA
           </p>
           <Link
-            href="/admin/login"
+            href="/admin/login?trial=1"
             className="group inline-flex items-center gap-2 bg-foreground text-background px-10 py-4 rounded-full text-base font-medium transition-all hover:opacity-80 active:scale-[0.98] cursor-pointer shadow-lg"
           >
             Prueba gratis

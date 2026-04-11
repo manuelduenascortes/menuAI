@@ -16,9 +16,20 @@ create table if not exists restaurants (
   logo_url text,
   address text,
   phone text,
+  trial_ends_at timestamptz default (now() + interval '14 days'),
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  subscription_status text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+-- Migración para BD existentes:
+-- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS trial_ends_at timestamptz DEFAULT (now() + interval '14 days');
+-- UPDATE restaurants SET trial_ends_at = created_at + interval '14 days' WHERE trial_ends_at IS NULL;
+-- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS stripe_customer_id text;
+-- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS stripe_subscription_id text;
+-- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS subscription_status text;
 
 -- ============================================
 -- TABLA: tables (mesas)

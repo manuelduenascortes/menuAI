@@ -17,6 +17,10 @@ Required in `.env.local`:
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase project credentials
 - `SUPABASE_SERVICE_ROLE_KEY` — server-side admin client (used in API routes)
 - `GROQ_API_KEY` — Groq LLM API key (powers the chat assistant)
+- `STRIPE_SECRET_KEY` — Stripe secret key (server-side)
+- `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — Stripe publishable key (client-side)
+- `NEXT_PUBLIC_STRIPE_PRICE_MONTHLY` / `NEXT_PUBLIC_STRIPE_PRICE_SEMESTRAL` / `NEXT_PUBLIC_STRIPE_PRICE_ANNUAL` — Stripe Price IDs for each plan
 
 ## Architecture
 

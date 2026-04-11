@@ -7,7 +7,8 @@
       "Bash(npx shadcn@latest add alert-dialog -y)",
       "Bash(npx shadcn@latest add tooltip -y)",
       "Bash(npx next:*)",
-      "Bash(npx shadcn@latest add skeleton accordion progress -y)"
+      "Bash(npx shadcn@latest add skeleton accordion progress -y)",
+      "Bash(npm install:*)"
     ]
   }
 }

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase-client'
 import { UtensilsCrossed, Loader2, ChevronLeft } from 'lucide-react'
@@ -10,12 +10,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isTrial = searchParams.get('trial') === '1'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
+  const [mode, setMode] = useState<'login' | 'signup'>(isTrial ? 'signup' : 'login')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -74,10 +84,10 @@ export default function LoginPage() {
         <div className="w-full max-w-md animate-fade-up">
           <div className="mb-10 text-center md:text-left">
             <h2 className="font-serif text-3xl text-foreground mb-2">
-              {mode === 'login' ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}
+              {mode === 'login' ? 'Bienvenido de nuevo' : (isTrial ? 'Prueba gratuita de 14 días' : 'Crea tu cuenta')}
             </h2>
             <p key={mode} className="text-base text-muted-foreground animate-fade-up">
-              {mode === 'login' ? 'Accede a tu panel de gestión' : 'Comienza tu prueba y digitaliza tu restaurante'}
+              {mode === 'login' ? 'Accede a tu panel de gestión' : (isTrial ? 'Crea tu cuenta para empezar. Sin tarjeta de crédito.' : 'Comienza tu prueba y digitaliza tu restaurante')}
             </p>
           </div>
 
