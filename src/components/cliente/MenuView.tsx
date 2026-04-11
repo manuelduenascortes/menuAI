@@ -192,13 +192,17 @@ function MenuItemCard({ item }: { item: MenuItem }) {
       aria-expanded={expanded}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(!expanded) } }}
     >
-      <div className="flex">
+      <div className="flex items-start">
         {item.image_url && (
-          <img
-            src={item.image_url}
-            alt={item.name}
-            className="w-24 h-24 object-cover shrink-0"
-          />
+          <div className="p-3 pr-0 shrink-0">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 relative rounded-lg overflow-hidden border border-border/50 bg-muted/50 shadow-sm">
+              <img
+                src={item.image_url}
+                alt={item.name}
+                className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+              />
+            </div>
+          </div>
         )}
         <div className="p-4 flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">

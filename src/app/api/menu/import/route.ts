@@ -12,6 +12,10 @@ Reglas:
 - Asigna un emoji representativo a cada categoría
 - Si no se ve el precio, pon 0
 - Extrae ingredientes si se mencionan
+- Detecta alérgenos de cada plato basándote en los ingredientes, símbolos o iconos visibles en la carta
+- Los 14 alérgenos oficiales de la UE son: Gluten, Crustáceos, Huevo, Pescado, Cacahuetes, Soja, Lácteos, Frutos de cáscara, Apio, Mostaza, Sésamo, Dióxido de azufre, Altramuces, Moluscos
+- Usa EXACTAMENTE esos nombres en el campo "allergens"
+- Si no puedes determinar alérgenos, devuelve un array vacío
 - Responde SOLO con JSON válido, sin markdown ni texto adicional
 
 Formato exacto:
@@ -25,7 +29,8 @@ Formato exacto:
           "name": "Nombre del plato",
           "description": "Descripción breve o null",
           "price": 12.50,
-          "ingredients": ["ingrediente1", "ingrediente2"]
+          "ingredients": ["ingrediente1", "ingrediente2"],
+          "allergens": ["Gluten", "Lácteos"]
         }
       ]
     }
@@ -77,13 +82,13 @@ export async function POST(req: NextRequest) {
       ]
     }
 
-    const model = type === 'image' ? 'llama-3.2-90b-vision-preview' : 'llama-3.3-70b-versatile'
+    const model = type === 'image' ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile'
 
     const completion = await groq.chat.completions.create({
       model,
       messages,
       temperature: 0.1,
-      max_tokens: 4096,
+      max_tokens: 8192,
     })
 
     const raw = completion.choices[0]?.message?.content ?? ''

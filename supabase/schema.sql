@@ -311,3 +311,27 @@ begin
   end if;
 end;
 $$ language plpgsql security definer;
+
+-- ============================================
+-- Storage: menu-images bucket
+-- ============================================
+insert into storage.buckets (id, name, public)
+values ('menu-images', 'menu-images', true)
+on conflict (id) do nothing;
+
+-- Anyone can read (public bucket)
+create policy "Public read menu-images"
+  on storage.objects for select
+  using (bucket_id = 'menu-images');
+
+-- Authenticated users can upload
+create policy "Auth users upload menu-images"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'menu-images');
+
+-- Authenticated users can delete their uploads
+create policy "Auth users delete menu-images"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'menu-images');

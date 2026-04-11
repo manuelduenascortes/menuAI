@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -18,7 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { Plus, Trash2, X, AlertTriangle, Leaf, Pencil, GripVertical } from 'lucide-react'
+import { Plus, Trash2, X, AlertTriangle, Leaf, Pencil, GripVertical, ImagePlus, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Restaurant, Allergen, DietaryTag } from '@/lib/types'
 import {
@@ -71,6 +71,13 @@ interface MenuItemFull {
 export default function CartaManager({ restaurant, initialCategories, allergens, dietaryTags }: Props) {
   const router = useRouter()
   const [categories, setCategories] = useState<CategoryWithItems[]>(initialCategories)
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    setCategories(initialCategories)
+  }, [initialCategories])
+
   const [newCategory, setNewCategory] = useState({ name: '', emoji: '', description: '' })
   const [addingCategory, setAddingCategory] = useState(false)
   const [loadingCategory, setLoadingCategory] = useState(false)
@@ -80,6 +87,81 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
     description: string
     onConfirm: () => void
   }>({ open: false, title: '', description: '', onConfirm: () => {} })
+
+  function toggleSelectAll() {
+    const allCatIds = categories.map(c => c.id)
+    const allItemIds = categories.flatMap(c => c.menu_items.map(i => i.id))
+    
+    if (selectedCategories.size === allCatIds.length && selectedItems.size === allItemIds.length && allCatIds.length + allItemIds.length > 0) {
+      setSelectedCategories(new Set())
+      setSelectedItems(new Set())
+    } else {
+      setSelectedCategories(new Set(allCatIds))
+      setSelectedItems(new Set(allItemIds))
+    }
+  }
+
+  function handleBulkDelete() {
+    const count = selectedCategories.size + selectedItems.size
+    if (count === 0) return
+
+    setConfirmDialog({
+      open: true,
+      title: '¿Borrar selección?',
+      description: `Se eliminarán ${selectedCategories.size} categorías y ${selectedItems.size} platos. Esta acción no se puede deshacer.`,
+      onConfirm: async () => {
+        let errorOccurred = false
+        if (selectedCategories.size > 0) {
+          const { error } = await supabase.from('categories').delete().in('id', Array.from(selectedCategories))
+          if (error) errorOccurred = true
+        }
+        if (selectedItems.size > 0) {
+          const itemsToExplicitlyDelete = Array.from(selectedItems).filter(itemId => {
+             const cat = categories.find(c => c.menu_items.some(i => i.id === itemId))
+             return cat && !selectedCategories.has(cat.id)
+          })
+          if (itemsToExplicitlyDelete.length > 0) {
+            const { error } = await supabase.from('menu_items').delete().in('id', itemsToExplicitlyDelete)
+            if (error) errorOccurred = true
+          }
+        }
+
+        if (errorOccurred) {
+          toast.error('Ocurrió un error al borrar algunos elementos')
+        } else {
+          toast.success('Elementos seleccionados eliminados')
+        }
+
+        setCategories(prev => prev
+          .filter(c => !selectedCategories.has(c.id))
+          .map(c => ({
+            ...c,
+            menu_items: c.menu_items.filter(i => !selectedItems.has(i.id))
+          }))
+        )
+        setSelectedCategories(new Set())
+        setSelectedItems(new Set())
+      }
+    })
+  }
+
+  function toggleCategorySelection(id: string) {
+    setSelectedCategories(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleItemSelection(id: string) {
+    setSelectedItems(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -180,10 +262,23 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
   return (
     <div className="space-y-6">
       {/* Header bar */}
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">
-          {categories.length} categorías · {categories.reduce((acc, c) => acc + c.menu_items.length, 0)} platos
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-muted-foreground mr-2">
+            {categories.length} categorías · {categories.reduce((acc, c) => acc + c.menu_items.length, 0)} platos
+          </p>
+          <Button variant="outline" size="sm" onClick={toggleSelectAll} className="cursor-pointer text-xs h-8 hidden sm:flex">
+            {selectedCategories.size === categories.length && selectedItems.size === categories.reduce((a,c) => a + c.menu_items.length, 0) && categories.length > 0 
+              ? 'Deseleccionar todo' 
+              : 'Seleccionar todo'}
+          </Button>
+          {(selectedCategories.size > 0 || selectedItems.size > 0) && (
+            <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="cursor-pointer text-xs h-8">
+              <Trash2 className="w-3.5 h-3.5 mr-1" />
+              Borrar ({selectedCategories.size + selectedItems.size})
+            </Button>
+          )}
+        </div>
         <Button
           onClick={() => setAddingCategory(!addingCategory)}
           className="cursor-pointer"
@@ -283,6 +378,11 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
                           <div {...dragHandleProps} className="cursor-grab hover:bg-muted p-1 rounded md:-ml-2 text-muted-foreground mr-1">
                             <GripVertical className="w-5 h-5" />
                           </div>
+                          <Checkbox
+                            checked={selectedCategories.has(category.id)}
+                            onCheckedChange={() => toggleCategorySelection(category.id)}
+                            className="mr-1"
+                          />
                           {category.emoji && <span>{category.emoji}</span>}
                           {category.name}
                           <Badge variant="secondary" className="text-xs font-normal">
@@ -295,6 +395,7 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
                   categoryId={category.id}
                   allergens={allergens}
                   dietaryTags={dietaryTags}
+                  restaurantId={restaurant.id}
                   onSave={(item) => setCategories(categories.map(c =>
                     c.id === category.id ? { ...c, menu_items: [...c.menu_items, item] } : c
                   ))}
@@ -323,19 +424,32 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
           <CardContent>
             {category.menu_items.length === 0 ? (
               <div className="text-center py-8">
-                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
-                  <Plus className="w-5 h-5 text-muted-foreground" />
-                </div>
                 <p className="font-serif text-base text-foreground mb-1">Sin platos todavía</p>
-                <p className="text-sm text-muted-foreground">Usa el botón &quot;Plato&quot; arriba para añadir el primero</p>
+                <p className="text-sm text-muted-foreground mb-3">Añade el primer plato a esta categoría</p>
+                <ItemFormDialog
+                  mode="add"
+                  categoryId={category.id}
+                  allergens={allergens}
+                  dietaryTags={dietaryTags}
+                  restaurantId={restaurant.id}
+                  onSave={(item) => setCategories(categories.map(c =>
+                    c.id === category.id ? { ...c, menu_items: [...c.menu_items, item] } : c
+                  ))}
+                />
               </div>
             ) : (
               <div className="space-y-2">
                 {category.menu_items.map(item => (
                   <div key={item.id} className="flex items-start justify-between p-3 bg-muted/50 rounded-lg">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-foreground">{item.name}</span>
+                    <div className="flex-1 min-w-0 flex items-start gap-3">
+                      <Checkbox
+                        checked={selectedItems.has(item.id)}
+                        onCheckedChange={() => toggleItemSelection(item.id)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-foreground">{item.name}</span>
                         <span className="text-primary font-semibold tabular-nums">{item.price.toFixed(2)}€</span>
                         {!item.available && (
                           <Badge variant="destructive" className="text-xs">No disponible</Badge>
@@ -363,6 +477,7 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
                           {item.ingredients.map(i => i.name).join(', ')}
                         </p>
                       )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 ml-3 shrink-0">
                       <ItemFormDialog
@@ -370,6 +485,7 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
                         item={item}
                         allergens={allergens}
                         dietaryTags={dietaryTags}
+                        restaurantId={restaurant.id}
                         onSave={(updated) => setCategories(categories.map(c =>
                           c.id === category.id
                             ? { ...c, menu_items: c.menu_items.map(i => i.id === updated.id ? updated : i) }
@@ -436,6 +552,7 @@ function ItemFormDialog({
   item,
   allergens,
   dietaryTags,
+  restaurantId,
   onSave,
 }: {
   mode: 'add' | 'edit'
@@ -443,10 +560,13 @@ function ItemFormDialog({
   item?: MenuItemFull
   allergens: Allergen[]
   dietaryTags: DietaryTag[]
+  restaurantId: string
   onSave: (item: MenuItemFull) => void
 }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [imageUrl, setImageUrl] = useState<string | null>(item?.image_url ?? null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const emptyForm = { name: '', description: '', price: '', ingredients: '' }
   const itemForm = item
@@ -468,7 +588,6 @@ function ItemFormDialog({
 
   function handleOpenChange(v: boolean) {
     if (v && item) {
-      // Reset form to current item values when re-opening edit dialog
       setForm({
         name: item.name,
         description: item.description ?? '',
@@ -477,13 +596,32 @@ function ItemFormDialog({
       })
       setSelectedAllergens(item.menu_item_allergens.map((ma) => ma.allergen_id))
       setSelectedTags(item.menu_item_tags.map((mt) => mt.tag_id))
+      setImageUrl(item.image_url ?? null)
     }
     if (v && !item) {
       setForm(emptyForm)
       setSelectedAllergens([])
       setSelectedTags([])
+      setImageUrl(null)
     }
     setOpen(v)
+  }
+
+  async function handleImageUpload(file: File) {
+    setUploadingImage(true)
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      body.append('restaurantId', restaurantId)
+      const res = await fetch('/api/upload', { method: 'POST', body })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setImageUrl(data.url)
+    } catch {
+      toast.error('Error subiendo imagen')
+    } finally {
+      setUploadingImage(false)
+    }
   }
 
   function toggleAllergen(id: string) {
@@ -505,6 +643,7 @@ function ItemFormDialog({
       name: form.name,
       description: form.description || undefined,
       price: parseFloat(form.price),
+      image_url: imageUrl ?? undefined,
       ingredients: ingredientNames.map((name, i) => ({ id: `temp-${i}`, name })),
       menu_item_allergens: selectedAllergens.map((aid) => ({
         allergen_id: aid,
@@ -529,6 +668,7 @@ function ItemFormDialog({
         description: form.description || null,
         price: parseFloat(form.price),
         available: true,
+        image_url: imageUrl || null,
       })
       .select()
       .single()
@@ -559,6 +699,7 @@ function ItemFormDialog({
     setForm(emptyForm)
     setSelectedAllergens([])
     setSelectedTags([])
+    setImageUrl(null)
     setOpen(false)
     setLoading(false)
   }
@@ -574,6 +715,7 @@ function ItemFormDialog({
         name: form.name,
         description: form.description || null,
         price: parseFloat(form.price),
+        image_url: imageUrl || null,
       })
       .eq('id', item.id)
 
@@ -629,16 +771,12 @@ function ItemFormDialog({
     else await handleEdit()
   }
 
-  const trigger =
+  const addTrigger =
     mode === 'add' ? (
-      <DialogTrigger
-        render={
-          <Button variant="outline" size="sm" className="cursor-pointer">
-            <Plus className="w-3.5 h-3.5 mr-1" />
-            Plato
-          </Button>
-        }
-      />
+      <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => handleOpenChange(true)}>
+        <Plus className="w-3.5 h-3.5 mr-1" />
+        Plato
+      </Button>
     ) : null
 
   const editTrigger =
@@ -668,6 +806,41 @@ function ItemFormDialog({
         </DialogTitle>
       </DialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label>Imagen</Label>
+          <div className="flex items-center gap-3">
+            {imageUrl ? (
+              <div className="relative">
+                <img src={imageUrl} alt="Plato" className="w-20 h-20 rounded-lg object-cover border border-border" />
+                <button
+                  type="button"
+                  className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center cursor-pointer"
+                  onClick={() => setImageUrl(null)}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <label className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                {uploadingImage ? (
+                  <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+                ) : (
+                  <ImagePlus className="w-6 h-6 text-muted-foreground" />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) handleImageUpload(f)
+                    e.target.value = ''
+                  }}
+                />
+              </label>
+            )}
+          </div>
+        </div>
         <div className="space-y-2">
           <Label>Nombre *</Label>
           <Input
@@ -771,10 +944,12 @@ function ItemFormDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      {trigger}
-      {dialogContent}
-    </Dialog>
+    <>
+      {addTrigger}
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        {dialogContent}
+      </Dialog>
+    </>
   )
 }
 

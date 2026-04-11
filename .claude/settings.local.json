@@ -8,7 +8,10 @@
       "Bash(npx shadcn@latest add tooltip -y)",
       "Bash(npx next:*)",
       "Bash(npx shadcn@latest add skeleton accordion progress -y)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(xargs grep:*)",
+      "Bash(npx ts-node -e ':*)",
+      "Bash(node -e ':*)"
     ]
   }
 }

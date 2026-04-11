@@ -9,14 +9,19 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { Camera, FileText, Sparkles, Trash2, ArrowLeft, Save, Loader2, CheckCircle2, X } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Camera, FileText, Sparkles, Trash2, ArrowLeft, Save, Loader2, CheckCircle2, X, ChevronDown, ChevronUp, ImagePlus, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
+import type { Allergen } from '@/lib/types'
 
 interface ExtractedItem {
   name: string
   description: string | null
   price: number
   ingredients: string[]
+  allergens?: string[]
+  _allergenIds?: string[]
+  _imageUrl?: string
 }
 
 interface ExtractedCategory {
@@ -31,8 +36,9 @@ interface ExtractedMenu {
 
 type Step = 'input' | 'loading' | 'preview' | 'saving' | 'done'
 
-export default function MenuImport({ restaurantId, onComplete }: {
+export default function MenuImport({ restaurantId, allergens, onComplete }: {
   restaurantId: string
+  allergens: Allergen[]
   onComplete: () => void
 }) {
   const [step, setStep] = useState<Step>('input')
@@ -42,6 +48,9 @@ export default function MenuImport({ restaurantId, onComplete }: {
   const [extracted, setExtracted] = useState<ExtractedMenu | null>(null)
   const [error, setError] = useState('')
   const [saveProgress, setSaveProgress] = useState({ catIdx: 0, itemIdx: 0, totalCats: 0, totalItems: 0 })
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+  const [ingredientTexts, setIngredientTexts] = useState<Record<string, string>>({})
+  const [uploadingImage, setUploadingImage] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -59,6 +68,13 @@ export default function MenuImport({ restaurantId, onComplete }: {
       setError('')
     }
     reader.readAsDataURL(file)
+  }
+
+  // Match AI-returned allergen names to DB allergen IDs
+  function resolveAllergenIds(allergenNames: string[]): string[] {
+    return allergenNames
+      .map(name => allergens.find(a => a.name.toLowerCase() === name.toLowerCase())?.id)
+      .filter((id): id is string => !!id)
   }
 
   async function handleExtract() {
@@ -87,6 +103,13 @@ export default function MenuImport({ restaurantId, onComplete }: {
         throw new Error('No se encontraron platos en la carta')
       }
 
+      // Resolve allergen names → IDs
+      for (const cat of data.categories) {
+        for (const item of cat.items) {
+          item._allergenIds = resolveAllergenIds(item.allergens ?? [])
+        }
+      }
+
       setExtracted(data)
       setStep('preview')
     } catch (err) {
@@ -113,6 +136,99 @@ export default function MenuImport({ restaurantId, onComplete }: {
           : cat
       ),
     })
+  }
+
+  function toggleAllergen(catIdx: number, itemIdx: number, allergenId: string) {
+    if (!extracted) return
+    setExtracted({
+      categories: extracted.categories.map((cat, ci) =>
+        ci === catIdx
+          ? {
+              ...cat,
+              items: cat.items.map((item, ii) =>
+                ii === itemIdx
+                  ? {
+                      ...item,
+                      _allergenIds: item._allergenIds?.includes(allergenId)
+                        ? item._allergenIds.filter(id => id !== allergenId)
+                        : [...(item._allergenIds ?? []), allergenId],
+                    }
+                  : item
+              ),
+            }
+          : cat
+      ),
+    })
+  }
+
+  function updateItem(catIdx: number, itemIdx: number, patch: Partial<ExtractedItem>) {
+    if (!extracted) return
+    setExtracted({
+      categories: extracted.categories.map((cat, ci) =>
+        ci === catIdx
+          ? {
+              ...cat,
+              items: cat.items.map((item, ii) =>
+                ii === itemIdx ? { ...item, ...patch } : item
+              ),
+            }
+          : cat
+      ),
+    })
+  }
+
+  function updateCategory(catIdx: number, patch: Partial<ExtractedCategory>) {
+    if (!extracted) return
+    setExtracted({
+      categories: extracted.categories.map((cat, ci) =>
+        ci === catIdx ? { ...cat, ...patch } : cat
+      ),
+    })
+  }
+
+  function toggleExpanded(key: string) {
+    setExpandedItems(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  async function handleImageUpload(catIdx: number, itemIdx: number, file: File) {
+    const key = `${catIdx}-${itemIdx}`
+    setUploadingImage(key)
+
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      body.append('restaurantId', restaurantId)
+
+      const res = await fetch('/api/upload', { method: 'POST', body })
+      const data = await res.json()
+
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+
+      setExtracted(prev => {
+        if (!prev) return prev
+        return {
+          categories: prev.categories.map((cat, ci) =>
+            ci === catIdx
+              ? {
+                  ...cat,
+                  items: cat.items.map((item, ii) =>
+                    ii === itemIdx ? { ...item, _imageUrl: data.url } : item
+                  ),
+                }
+              : cat
+          ),
+        }
+      })
+    } catch {
+      toast.error('Error subiendo imagen')
+    } finally {
+      setUploadingImage(null)
+    }
   }
 
   async function handleSave() {
@@ -154,6 +270,7 @@ export default function MenuImport({ restaurantId, onComplete }: {
               price: item.price || 0,
               available: true,
               display_order: j,
+              image_url: item._imageUrl || null,
             })
             .select()
             .single()
@@ -165,6 +282,15 @@ export default function MenuImport({ restaurantId, onComplete }: {
               item.ingredients.map(name => ({
                 menu_item_id: itemData.id,
                 name,
+              }))
+            )
+          }
+
+          if (item._allergenIds?.length) {
+            await supabase.from('menu_item_allergens').insert(
+              item._allergenIds.map(allergen_id => ({
+                menu_item_id: itemData.id,
+                allergen_id,
               }))
             )
           }
@@ -280,7 +406,7 @@ export default function MenuImport({ restaurantId, onComplete }: {
         <CardContent className="py-20 text-center">
           <Loader2 className="w-10 h-10 mx-auto mb-4 text-primary animate-spin" />
           <p className="text-lg font-medium text-foreground">Analizando tu carta...</p>
-          <p className="text-sm text-muted-foreground mt-2">La IA está extrayendo los platos. Esto puede tardar unos segundos.</p>
+          <p className="text-sm text-muted-foreground mt-2">La IA está extrayendo los platos y detectando alérgenos. Esto puede tardar unos segundos.</p>
         </CardContent>
       </Card>
     )
@@ -301,7 +427,7 @@ export default function MenuImport({ restaurantId, onComplete }: {
                   Se encontraron {extracted.categories.length} categorías y {totalItems} platos
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Revisa el resultado. Puedes eliminar lo que no quieras antes de guardar.
+                  Revisa y edita el resultado antes de guardar. Puedes modificar cualquier campo, alérgenos y fotos.
                 </p>
               </div>
               <div className="flex gap-2">
@@ -321,11 +447,22 @@ export default function MenuImport({ restaurantId, onComplete }: {
         {extracted.categories.map((cat, catIdx) => (
           <Card key={catIdx}>
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-serif flex items-center gap-2">
-                  {cat.emoji} {cat.name}
-                  <Badge variant="secondary" className="text-xs font-normal">{cat.items.length} platos</Badge>
-                </CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Input
+                    value={cat.emoji}
+                    onChange={e => updateCategory(catIdx, { emoji: e.target.value })}
+                    className="w-12 text-center px-1"
+                    placeholder="🍕"
+                  />
+                  <Input
+                    value={cat.name}
+                    onChange={e => updateCategory(catIdx, { name: e.target.value })}
+                    className="flex-1 font-serif font-semibold"
+                    placeholder="Nombre categoría"
+                  />
+                  <Badge variant="secondary" className="text-xs font-normal shrink-0">{cat.items.length} platos</Badge>
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -339,35 +476,170 @@ export default function MenuImport({ restaurantId, onComplete }: {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {cat.items.map((item, itemIdx) => (
-                  <div
-                    key={itemIdx}
-                    className="flex items-start justify-between p-3 bg-muted/50 rounded-lg"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-foreground">{item.name}</span>
-                        {item.price > 0 && (
-                          <span className="text-primary font-semibold tabular-nums">{item.price.toFixed(2)}€</span>
-                        )}
+                {cat.items.map((item, itemIdx) => {
+                  const itemKey = `${catIdx}-${itemIdx}`
+                  const isExpanded = expandedItems.has(itemKey)
+                  const allergenCount = item._allergenIds?.length ?? 0
+
+                  return (
+                    <div
+                      key={itemIdx}
+                      className="p-3 bg-muted/50 rounded-lg space-y-2"
+                    >
+                      {/* Item header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex gap-3 flex-1 min-w-0">
+                          {/* Image thumbnail or upload */}
+                          {item._imageUrl ? (
+                            <div className="relative shrink-0">
+                              <img
+                                src={item._imageUrl}
+                                alt={item.name}
+                                className="w-14 h-14 rounded-lg object-cover border border-border"
+                              />
+                              <button
+                                className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full w-4 h-4 flex items-center justify-center cursor-pointer"
+                                onClick={() => {
+                                  setExtracted(prev => {
+                                    if (!prev) return prev
+                                    return {
+                                      categories: prev.categories.map((c, ci) =>
+                                        ci === catIdx
+                                          ? { ...c, items: c.items.map((it, ii) => ii === itemIdx ? { ...it, _imageUrl: undefined } : it) }
+                                          : c
+                                      ),
+                                    }
+                                  })
+                                }}
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <label className="shrink-0 w-14 h-14 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                              {uploadingImage === itemKey ? (
+                                <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                              ) : (
+                                <ImagePlus className="w-5 h-5 text-muted-foreground" />
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0]
+                                  if (f) handleImageUpload(catIdx, itemIdx, f)
+                                  e.target.value = ''
+                                }}
+                              />
+                            </label>
+                          )}
+
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={item.name}
+                                onChange={e => updateItem(catIdx, itemIdx, { name: e.target.value })}
+                                className="flex-1 h-8 text-sm font-medium"
+                                placeholder="Nombre del plato"
+                              />
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={item.price || ''}
+                                  onChange={e => updateItem(catIdx, itemIdx, { price: parseFloat(e.target.value) || 0 })}
+                                  className="w-20 h-8 text-sm text-right tabular-nums"
+                                  placeholder="0.00"
+                                />
+                                <span className="text-sm text-muted-foreground">€</span>
+                              </div>
+                            </div>
+                            <Input
+                              value={item.description ?? ''}
+                              onChange={e => updateItem(catIdx, itemIdx, { description: e.target.value || null })}
+                              className="h-7 text-xs text-muted-foreground"
+                              placeholder="Descripción (opcional)"
+                            />
+                            <Input
+                              value={ingredientTexts[itemKey] ?? item.ingredients?.join(', ') ?? ''}
+                              onChange={e => setIngredientTexts(prev => ({ ...prev, [itemKey]: e.target.value }))}
+                              onBlur={() => {
+                                const text = ingredientTexts[itemKey]
+                                if (text != null) {
+                                  updateItem(catIdx, itemIdx, {
+                                    ingredients: text.split(',').map(s => s.trim()).filter(Boolean)
+                                  })
+                                }
+                              }}
+                              className="h-7 text-xs text-muted-foreground"
+                              placeholder="Ingredientes separados por comas"
+                            />
+                            {/* Allergen summary badges */}
+                            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                              {allergenCount > 0 ? (
+                                item._allergenIds?.map(aId => {
+                                  const a = allergens.find(al => al.id === aId)
+                                  if (!a) return null
+                                  return (
+                                    <Badge key={aId} variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5">
+                                      <AlertTriangle className="w-2.5 h-2.5" />
+                                      {a.icon} {a.name}
+                                    </Badge>
+                                  )
+                                })
+                              ) : (
+                                <span className="text-[10px] text-muted-foreground">Sin alérgenos detectados</span>
+                              )}
+                              <button
+                                className="text-[10px] text-primary hover:underline cursor-pointer ml-1"
+                                onClick={() => toggleExpanded(itemKey)}
+                              >
+                                {isExpanded ? (
+                                  <span className="flex items-center gap-0.5"><ChevronUp className="w-3 h-3" /> Cerrar</span>
+                                ) : (
+                                  <span className="flex items-center gap-0.5"><ChevronDown className="w-3 h-3" /> Editar alérgenos</span>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          className="text-muted-foreground hover:text-destructive ml-2 shrink-0 cursor-pointer transition-colors"
+                          onClick={() => removeItem(catIdx, itemIdx)}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                      {item.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                      )}
-                      {item.ingredients?.length > 0 && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {item.ingredients.join(', ')}
-                        </p>
+
+                      {/* Expanded allergen editor */}
+                      {isExpanded && (
+                        <div className="pt-2 border-t border-border/50">
+                          <Label className="text-xs text-muted-foreground mb-2 block">Alérgenos</Label>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                            {allergens.map((a) => (
+                              <div key={a.id} className="flex items-center gap-1.5">
+                                <Checkbox
+                                  id={`import-allergen-${catIdx}-${itemIdx}-${a.id}`}
+                                  checked={item._allergenIds?.includes(a.id) ?? false}
+                                  onCheckedChange={() => toggleAllergen(catIdx, itemIdx, a.id)}
+                                />
+                                <label
+                                  htmlFor={`import-allergen-${catIdx}-${itemIdx}-${a.id}`}
+                                  className="text-xs cursor-pointer"
+                                >
+                                  {a.icon} {a.name}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       )}
                     </div>
-                    <button
-                      className="text-muted-foreground hover:text-destructive ml-2 shrink-0 cursor-pointer transition-colors"
-                      onClick={() => removeItem(catIdx, itemIdx)}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </CardContent>
           </Card>

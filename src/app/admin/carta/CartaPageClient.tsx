@@ -68,6 +68,7 @@ export default function CartaPageClient({
       {showImport && (
         <MenuImport
           restaurantId={restaurant.id}
+          allergens={allergens}
           onComplete={() => {
             setShowImport(false)
             router.refresh()
