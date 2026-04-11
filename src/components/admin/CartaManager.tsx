@@ -88,20 +88,25 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
-    if (over && active.id !== over.id) {
-      setCategories((items) => {
-        const oldIndex = items.findIndex((i) => i.id === active.id)
-        const newIndex = items.findIndex((i) => i.id === over.id)
-        const newArray = arrayMove(items, oldIndex, newIndex)
-        
-        newArray.forEach((cat, idx) => {
-          supabase.from('categories').update({ display_order: idx }).eq('id', cat.id).then(({ error }) => {
-            if (error) toast.error('Error al guardar el nuevo orden de ' + cat.name)
-          })
-        })
+    if (!over || active.id === over.id) return
 
-        return newArray.map((cat, idx) => ({ ...cat, display_order: idx }))
-      })
+    const oldIndex = categories.findIndex((i) => i.id === active.id)
+    const newIndex = categories.findIndex((i) => i.id === over.id)
+    const newArray = arrayMove(categories, oldIndex, newIndex)
+
+    // Optimistic update
+    setCategories(newArray.map((cat, idx) => ({ ...cat, display_order: idx })))
+
+    // Batch update with error recovery
+    const results = await Promise.all(
+      newArray.map((cat, idx) =>
+        supabase.from('categories').update({ display_order: idx }).eq('id', cat.id)
+      )
+    )
+    const failed = results.some((r) => r.error)
+    if (failed) {
+      toast.error('Error al guardar orden. Recargando...')
+      router.refresh()
     }
   }
 
@@ -285,11 +290,12 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
                           </Badge>
                         </CardTitle>
               <div className="flex gap-2">
-                <AddItemDialog
+                <ItemFormDialog
+                  mode="add"
                   categoryId={category.id}
                   allergens={allergens}
                   dietaryTags={dietaryTags}
-                  onAdd={(item) => setCategories(categories.map(c =>
+                  onSave={(item) => setCategories(categories.map(c =>
                     c.id === category.id ? { ...c, menu_items: [...c.menu_items, item] } : c
                   ))}
                 />
@@ -359,11 +365,12 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
                       )}
                     </div>
                     <div className="flex items-center gap-2 ml-3 shrink-0">
-                      <EditItemDialog
+                      <ItemFormDialog
+                        mode="edit"
                         item={item}
                         allergens={allergens}
                         dietaryTags={dietaryTags}
-                        onUpdate={(updated) => setCategories(categories.map(c =>
+                        onSave={(updated) => setCategories(categories.map(c =>
                           c.id === category.id
                             ? { ...c, menu_items: c.menu_items.map(i => i.id === updated.id ? updated : i) }
                             : c
@@ -412,7 +419,7 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
   )
 }
 
-/* Inline icon for empty state — avoids separate import */
+/* Inline icon for empty state */
 function BookOpenIcon({ className }: { className?: string }) {
   return (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -421,44 +428,100 @@ function BookOpenIcon({ className }: { className?: string }) {
   )
 }
 
-// Dialog para añadir plato
-function AddItemDialog({
+// ─── UNIFIED ITEM FORM DIALOG ───
+// Handles both "add" and "edit" modes, eliminating ~400 lines of duplication.
+function ItemFormDialog({
+  mode,
   categoryId,
+  item,
   allergens,
   dietaryTags,
-  onAdd,
+  onSave,
 }: {
-  categoryId: string
+  mode: 'add' | 'edit'
+  categoryId?: string
+  item?: MenuItemFull
   allergens: Allergen[]
   dietaryTags: DietaryTag[]
-  onAdd: (item: MenuItemFull) => void
+  onSave: (item: MenuItemFull) => void
 }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-    price: '',
-    ingredients: '',
-  })
-  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([])
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+
+  const emptyForm = { name: '', description: '', price: '', ingredients: '' }
+  const itemForm = item
+    ? {
+        name: item.name,
+        description: item.description ?? '',
+        price: item.price.toString(),
+        ingredients: item.ingredients.map((i) => i.name).join(', '),
+      }
+    : emptyForm
+
+  const [form, setForm] = useState(itemForm)
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>(
+    item?.menu_item_allergens.map((ma) => ma.allergen_id) ?? []
+  )
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    item?.menu_item_tags.map((mt) => mt.tag_id) ?? []
+  )
+
+  function handleOpenChange(v: boolean) {
+    if (v && item) {
+      // Reset form to current item values when re-opening edit dialog
+      setForm({
+        name: item.name,
+        description: item.description ?? '',
+        price: item.price.toString(),
+        ingredients: item.ingredients.map((i) => i.name).join(', '),
+      })
+      setSelectedAllergens(item.menu_item_allergens.map((ma) => ma.allergen_id))
+      setSelectedTags(item.menu_item_tags.map((mt) => mt.tag_id))
+    }
+    if (v && !item) {
+      setForm(emptyForm)
+      setSelectedAllergens([])
+      setSelectedTags([])
+    }
+    setOpen(v)
+  }
 
   function toggleAllergen(id: string) {
-    setSelectedAllergens(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+    setSelectedAllergens((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
 
   function toggleTag(id: string) {
-    setSelectedTags(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+    setSelectedTags((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!form.name.trim() || !form.price) return
+  function buildFullItem(baseItem: any): MenuItemFull {
+    const ingredientNames = form.ingredients
+      .split(',')
+      .map((i) => i.trim())
+      .filter(Boolean)
+
+    return {
+      ...baseItem,
+      name: form.name,
+      description: form.description || undefined,
+      price: parseFloat(form.price),
+      ingredients: ingredientNames.map((name, i) => ({ id: `temp-${i}`, name })),
+      menu_item_allergens: selectedAllergens.map((aid) => ({
+        allergen_id: aid,
+        allergens: allergens.find((a) => a.id === aid)!,
+      })),
+      menu_item_tags: selectedTags.map((tid) => ({
+        tag_id: tid,
+        dietary_tags: dietaryTags.find((t) => t.id === tid)!,
+      })),
+    }
+  }
+
+  async function handleAdd() {
+    if (!form.name.trim() || !form.price || !categoryId) return
     setLoading(true)
 
-    // Insertar plato
-    const { data: item, error } = await supabase
+    const { data: newItem, error } = await supabase
       .from('menu_items')
       .insert({
         category_id: categoryId,
@@ -470,221 +533,41 @@ function AddItemDialog({
       .select()
       .single()
 
-    if (error || !item) { toast.error('Error al añadir plato'); setLoading(false); return }
-
-    // Ingredientes
-    const ingredientNames = form.ingredients
-      .split(',')
-      .map(i => i.trim())
-      .filter(Boolean)
-
-    if (ingredientNames.length > 0) {
-      await supabase.from('ingredients').insert(
-        ingredientNames.map(name => ({ menu_item_id: item.id, name }))
-      )
+    if (error || !newItem) {
+      toast.error('Error al añadir plato')
+      setLoading(false)
+      return
     }
 
-    // Alergenos
-    if (selectedAllergens.length > 0) {
-      await supabase.from('menu_item_allergens').insert(
-        selectedAllergens.map(allergen_id => ({ menu_item_id: item.id, allergen_id }))
-      )
-    }
+    const ingredientNames = form.ingredients.split(',').map((i) => i.trim()).filter(Boolean)
 
-    // Tags
-    if (selectedTags.length > 0) {
-      await supabase.from('menu_item_tags').insert(
-        selectedTags.map(tag_id => ({ menu_item_id: item.id, tag_id }))
-      )
-    }
+    // Insert relations in parallel
+    await Promise.all([
+      ingredientNames.length > 0
+        ? supabase.from('ingredients').insert(ingredientNames.map((name) => ({ menu_item_id: newItem.id, name })))
+        : Promise.resolve(),
+      selectedAllergens.length > 0
+        ? supabase.from('menu_item_allergens').insert(selectedAllergens.map((allergen_id) => ({ menu_item_id: newItem.id, allergen_id })))
+        : Promise.resolve(),
+      selectedTags.length > 0
+        ? supabase.from('menu_item_tags').insert(selectedTags.map((tag_id) => ({ menu_item_id: newItem.id, tag_id })))
+        : Promise.resolve(),
+    ])
 
-    // Construir objeto completo para el estado
-    const newItem: MenuItemFull = {
-      ...item,
-      ingredients: ingredientNames.map((name, i) => ({ id: `temp-${i}`, name })),
-      menu_item_allergens: selectedAllergens.map(aid => ({
-        allergen_id: aid,
-        allergens: allergens.find(a => a.id === aid)!,
-      })),
-      menu_item_tags: selectedTags.map(tid => ({
-        tag_id: tid,
-        dietary_tags: dietaryTags.find(t => t.id === tid)!,
-      })),
-    }
-
-    onAdd(newItem)
+    onSave(buildFullItem(newItem))
     toast.success('Plato añadido ✓')
-    setForm({ name: '', description: '', price: '', ingredients: '' })
+    setForm(emptyForm)
     setSelectedAllergens([])
     setSelectedTags([])
     setOpen(false)
     setLoading(false)
   }
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={
-          <Button variant="outline" size="sm" className="cursor-pointer">
-            <Plus className="w-3.5 h-3.5 mr-1" />
-            Plato
-          </Button>
-        }
-      />
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-serif text-xl">Añadir plato</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Nombre *</Label>
-            <Input
-              placeholder="Ej: Ensalada César"
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Descripción</Label>
-            <Textarea
-              placeholder="Breve descripción del plato..."
-              value={form.description}
-              onChange={e => setForm({ ...form, description: e.target.value })}
-              rows={2}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Precio (€) *</Label>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="12.50"
-              value={form.price}
-              onChange={e => setForm({ ...form, price: e.target.value })}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Ingredientes (separados por comas)</Label>
-            <Input
-              placeholder="Lechuga, pollo, parmesano, crutones, salsa César"
-              value={form.ingredients}
-              onChange={e => setForm({ ...form, ingredients: e.target.value })}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <Label>Alergenos</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {allergens.map(a => (
-                <div key={a.id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`allergen-${a.id}`}
-                    checked={selectedAllergens.includes(a.id)}
-                    onCheckedChange={() => toggleAllergen(a.id)}
-                  />
-                  <label htmlFor={`allergen-${a.id}`} className="text-sm cursor-pointer">
-                    {a.icon} {a.name}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <Label>Etiquetas dietéticas</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {dietaryTags.map(t => (
-                <div key={t.id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`tag-${t.id}`}
-                    checked={selectedTags.includes(t.id)}
-                    onCheckedChange={() => toggleTag(t.id)}
-                  />
-                  <label htmlFor={`tag-${t.id}`} className="text-sm cursor-pointer">
-                    {t.icon} {t.name}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <Button type="submit" disabled={loading} className="flex-1 cursor-pointer">
-              {loading ? 'Guardando...' : 'Añadir plato'}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="cursor-pointer">
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-// Dialog para editar plato existente
-function EditItemDialog({
-  item,
-  allergens,
-  dietaryTags,
-  onUpdate,
-}: {
-  item: MenuItemFull
-  allergens: Allergen[]
-  dietaryTags: DietaryTag[]
-  onUpdate: (item: MenuItemFull) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({
-    name: item.name,
-    description: item.description ?? '',
-    price: item.price.toString(),
-    ingredients: item.ingredients.map(i => i.name).join(', '),
-  })
-  const [selectedAllergens, setSelectedAllergens] = useState<string[]>(
-    item.menu_item_allergens.map(ma => ma.allergen_id)
-  )
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    item.menu_item_tags.map(mt => mt.tag_id)
-  )
-
-  // Reset form when dialog opens (in case item changed externally)
-  function handleOpenChange(v: boolean) {
-    if (v) {
-      setForm({
-        name: item.name,
-        description: item.description ?? '',
-        price: item.price.toString(),
-        ingredients: item.ingredients.map(i => i.name).join(', '),
-      })
-      setSelectedAllergens(item.menu_item_allergens.map(ma => ma.allergen_id))
-      setSelectedTags(item.menu_item_tags.map(mt => mt.tag_id))
-    }
-    setOpen(v)
-  }
-
-  function toggleAllergen(id: string) {
-    setSelectedAllergens(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
-  }
-
-  function toggleTag(id: string) {
-    setSelectedTags(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!form.name.trim() || !form.price) return
+  async function handleEdit() {
+    if (!form.name.trim() || !form.price || !item) return
     setLoading(true)
 
-    // Update item
+    // Update the item itself
     const { error } = await supabase
       .from('menu_items')
       .update({
@@ -694,58 +577,72 @@ function EditItemDialog({
       })
       .eq('id', item.id)
 
-    if (error) { toast.error('Error al guardar cambios'); setLoading(false); return }
-
-    // Replace ingredients: delete old, insert new
-    await supabase.from('ingredients').delete().eq('menu_item_id', item.id)
-    const ingredientNames = form.ingredients.split(',').map(i => i.trim()).filter(Boolean)
-    if (ingredientNames.length > 0) {
-      await supabase.from('ingredients').insert(
-        ingredientNames.map(name => ({ menu_item_id: item.id, name }))
-      )
+    if (error) {
+      toast.error('Error al guardar cambios')
+      setLoading(false)
+      return
     }
 
-    // Replace allergens
-    await supabase.from('menu_item_allergens').delete().eq('menu_item_id', item.id)
-    if (selectedAllergens.length > 0) {
-      await supabase.from('menu_item_allergens').insert(
-        selectedAllergens.map(allergen_id => ({ menu_item_id: item.id, allergen_id }))
-      )
+    // Replace relations: delete all then re-insert.
+    // Wrapped in error handling — if insert fails after delete, warn user.
+    const ingredientNames = form.ingredients.split(',').map((i) => i.trim()).filter(Boolean)
+
+    const [delIng, delAll, delTag] = await Promise.all([
+      supabase.from('ingredients').delete().eq('menu_item_id', item.id),
+      supabase.from('menu_item_allergens').delete().eq('menu_item_id', item.id),
+      supabase.from('menu_item_tags').delete().eq('menu_item_id', item.id),
+    ])
+
+    const deleteErrors = [delIng.error, delAll.error, delTag.error].filter(Boolean)
+    if (deleteErrors.length > 0) {
+      toast.error('Error al actualizar relaciones del plato')
+      setLoading(false)
+      return
     }
 
-    // Replace tags
-    await supabase.from('menu_item_tags').delete().eq('menu_item_id', item.id)
-    if (selectedTags.length > 0) {
-      await supabase.from('menu_item_tags').insert(
-        selectedTags.map(tag_id => ({ menu_item_id: item.id, tag_id }))
-      )
+    const insertResults = await Promise.all([
+      ingredientNames.length > 0
+        ? supabase.from('ingredients').insert(ingredientNames.map((name) => ({ menu_item_id: item.id, name })))
+        : Promise.resolve({ error: null }),
+      selectedAllergens.length > 0
+        ? supabase.from('menu_item_allergens').insert(selectedAllergens.map((allergen_id) => ({ menu_item_id: item.id, allergen_id })))
+        : Promise.resolve({ error: null }),
+      selectedTags.length > 0
+        ? supabase.from('menu_item_tags').insert(selectedTags.map((tag_id) => ({ menu_item_id: item.id, tag_id })))
+        : Promise.resolve({ error: null }),
+    ])
+
+    const insertErrors = insertResults.filter((r) => r.error)
+    if (insertErrors.length > 0) {
+      toast.error('Error al guardar relaciones. Algunos datos pueden haberse perdido. Recarga la página.')
     }
 
-    // Optimistic update
-    const updated: MenuItemFull = {
-      ...item,
-      name: form.name,
-      description: form.description || undefined,
-      price: parseFloat(form.price),
-      ingredients: ingredientNames.map((name, i) => ({ id: `temp-${i}`, name })),
-      menu_item_allergens: selectedAllergens.map(aid => ({
-        allergen_id: aid,
-        allergens: allergens.find(a => a.id === aid)!,
-      })),
-      menu_item_tags: selectedTags.map(tid => ({
-        tag_id: tid,
-        dietary_tags: dietaryTags.find(t => t.id === tid)!,
-      })),
-    }
-
-    onUpdate(updated)
+    onSave(buildFullItem(item))
     toast.success('Plato actualizado ✓')
     setOpen(false)
     setLoading(false)
   }
 
-  return (
-    <>
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (mode === 'add') await handleAdd()
+    else await handleEdit()
+  }
+
+  const trigger =
+    mode === 'add' ? (
+      <DialogTrigger
+        render={
+          <Button variant="outline" size="sm" className="cursor-pointer">
+            <Plus className="w-3.5 h-3.5 mr-1" />
+            Plato
+          </Button>
+        }
+      />
+    ) : null
+
+  const editTrigger =
+    mode === 'edit' ? (
       <Tooltip>
         <TooltipTrigger
           render={
@@ -761,107 +658,127 @@ function EditItemDialog({
         />
         <TooltipContent>Editar plato</TooltipContent>
       </Tooltip>
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-xl">Editar plato</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nombre *</Label>
-              <Input
-                placeholder="Ej: Ensalada César"
-                value={form.name}
-                onChange={e => setForm({ ...form, name: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Descripción</Label>
-              <Textarea
-                placeholder="Breve descripción del plato..."
-                value={form.description}
-                onChange={e => setForm({ ...form, description: e.target.value })}
-                rows={2}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Precio (€) *</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="12.50"
-                value={form.price}
-                onChange={e => setForm({ ...form, price: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Ingredientes (separados por comas)</Label>
-              <Input
-                placeholder="Lechuga, pollo, parmesano, crutones, salsa César"
-                value={form.ingredients}
-                onChange={e => setForm({ ...form, ingredients: e.target.value })}
-              />
-            </div>
+    ) : null
 
-            <Separator />
+  const dialogContent = (
+    <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="font-serif text-xl">
+          {mode === 'add' ? 'Añadir plato' : 'Editar plato'}
+        </DialogTitle>
+      </DialogHeader>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label>Nombre *</Label>
+          <Input
+            placeholder="Ej: Ensalada César"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Descripción</Label>
+          <Textarea
+            placeholder="Breve descripción del plato..."
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            rows={2}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Precio (€) *</Label>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="12.50"
+            value={form.price}
+            onChange={(e) => setForm({ ...form, price: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Ingredientes (separados por comas)</Label>
+          <Input
+            placeholder="Lechuga, pollo, parmesano, crutones, salsa César"
+            value={form.ingredients}
+            onChange={(e) => setForm({ ...form, ingredients: e.target.value })}
+          />
+        </div>
 
-            <div className="space-y-2">
-              <Label>Alergenos</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {allergens.map(a => (
-                  <div key={a.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`edit-allergen-${item.id}-${a.id}`}
-                      checked={selectedAllergens.includes(a.id)}
-                      onCheckedChange={() => toggleAllergen(a.id)}
-                    />
-                    <label htmlFor={`edit-allergen-${item.id}-${a.id}`} className="text-sm cursor-pointer">
-                      {a.icon} {a.name}
-                    </label>
-                  </div>
-                ))}
+        <Separator />
+
+        <div className="space-y-2">
+          <Label>Alergenos</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {allergens.map((a) => (
+              <div key={a.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={`${mode}-allergen-${item?.id ?? 'new'}-${a.id}`}
+                  checked={selectedAllergens.includes(a.id)}
+                  onCheckedChange={() => toggleAllergen(a.id)}
+                />
+                <label htmlFor={`${mode}-allergen-${item?.id ?? 'new'}-${a.id}`} className="text-sm cursor-pointer">
+                  {a.icon} {a.name}
+                </label>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
 
-            <Separator />
+        <Separator />
 
-            <div className="space-y-2">
-              <Label>Etiquetas dietéticas</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {dietaryTags.map(t => (
-                  <div key={t.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`edit-tag-${item.id}-${t.id}`}
-                      checked={selectedTags.includes(t.id)}
-                      onCheckedChange={() => toggleTag(t.id)}
-                    />
-                    <label htmlFor={`edit-tag-${item.id}-${t.id}`} className="text-sm cursor-pointer">
-                      {t.icon} {t.name}
-                    </label>
-                  </div>
-                ))}
+        <div className="space-y-2">
+          <Label>Etiquetas dietéticas</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {dietaryTags.map((t) => (
+              <div key={t.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={`${mode}-tag-${item?.id ?? 'new'}-${t.id}`}
+                  checked={selectedTags.includes(t.id)}
+                  onCheckedChange={() => toggleTag(t.id)}
+                />
+                <label htmlFor={`${mode}-tag-${item?.id ?? 'new'}-${t.id}`} className="text-sm cursor-pointer">
+                  {t.icon} {t.name}
+                </label>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
 
-            <div className="flex gap-2 pt-2">
-              <Button type="submit" disabled={loading} className="flex-1 cursor-pointer">
-                {loading ? 'Guardando...' : 'Guardar cambios'}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="cursor-pointer">
-                Cancelar
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </>
+        <div className="flex gap-2 pt-2">
+          <Button type="submit" disabled={loading} className="flex-1 cursor-pointer">
+            {loading ? 'Guardando...' : mode === 'add' ? 'Añadir plato' : 'Guardar cambios'}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => setOpen(false)} className="cursor-pointer">
+            Cancelar
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  )
+
+  if (mode === 'edit') {
+    return (
+      <>
+        {editTrigger}
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+          {dialogContent}
+        </Dialog>
+      </>
+    )
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {trigger}
+      {dialogContent}
+    </Dialog>
   )
 }
 
-function SortableCategory({ categoryId, children }: { categoryId: string, children: (dragHandleProps: any) => React.ReactNode }) {
+function SortableCategory({ categoryId, children }: { categoryId: string; children: (dragHandleProps: any) => React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: categoryId })
   const style = {
     transform: CSS.Transform.toString(transform),

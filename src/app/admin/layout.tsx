@@ -1,5 +1,4 @@
 import { createServerSupabase } from '@/lib/supabase'
-import { redirect } from 'next/navigation'
 import AdminNav from '@/components/admin/AdminNav'
 
 export default async function AdminLayout({
@@ -10,11 +9,16 @@ export default async function AdminLayout({
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // /admin/login no necesita layout con nav
+  // Middleware already redirects unauthenticated users for non-login routes.
+  // If user exists, show full admin chrome; otherwise render children bare (login page).
+  if (!user) {
+    return <>{children}</>
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      {user && <AdminNav user={user} />}
-      <main className={user ? 'pt-14' : ''}>
+      <AdminNav user={user} />
+      <main className="pt-14">
         {children}
       </main>
     </div>

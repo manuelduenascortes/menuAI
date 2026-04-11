@@ -314,7 +314,7 @@ export default function HomePage() {
           <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight text-center mb-12">
             Preguntas frecuentes
           </h2>
-          <Accordion type="single" collapsible className="w-full">
+          <Accordion multiple={false} className="w-full">
             {[
               {
                 q: "¿Cuánto dura la prueba gratuita?",

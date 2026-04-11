@@ -13,29 +13,30 @@ const ChatReq = z.object({
   })).min(1).max(20),
 })
 
-// Cache simple en memoria (se resetea con cada deploy)
+// Cache simple en memoria (se resetea con cada deploy/cold start)
 const menuCache = new Map<string, { data: FullMenu; ts: number }>()
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutos
 
-// Rate limit en memoria simple (IP + Slug)
+// Rate limit en memoria — best-effort on serverless (each instance has its own Map).
+// For production, replace with Upstash Redis: npm install @upstash/ratelimit @upstash/redis
 const rateLimitCache = new Map<string, { count: number; ts: number }>()
-const RATE_LIMIT_TTL = 60 * 1000 // 1 minuto
+const RATE_LIMIT_TTL = 60 * 1000
 const MAX_REQUESTS_PER_MIN = 10
 
 function checkRateLimit(ip: string, slug: string): boolean {
   const key = `ratelimit:${slug}:${ip}`
   const now = Date.now()
   const current = rateLimitCache.get(key)
-  
+
   if (!current || now - current.ts > RATE_LIMIT_TTL) {
     rateLimitCache.set(key, { count: 1, ts: now })
     return true
   }
-  
+
   if (current.count >= MAX_REQUESTS_PER_MIN) {
     return false
   }
-  
+
   current.count += 1
   rateLimitCache.set(key, current)
   return true
@@ -99,11 +100,10 @@ export async function POST(req: NextRequest) {
 
     const { messages, restaurantSlug } = parsed.data
     restaurantSlugForLogs = restaurantSlug
-    
-    // Aproximar y sumar los caracteres de entrada
+
     charsIn = messages.reduce((acc, msg) => acc + msg.content.length, 0)
-    
-    // Validación de Rate Limit
+
+    // Rate Limit
     const ip = req.headers.get('x-forwarded-for') || 'unknown-ip'
     if (!checkRateLimit(ip, restaurantSlug)) {
       console.warn(JSON.stringify({
@@ -128,10 +128,7 @@ export async function POST(req: NextRequest) {
 
     const systemPrompt = buildMenuSystemPromptV2(menu)
 
-    // Agregamos un abort controller para manejar timeout/cancelaciones de stream
     const abortController = new AbortController()
-
-    // Si el request se cancela del lado cliente, abortamos a Groq
     req.signal.addEventListener('abort', () => abortController.abort())
 
     const stream = await groq.chat.completions.create({
@@ -150,9 +147,7 @@ export async function POST(req: NextRequest) {
       async start(controller) {
         try {
           for await (const chunk of stream) {
-            if (req.signal.aborted) {
-              break; // Abortamos inmediatamente si el usuario canceló
-            }
+            if (req.signal.aborted) break
             const text = chunk.choices[0]?.delta?.content ?? ''
             if (text) {
               charsOut += text.length
@@ -170,30 +165,19 @@ export async function POST(req: NextRequest) {
           }
         } finally {
           controller.close()
-          
-          if (req.signal.aborted) {
-            console.log(JSON.stringify({
-              event: 'chat_aborted',
-              slug: restaurantSlugForLogs,
-              latency_ms: Date.now() - startTime,
-              chars_in: charsIn,
-              chars_out: charsOut,
-              approx_tokens: Math.round((charsIn + charsOut) / 4)
-            }))
-          } else {
-            console.log(JSON.stringify({
-              event: 'chat_success',
-              slug: restaurantSlugForLogs,
-              latency_ms: Date.now() - startTime,
-              chars_in: charsIn,
-              chars_out: charsOut,
-              approx_tokens: Math.round((charsIn + charsOut) / 4)
-            }))
-          }
+
+          const event = req.signal.aborted ? 'chat_aborted' : 'chat_success'
+          console.log(JSON.stringify({
+            event,
+            slug: restaurantSlugForLogs,
+            latency_ms: Date.now() - startTime,
+            chars_in: charsIn,
+            chars_out: charsOut,
+            approx_tokens: Math.round((charsIn + charsOut) / 4)
+          }))
         }
       },
       cancel() {
-        // En caso que Next.js cancele el reader
         abortController.abort()
       }
     })
@@ -206,10 +190,9 @@ export async function POST(req: NextRequest) {
     })
   } catch (error: any) {
     if (error.name === 'AbortError') {
-       // Operación cancelada por timeout/cliente. Ya se loguea en stream/abort.
-       return new Response('Aborted', { status: 499 })
+      return new Response('Aborted', { status: 499 })
     }
-    
+
     console.error(JSON.stringify({
       event: 'chat_error',
       slug: restaurantSlugForLogs,

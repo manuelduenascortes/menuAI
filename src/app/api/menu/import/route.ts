@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { groq } from '@/lib/groq'
+import { createServerSupabase } from '@/lib/supabase'
+
+const MAX_PAYLOAD_BYTES = 5 * 1024 * 1024 // 5MB
 
 const EXTRACTION_PROMPT = `Eres un experto en digitalización de cartas de restaurante.
 Extrae TODOS los platos de la carta proporcionada y devuélvelos en formato JSON.
@@ -31,16 +34,32 @@ Formato exacto:
 
 export async function POST(req: NextRequest) {
   try {
+    // Auth check
+    const supabase = await createServerSupabase()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Payload size check
+    const contentLength = req.headers.get('content-length')
+    if (contentLength && parseInt(contentLength) > MAX_PAYLOAD_BYTES) {
+      return NextResponse.json({ error: 'Payload demasiado grande (máx 5MB)' }, { status: 413 })
+    }
+
     const { type, content } = await req.json()
 
     if (!content || !type) {
       return NextResponse.json({ error: 'Missing content or type' }, { status: 400 })
     }
 
+    if (type !== 'image' && type !== 'text') {
+      return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
+    }
+
     let messages: Parameters<typeof groq.chat.completions.create>[0]['messages']
 
     if (type === 'image') {
-      // Image → vision model
       messages = [
         { role: 'system', content: EXTRACTION_PROMPT },
         {
@@ -52,7 +71,6 @@ export async function POST(req: NextRequest) {
         },
       ]
     } else {
-      // Text → text model
       messages = [
         { role: 'system', content: EXTRACTION_PROMPT },
         { role: 'user', content: `Extrae los platos de esta carta:\n\n${content}` },

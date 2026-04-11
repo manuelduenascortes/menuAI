@@ -261,3 +261,42 @@ create trigger restaurants_updated_at
 create trigger menu_items_updated_at
   before update on menu_items
   for each row execute function update_updated_at();
+
+-- ============================================
+-- RPC: Atomic update of menu item + relations
+-- Prevents data loss if insert fails after delete
+-- ============================================
+create or replace function update_menu_item_full(
+  p_item_id uuid,
+  p_name text,
+  p_description text,
+  p_price numeric,
+  p_ingredient_names text[],
+  p_allergen_ids uuid[],
+  p_tag_ids uuid[]
+) returns void as $$
+begin
+  update menu_items
+  set name = p_name, description = p_description, price = p_price
+  where id = p_item_id;
+
+  delete from ingredients where menu_item_id = p_item_id;
+  delete from menu_item_allergens where menu_item_id = p_item_id;
+  delete from menu_item_tags where menu_item_id = p_item_id;
+
+  if array_length(p_ingredient_names, 1) > 0 then
+    insert into ingredients (menu_item_id, name)
+      select p_item_id, unnest(p_ingredient_names);
+  end if;
+
+  if array_length(p_allergen_ids, 1) > 0 then
+    insert into menu_item_allergens (menu_item_id, allergen_id)
+      select p_item_id, unnest(p_allergen_ids);
+  end if;
+
+  if array_length(p_tag_ids, 1) > 0 then
+    insert into menu_item_tags (menu_item_id, tag_id)
+      select p_item_id, unnest(p_tag_ids);
+  end if;
+end;
+$$ language plpgsql security definer;

@@ -44,11 +44,14 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
     setLoading(true)
 
     try {
+      // Skip the hardcoded greeting message — system prompt handles greeting behavior
+      const apiMessages = newMessages.filter((_, i) => i > 0)
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: newMessages,
+          messages: apiMessages,
           restaurantSlug,
         }),
       })
