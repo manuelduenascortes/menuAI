@@ -239,6 +239,9 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
 
     try {
       let itemsDone = 0
+      let failedCats = 0
+      let failedItems = 0
+
       for (let i = 0; i < extracted.categories.length; i++) {
         const cat = extracted.categories[i]
         setSaveProgress(prev => ({ ...prev, catIdx: i + 1 }))
@@ -254,7 +257,11 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
           .select()
           .single()
 
-        if (catErr || !catData) continue
+        if (catErr || !catData) {
+          failedCats++
+          failedItems += cat.items.length
+          continue
+        }
 
         for (let j = 0; j < cat.items.length; j++) {
           const item = cat.items[j]
@@ -275,7 +282,10 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
             .select()
             .single()
 
-          if (itemErr || !itemData) continue
+          if (itemErr || !itemData) {
+            failedItems++
+            continue
+          }
 
           if (item.ingredients?.length) {
             await supabase.from('ingredients').insert(
@@ -297,7 +307,11 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
         }
       }
 
-      toast.success('Carta importada correctamente ✓')
+      if (failedCats > 0 || failedItems > 0) {
+        toast.warning(`Importación parcial: ${failedCats} categorías y ${failedItems} platos no se pudieron guardar.`)
+      } else {
+        toast.success('Carta importada correctamente ✓')
+      }
       setStep('done')
     } catch {
       toast.error('Error guardando en base de datos')
@@ -354,6 +368,7 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
               />
               {imagePreview && (
                 <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imagePreview}
                     alt="Preview carta"
@@ -492,6 +507,7 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
                           {/* Image thumbnail or upload */}
                           {item._imageUrl ? (
                             <div className="relative shrink-0">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={item._imageUrl}
                                 alt={item.name}

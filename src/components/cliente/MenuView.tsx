@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { MessageCircle, X, ChevronDown, AlertTriangle, Leaf, Search } from 'lucide-react'
+import { MessageCircle, AlertTriangle, Leaf, Search } from 'lucide-react'
 import ChatInterface from './ChatInterface'
 import type { Restaurant } from '@/lib/types'
 
@@ -29,12 +29,13 @@ interface Props {
 
 const FILTER_TAGS = ['Vegetariano', 'Vegano', 'Sin gluten', 'Sin lactosa', 'Halal']
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function MenuView({ restaurant, categories, tableId, tableNumber }: Props) {
-  const [activeCategory, setActiveCategory] = useState<string | null>(categories[0]?.id ?? null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(categories[0]?.id ?? null)
   const [activeFilters, setActiveFilters] = useState<string[]>([])
   const [chatOpen, setChatOpen] = useState(false)
 
-  const filteredCategories = categories.map(cat => ({
+  const filteredCategories = useMemo(() => categories.map(cat => ({
     ...cat,
     menu_items: cat.menu_items.filter(item => {
       if (!item.available) return false
@@ -43,7 +44,13 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
         item.menu_item_tags.some(t => t.dietary_tags.name === f)
       )
     }),
-  })).filter(cat => cat.menu_items.length > 0)
+  })).filter(cat => cat.menu_items.length > 0), [categories, activeFilters])
+
+  // If selected category is no longer in filtered results, fall back to first
+  const activeCategory = filteredCategories.some(c => c.id === selectedCategory)
+    ? selectedCategory
+    : filteredCategories[0]?.id ?? null
+  const setActiveCategory = setSelectedCategory
 
   function toggleFilter(name: string) {
     setActiveFilters(prev =>
@@ -65,6 +72,7 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
               )}
             </div>
             {restaurant.logo_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={restaurant.logo_url}
                 alt={restaurant.name}
@@ -196,6 +204,7 @@ function MenuItemCard({ item }: { item: MenuItem }) {
         {item.image_url && (
           <div className="p-3 pr-0 shrink-0">
             <div className="w-24 h-24 sm:w-28 sm:h-28 relative rounded-lg overflow-hidden border border-border/50 bg-muted/50 shadow-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.image_url}
                 alt={item.name}

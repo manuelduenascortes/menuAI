@@ -32,10 +32,20 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
     inputRef.current?.focus()
   }, [])
 
+  const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    return () => { abortRef.current?.abort() }
+  }, [])
+
   async function sendMessage(e: React.FormEvent) {
     e.preventDefault()
     const text = input.trim()
     if (!text || loading) return
+
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
 
     const userMsg: ChatMessage = { role: 'user', content: text }
     const newMessages = [...messages, userMsg]
@@ -54,11 +64,13 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
           messages: apiMessages,
           restaurantSlug,
         }),
+        signal: controller.signal,
       })
 
       if (!res.ok) throw new Error('Error en la respuesta')
+      if (!res.body) throw new Error('No response body')
 
-      const reader = res.body!.getReader()
+      const reader = res.body.getReader()
       const decoder = new TextDecoder()
       let assistantContent = ''
 
@@ -73,9 +85,10 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
           { role: 'assistant', content: assistantContent },
         ])
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
       setMessages(prev => [
-        ...prev,
+        ...prev.slice(0, -1),
         { role: 'assistant', content: 'Lo siento, ha habido un error. Inténtalo de nuevo.' },
       ])
     } finally {
@@ -90,7 +103,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-            <MessageCircle className="w-4.5 h-4.5 text-primary" />
+            <MessageCircle className="w-[18px] h-[18px] text-primary" />
           </div>
           <div>
             <p className="font-medium text-sm text-foreground">Asistente</p>

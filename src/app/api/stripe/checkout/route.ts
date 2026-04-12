@@ -40,14 +40,14 @@ export async function POST(request: NextRequest) {
       .eq('id', restaurant.id)
   }
 
-  const origin = request.headers.get('origin') || ''
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || ''
 
   const session = await getStripe().checkout.sessions.create({
     customer: customerId,
     mode: 'subscription',
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${origin}/admin/dashboard?checkout=success`,
-    cancel_url: `${origin}/trial-expired`,
+    success_url: `${baseUrl}/admin/dashboard?checkout=success`,
+    cancel_url: `${baseUrl}/trial-expired`,
     subscription_data: {
       metadata: { restaurant_id: restaurant.id },
     },

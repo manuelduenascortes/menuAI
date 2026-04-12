@@ -8,6 +8,7 @@ import type { Restaurant } from './types'
 export async function getFullMenuBySlug(
   supabase: SupabaseClient,
   slug: string
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<{ restaurant: Restaurant; categories: any[] } | null> {
   const { data: restaurant } = await supabase
     .from('restaurants')

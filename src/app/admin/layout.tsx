@@ -24,7 +24,7 @@ export default async function AdminLayout({
     .single()
 
   // Allow access if: active subscription, or trial not yet expired, or no restaurant yet (onboarding)
-  const hasActiveSubscription = restaurant?.subscription_status === 'active'
+  const hasActiveSubscription = ['active', 'trialing'].includes(restaurant?.subscription_status ?? '')
   const trialValid = restaurant?.trial_ends_at && new Date(restaurant.trial_ends_at) > new Date()
 
   if (restaurant && !hasActiveSubscription && !trialValid) {

@@ -50,18 +50,21 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
       color: { dark: '#1C1917', light: '#ffffff' },
     })
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if (typeof document === 'undefined') return resolve(qrDataUrl)
-      
+
       const canvas = document.createElement('canvas')
-      // Aumentamos resolución del canvas principal para que no se vea el texto borroso
       canvas.width = 400
       canvas.height = 400
       const ctx = canvas.getContext('2d')
       if (!ctx) return resolve(qrDataUrl)
 
+      const timeout = setTimeout(() => reject(new Error('QR image load timeout')), 10000)
+
       const img = new Image()
+      img.onerror = () => { clearTimeout(timeout); resolve(qrDataUrl) }
       img.onload = () => {
+        clearTimeout(timeout)
         // Puesto que el qrDataUrl es de 300x300 por su llamada anterior de qrcode,  vamos a decirle a qrcode que devuelva 400.
         // Wait, tengo que cambiar también QRCodeLib param, pero en este replace block voy a dibujarlo escalado o cambiar la variable de arriba. Mejor cambiaré todo el block.
         // Solo para no errar, dibujarlo escalado a 400x400 funciona pero se difumina ligeramente.
@@ -85,15 +88,15 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
         // Logo balanceado (42px)
         const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8"/><path d="M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7"/><path d="m2.1 21.8 6.4-6.3"/><path d="m19 5-8 8"/></svg>`
         const svgImg = new Image()
+        svgImg.onerror = () => resolve(canvas.toDataURL('image/png'))
         svgImg.onload = () => {
           ctx.drawImage(svgImg, 400/2 - 21, cy + 10)
-          
-          // Texto bien proporcionado y nítido
+
           ctx.fillStyle = '#1C1917'
           ctx.font = '20px "DM Serif Display", serif'
           ctx.textAlign = 'center'
           ctx.fillText('MenuAI', 400/2, cy + centerSize - 16)
-          
+
           resolve(canvas.toDataURL('image/png'))
         }
         svgImg.src = 'data:image/svg+xml;base64,' + window.btoa(svgString)
@@ -107,9 +110,6 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
     if (!num || num < 1) return
     setLoading(true)
     setError('')
-
-    const tableIdTemp = crypto.randomUUID()
-    const qrDataUrl = await generateQR(tableIdTemp)
 
     const { data, error: dbError } = await supabase
       .from('tables')
@@ -174,22 +174,33 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
     const lastNumber = tables.length > 0 ? Math.max(...tables.map(t => t.number)) : 0
     setLoading(true)
 
-    for (let i = 1; i <= count; i++) {
-      const num = lastNumber + i
-      const { data, error } = await supabase
-        .from('tables')
-        .insert({ restaurant_id: restaurant.id, number: num })
-        .select()
-        .single()
+    let added = 0
+    try {
+      for (let i = 1; i <= count; i++) {
+        const num = lastNumber + i
+        const { data, error } = await supabase
+          .from('tables')
+          .insert({ restaurant_id: restaurant.id, number: num })
+          .select()
+          .single()
 
-      if (!error && data) {
-        const qr = await generateQR(data.id)
-        await supabase.from('tables').update({ qr_code_url: qr }).eq('id', data.id)
-        setTables(prev => [...prev, { ...data, qr_code_url: qr }].sort((a, b) => a.number - b.number))
+        if (!error && data) {
+          const qr = await generateQR(data.id)
+          await supabase.from('tables').update({ qr_code_url: qr }).eq('id', data.id)
+          setTables(prev => [...prev, { ...data, qr_code_url: qr }].sort((a, b) => a.number - b.number))
+          added++
+        }
       }
+    } finally {
+      if (added === count) {
+        toast.success(`${count} mesas añadidas ✓`)
+      } else if (added > 0) {
+        toast.warning(`${added} de ${count} mesas añadidas. Algunas fallaron.`)
+      } else {
+        toast.error('No se pudieron añadir las mesas.')
+      }
+      setLoading(false)
     }
-    toast.success(`${count} mesas añadidas ✓`)
-    setLoading(false)
   }
 
   return (
@@ -264,6 +275,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
               <CardContent className="p-4 space-y-3">
                 {table.qr_code_url ? (
                   <div className="flex justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={table.qr_code_url}
                       alt={`QR Mesa ${table.number}`}

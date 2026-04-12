@@ -20,11 +20,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No hay suscripción' }, { status: 404 })
   }
 
-  const origin = request.headers.get('origin') || ''
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || ''
 
   const session = await getStripe().billingPortal.sessions.create({
     customer: restaurant.stripe_customer_id,
-    return_url: `${origin}/admin/dashboard`,
+    return_url: `${baseUrl}/admin/dashboard`,
   })
 
   return NextResponse.json({ url: session.url })

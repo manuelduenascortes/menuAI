@@ -287,6 +287,16 @@ create or replace function update_menu_item_full(
   p_tag_ids uuid[]
 ) returns void as $$
 begin
+  -- Verify ownership: caller must own the restaurant that owns this item
+  if not exists (
+    select 1 from menu_items mi
+    join categories c on c.id = mi.category_id
+    join restaurants r on r.id = c.restaurant_id
+    where mi.id = p_item_id and r.user_id = auth.uid()
+  ) then
+    raise exception 'No autorizado';
+  end if;
+
   update menu_items
   set name = p_name, description = p_description, price = p_price
   where id = p_item_id;

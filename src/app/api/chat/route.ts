@@ -23,9 +23,23 @@ const rateLimitCache = new Map<string, { count: number; ts: number }>()
 const RATE_LIMIT_TTL = 60 * 1000
 const MAX_REQUESTS_PER_MIN = 10
 
+function pruneCache() {
+  const now = Date.now()
+  for (const [key, entry] of rateLimitCache) {
+    if (now - entry.ts > RATE_LIMIT_TTL) rateLimitCache.delete(key)
+  }
+  for (const [key, entry] of menuCache) {
+    if (now - entry.ts > CACHE_TTL) menuCache.delete(key)
+  }
+}
+
 function checkRateLimit(ip: string, slug: string): boolean {
   const key = `ratelimit:${slug}:${ip}`
   const now = Date.now()
+
+  // Prune stale entries periodically
+  if (rateLimitCache.size > 100) pruneCache()
+
   const current = rateLimitCache.get(key)
 
   if (!current || now - current.ts > RATE_LIMIT_TTL) {
@@ -70,11 +84,15 @@ async function getFullMenu(slug: string): Promise<FullMenu | null> {
     .eq('restaurant_id', restaurant.id)
     .order('display_order')
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const normalizedCategories = (categories ?? []).map((c: any) => ({
     ...c,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     menu_items: (c.menu_items ?? []).map((i: any) => ({
       ...i,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       allergens: (i.menu_item_allergens ?? []).map((x: any) => x.allergens).filter(Boolean),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       dietary_tags: (i.menu_item_tags ?? []).map((x: any) => x.dietary_tags).filter(Boolean),
     })),
   }))
@@ -104,7 +122,7 @@ export async function POST(req: NextRequest) {
     charsIn = messages.reduce((acc, msg) => acc + msg.content.length, 0)
 
     // Rate Limit
-    const ip = req.headers.get('x-forwarded-for') || 'unknown-ip'
+    const ip = (req.headers.get('x-forwarded-for') ?? 'unknown-ip').split(',')[0].trim()
     if (!checkRateLimit(ip, restaurantSlug)) {
       console.warn(JSON.stringify({
         event: 'chat_rate_limit',
@@ -154,8 +172,8 @@ export async function POST(req: NextRequest) {
               controller.enqueue(encoder.encode(text))
             }
           }
-        } catch (streamError: any) {
-          if (streamError.name !== 'AbortError') {
+        } catch (streamError: unknown) {
+          if (streamError instanceof Error && streamError.name !== 'AbortError') {
             console.error(JSON.stringify({
               event: 'chat_stream_error',
               slug: restaurantSlugForLogs,
@@ -188,8 +206,8 @@ export async function POST(req: NextRequest) {
         'Transfer-Encoding': 'chunked',
       },
     })
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'AbortError') {
       return new Response('Aborted', { status: 499 })
     }
 

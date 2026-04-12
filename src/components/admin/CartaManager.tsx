@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -632,7 +632,7 @@ function ItemFormDialog({
     setSelectedTags((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
 
-  function buildFullItem(baseItem: any): MenuItemFull {
+  function buildFullItem(baseItem: { id: string; available: boolean }): MenuItemFull {
     const ingredientNames = form.ingredients
       .split(',')
       .map((i) => i.trim())
@@ -645,14 +645,18 @@ function ItemFormDialog({
       price: parseFloat(form.price),
       image_url: imageUrl ?? undefined,
       ingredients: ingredientNames.map((name, i) => ({ id: `temp-${i}`, name })),
-      menu_item_allergens: selectedAllergens.map((aid) => ({
-        allergen_id: aid,
-        allergens: allergens.find((a) => a.id === aid)!,
-      })),
-      menu_item_tags: selectedTags.map((tid) => ({
-        tag_id: tid,
-        dietary_tags: dietaryTags.find((t) => t.id === tid)!,
-      })),
+      menu_item_allergens: selectedAllergens
+        .map((aid) => {
+          const found = allergens.find((a) => a.id === aid)
+          return found ? { allergen_id: aid, allergens: found } : null
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null),
+      menu_item_tags: selectedTags
+        .map((tid) => {
+          const found = dietaryTags.find((t) => t.id === tid)
+          return found ? { tag_id: tid, dietary_tags: found } : null
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null),
     }
   }
 
@@ -811,6 +815,7 @@ function ItemFormDialog({
           <div className="flex items-center gap-3">
             {imageUrl ? (
               <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={imageUrl} alt="Plato" className="w-20 h-20 rounded-lg object-cover border border-border" />
                 <button
                   type="button"
@@ -953,7 +958,7 @@ function ItemFormDialog({
   )
 }
 
-function SortableCategory({ categoryId, children }: { categoryId: string; children: (dragHandleProps: any) => React.ReactNode }) {
+function SortableCategory({ categoryId, children }: { categoryId: string; children: (dragHandleProps: Record<string, unknown>) => React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: categoryId })
   const style = {
     transform: CSS.Transform.toString(transform),

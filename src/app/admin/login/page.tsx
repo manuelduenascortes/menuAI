@@ -25,12 +25,14 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [mode, setMode] = useState<'login' | 'signup'>(isTrial ? 'signup' : 'login')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccess('')
 
     try {
       if (mode === 'login') {
@@ -41,7 +43,7 @@ function LoginForm() {
       } else {
         const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
-        setError('Revisa tu email para confirmar la cuenta.')
+        setSuccess('Revisa tu email para confirmar la cuenta.')
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error desconocido')
@@ -122,6 +124,12 @@ function LoginForm() {
             {error && (
               <p className="text-sm text-destructive bg-destructive/10 p-4 rounded-xl border border-destructive/20">
                 {error}
+              </p>
+            )}
+
+            {success && (
+              <p className="text-sm text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                {success}
               </p>
             )}
 
