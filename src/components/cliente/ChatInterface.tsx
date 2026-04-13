@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, X, MessageCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import rehypeSanitize from 'rehype-sanitize'
@@ -33,10 +33,36 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
   }, [])
 
   const abortRef = useRef<AbortController | null>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const [liveMessage, setLiveMessage] = useState('')
 
   useEffect(() => {
     return () => { abortRef.current?.abort() }
   }, [])
+
+  // Focus trap
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose()
+      return
+    }
+    if (e.key !== 'Tab') return
+    const container = dialogRef.current
+    if (!container) return
+    const focusable = container.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }, [onClose])
 
   async function sendMessage(e: React.FormEvent) {
     e.preventDefault()
@@ -85,6 +111,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
           { role: 'assistant', content: assistantContent },
         ])
       }
+      setLiveMessage(assistantContent)
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return
       setMessages(prev => [
@@ -98,7 +125,14 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background animate-fade-in">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Chat con asistente IA"
+      onKeyDown={handleKeyDown}
+      className="fixed inset-0 z-50 flex flex-col bg-background animate-fade-in"
+    >
       {/* ─── HEADER ─── */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-3">
@@ -112,7 +146,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
         </div>
         <button
           onClick={onClose}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+          className="w-11 h-11 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
           aria-label="Cerrar chat"
         >
           <X className="w-5 h-5" />
@@ -143,17 +177,19 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
 
         {/* Typing indicator */}
         {loading && messages[messages.length - 1]?.role === 'user' && (
-          <div className="flex justify-start">
+          <div className="flex justify-start" role="status">
             <div className="bg-secondary rounded-2xl rounded-bl-md px-4 py-3.5">
               <div className="flex gap-1.5">
                 <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
+              <span className="sr-only">El asistente está escribiendo</span>
             </div>
           </div>
         )}
         <div ref={bottomRef} />
+        <div aria-live="polite" className="sr-only">{liveMessage}</div>
       </div>
 
       {/* ─── INPUT ─── */}
@@ -164,6 +200,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Escribe tu mensaje..."
+            aria-label="Escribe tu mensaje"
             disabled={loading}
             className="flex-1 bg-secondary text-foreground placeholder:text-muted-foreground rounded-full px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-shadow disabled:opacity-60"
             autoComplete="off"
@@ -171,7 +208,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 transition-opacity hover:opacity-80 disabled:opacity-30 cursor-pointer"
+            className="w-11 h-11 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 transition-opacity hover:opacity-80 disabled:opacity-30 cursor-pointer"
             aria-label="Enviar mensaje"
           >
             <Send className="w-4 h-4" />

@@ -1,6 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 import AdminNav from '@/components/admin/AdminNav'
+import AuthErrorRedirect from '@/components/admin/AuthErrorRedirect'
 
 export default async function AdminLayout({
   children,
@@ -31,10 +32,25 @@ export default async function AdminLayout({
     redirect('/trial-expired')
   }
 
+  // Trial warning banner (< 3 days remaining)
+  const trialDaysLeft = restaurant?.trial_ends_at
+    ? Math.max(0, Math.ceil((new Date(restaurant.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : null
+  const showTrialWarning = !hasActiveSubscription && trialValid && trialDaysLeft !== null && trialDaysLeft <= 3
+
   return (
     <div className="min-h-screen bg-background">
+      <AuthErrorRedirect />
       <AdminNav user={user} />
-      <main className="pt-14">
+      <main id="main-content" className="pt-14">
+        {showTrialWarning && (
+          <div className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-800 px-4 py-2.5 text-center text-sm text-amber-800 dark:text-amber-300">
+            Tu prueba gratuita expira en {trialDaysLeft === 0 ? 'menos de 24 horas' : `${trialDaysLeft} día${trialDaysLeft === 1 ? '' : 's'}`}.{' '}
+            <a href="/trial-expired" className="font-medium underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200">
+              Elige un plan para continuar
+            </a>
+          </div>
+        )}
         {children}
       </main>
     </div>

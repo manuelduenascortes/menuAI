@@ -7,6 +7,10 @@ export interface Restaurant {
   logo_url?: string
   address?: string
   phone?: string
+  trial_ends_at?: string
+  stripe_customer_id?: string
+  stripe_subscription_id?: string
+  subscription_status?: string
   created_at: string
   updated_at: string
 }

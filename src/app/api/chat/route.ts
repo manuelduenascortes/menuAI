@@ -1,7 +1,9 @@
 import { NextRequest } from 'next/server'
-import { groq, GROQ_MODEL } from '@/lib/groq'
+import { groq, GROQ_MODEL_FAST } from '@/lib/groq'
 import { createAdminSupabase } from '@/lib/supabase'
 import { buildMenuSystemPromptV2 } from '@/lib/menu-context'
+import { checkRateLimit } from '@/lib/redis'
+import { getChatUsage, getChatLimit, incrementChatUsage } from '@/lib/usage'
 import type { FullMenu } from '@/lib/types'
 import { z } from 'zod'
 
@@ -10,55 +12,24 @@ const ChatReq = z.object({
   messages: z.array(z.object({
     role: z.enum(['user', 'assistant']),
     content: z.string().min(1).max(1200),
-  })).min(1).max(20),
+  })).min(1).max(10),
 })
 
 // Cache simple en memoria (se resetea con cada deploy/cold start)
 const menuCache = new Map<string, { data: FullMenu; ts: number }>()
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutos
 
-// Rate limit en memoria — best-effort on serverless (each instance has its own Map).
-// For production, replace with Upstash Redis: npm install @upstash/ratelimit @upstash/redis
-const rateLimitCache = new Map<string, { count: number; ts: number }>()
-const RATE_LIMIT_TTL = 60 * 1000
-const MAX_REQUESTS_PER_MIN = 10
-
-function pruneCache() {
-  const now = Date.now()
-  for (const [key, entry] of rateLimitCache) {
-    if (now - entry.ts > RATE_LIMIT_TTL) rateLimitCache.delete(key)
-  }
-  for (const [key, entry] of menuCache) {
-    if (now - entry.ts > CACHE_TTL) menuCache.delete(key)
-  }
-}
-
-function checkRateLimit(ip: string, slug: string): boolean {
-  const key = `ratelimit:${slug}:${ip}`
-  const now = Date.now()
-
-  // Prune stale entries periodically
-  if (rateLimitCache.size > 100) pruneCache()
-
-  const current = rateLimitCache.get(key)
-
-  if (!current || now - current.ts > RATE_LIMIT_TTL) {
-    rateLimitCache.set(key, { count: 1, ts: now })
-    return true
-  }
-
-  if (current.count >= MAX_REQUESTS_PER_MIN) {
-    return false
-  }
-
-  current.count += 1
-  rateLimitCache.set(key, current)
-  return true
-}
-
 async function getFullMenu(slug: string): Promise<FullMenu | null> {
   const cached = menuCache.get(slug)
   if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data
+
+  // Prune stale entries
+  if (menuCache.size > 50) {
+    const now = Date.now()
+    for (const [key, entry] of menuCache) {
+      if (now - entry.ts > CACHE_TTL) menuCache.delete(key)
+    }
+  }
 
   const supabase = createAdminSupabase()
 
@@ -121,9 +92,9 @@ export async function POST(req: NextRequest) {
 
     charsIn = messages.reduce((acc, msg) => acc + msg.content.length, 0)
 
-    // Rate Limit
+    // Rate Limit (Upstash Redis if configured, in-memory fallback)
     const ip = (req.headers.get('x-forwarded-for') ?? 'unknown-ip').split(',')[0].trim()
-    if (!checkRateLimit(ip, restaurantSlug)) {
+    if (!(await checkRateLimit(ip, restaurantSlug))) {
       console.warn(JSON.stringify({
         event: 'chat_rate_limit',
         slug: restaurantSlug,
@@ -144,21 +115,44 @@ export async function POST(req: NextRequest) {
       return new Response('Restaurant not found', { status: 404 })
     }
 
+    // Chat usage limit per restaurant/month
+    const restaurantId = menu.restaurant.id
+    const subscriptionStatus = menu.restaurant.subscription_status ?? null
+    const limit = getChatLimit(subscriptionStatus)
+    const currentUsage = await getChatUsage(restaurantId)
+
+    if (currentUsage >= limit) {
+      console.warn(JSON.stringify({
+        event: 'chat_usage_limit',
+        slug: restaurantSlug,
+        usage: currentUsage,
+        limit,
+        timestamp: new Date().toISOString()
+      }))
+      return new Response(
+        'Nuestro asistente ha alcanzado el límite de consultas de este mes. Puedes seguir consultando la carta directamente.',
+        { status: 429 }
+      )
+    }
+
     const systemPrompt = buildMenuSystemPromptV2(menu)
 
     const abortController = new AbortController()
     req.signal.addEventListener('abort', () => abortController.abort())
 
     const stream = await groq.chat.completions.create({
-      model: GROQ_MODEL,
+      model: GROQ_MODEL_FAST,
       messages: [
         { role: 'system', content: systemPrompt },
         ...messages,
       ],
       stream: true,
-      max_tokens: 1024,
+      max_tokens: 512,
       temperature: 0.7,
     }, { signal: abortController.signal })
+
+    // Increment usage after successful Groq call start
+    await incrementChatUsage(restaurantId).catch(() => {})
 
     const encoder = new TextEncoder()
     const readable = new ReadableStream({

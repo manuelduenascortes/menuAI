@@ -323,6 +323,47 @@ end;
 $$ language plpgsql security definer;
 
 -- ============================================
+-- TABLA: chat_usage (control de uso mensual)
+-- ============================================
+create table if not exists chat_usage (
+  restaurant_id uuid references restaurants(id) on delete cascade not null,
+  month_key text not null, -- formato: '2026-04'
+  count integer not null default 0,
+  primary key (restaurant_id, month_key)
+);
+
+alter table chat_usage enable row level security;
+create policy "Chat usage público lectura" on chat_usage for select using (true);
+
+-- RPC: Incrementar contador de uso (upsert atómico)
+create or replace function increment_chat_usage(
+  p_restaurant_id uuid,
+  p_month_key text
+) returns integer as $$
+declare
+  new_count integer;
+begin
+  insert into chat_usage (restaurant_id, month_key, count)
+  values (p_restaurant_id, p_month_key, 1)
+  on conflict (restaurant_id, month_key)
+  do update set count = chat_usage.count + 1
+  returning count into new_count;
+
+  return new_count;
+end;
+$$ language plpgsql security definer;
+
+-- ============================================
+-- ÍNDICES para foreign keys (rendimiento queries)
+-- ============================================
+create index if not exists idx_categories_restaurant_id on categories(restaurant_id);
+create index if not exists idx_menu_items_category_id on menu_items(category_id);
+create index if not exists idx_tables_restaurant_id on tables(restaurant_id);
+create index if not exists idx_ingredients_menu_item_id on ingredients(menu_item_id);
+create index if not exists idx_menu_item_allergens_menu_item_id on menu_item_allergens(menu_item_id);
+create index if not exists idx_menu_item_tags_menu_item_id on menu_item_tags(menu_item_id);
+
+-- ============================================
 -- Storage: menu-images bucket
 -- ============================================
 insert into storage.buckets (id, name, public)

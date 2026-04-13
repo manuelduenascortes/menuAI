@@ -48,6 +48,7 @@ export default function AdminNav({ user }: AdminNavProps) {
                 <Link
                   key={link.href}
                   href={link.href}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer ${
                     isActive
                       ? 'text-foreground font-medium bg-secondary'
@@ -81,6 +82,7 @@ export default function AdminNav({ user }: AdminNavProps) {
             onClick={() => setMobileOpen(!mobileOpen)}
             className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
             aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -98,6 +100,7 @@ export default function AdminNav({ user }: AdminNavProps) {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
+                aria-current={isActive ? 'page' : undefined}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer ${
                   isActive
                     ? 'text-foreground font-medium bg-secondary'

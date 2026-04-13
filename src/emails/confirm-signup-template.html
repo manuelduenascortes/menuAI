@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Confirma tu cuenta — MenuAI</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+</head>
+<body style="margin: 0; padding: 0; background-color: #FAFAF7; font-family: Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased;">
+
+  <!-- Outer wrapper -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FAFAF7;">
+    <tr>
+      <td align="center" style="padding: 40px 16px;">
+
+        <!-- Card -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; border: 1px solid #E7E0D8;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #8B5E3C; padding: 32px 40px; text-align: center;">
+              <span style="font-family: Georgia, 'Times New Roman', serif; font-size: 28px; color: #FFFFFF; letter-spacing: -0.5px;">&#x1F374; MenuAI</span>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 40px 16px;">
+              <h1 style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #1C1917; margin: 0 0 8px; font-weight: normal;">
+                Bienvenido a MenuAI
+              </h1>
+              <p style="font-size: 16px; line-height: 26px; color: #6B6560; margin: 0;">
+                Confirma tu cuenta para empezar a digitalizar la carta de tu restaurante.
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA Button -->
+          <tr>
+            <td style="padding: 24px 40px 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="{{ .ConfirmationURL }}"
+                       target="_blank"
+                       style="display: inline-block; background-color: #8B5E3C; color: #FFFFFF; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 10px; mso-padding-alt: 0;">
+                      <!--[if mso]>
+                      <i style="letter-spacing: 36px; mso-font-width: -100%; mso-text-raise: 21pt;">&nbsp;</i>
+                      <![endif]-->
+                      <span style="mso-text-raise: 10pt;">Confirmar cuenta</span>
+                      <!--[if mso]>
+                      <i style="letter-spacing: 36px; mso-font-width: -100%;">&nbsp;</i>
+                      <![endif]-->
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr style="border: none; border-top: 1px solid #E7E0D8; margin: 0;" />
+            </td>
+          </tr>
+
+          <!-- Secondary info -->
+          <tr>
+            <td style="padding: 24px 40px 12px;">
+              <p style="font-size: 14px; line-height: 22px; color: #6B6560; margin: 0;">
+                Si no creaste esta cuenta, puedes ignorar este email.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Link fallback -->
+          <tr>
+            <td style="padding: 0 40px 32px;">
+              <p style="font-size: 13px; line-height: 20px; color: #A8A29E; margin: 0;">
+                Si el boton no funciona, copia y pega este enlace en tu navegador:<br />
+                <a href="{{ .ConfirmationURL }}" style="color: #8B5E3C; word-break: break-all;">{{ .ConfirmationURL }}</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!-- End Card -->
+
+        <!-- Footer -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px;">
+          <tr>
+            <td style="padding: 24px 40px; text-align: center;">
+              <p style="font-size: 13px; line-height: 20px; color: #A8A29E; margin: 0;">
+                Este enlace expira en 24 horas.
+              </p>
+              <p style="font-size: 12px; line-height: 18px; color: #A8A29E; margin: 8px 0 0;">
+                &copy; MenuAI. Todos los derechos reservados.
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

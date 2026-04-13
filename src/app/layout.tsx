@@ -28,10 +28,17 @@ export const metadata: Metadata = {
   description:
     "Digitaliza la carta de tu restaurante y ofrece un asistente IA que ayuda a tus clientes a elegir según sus gustos, alergias y preferencias.",
   keywords: ["carta digital", "menú QR", "restaurante", "IA", "asistente", "hostelería", "alérgenos"],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://menuai.es"),
   openGraph: {
     title: "MenuAI — Carta digital inteligente",
-    description: "Digitaliza la carta de tu restaurante con IA",
+    description: "Digitaliza la carta de tu restaurante con IA. Chatbot que recomienda platos según gustos, alergias y preferencias.",
     type: "website",
+    siteName: "MenuAI",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MenuAI — Carta digital inteligente",
+    description: "Digitaliza la carta de tu restaurante con IA",
   },
 };
 
@@ -53,7 +60,20 @@ export default function RootLayout({
       className={`${dmSerif.variable} ${outfit.variable} ${geistMono.variable} h-full`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col"><ThemeProvider><TooltipProvider>{children}</TooltipProvider><Toaster richColors position="bottom-right" /></ThemeProvider></body>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <ThemeProvider>
+          <TooltipProvider>
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-6 focus:py-3 focus:bg-foreground focus:text-background focus:text-sm focus:font-semibold focus:rounded-lg focus:outline-2 focus:outline-ring focus:outline-offset-2 focus:no-underline"
+            >
+              Ir al contenido
+            </a>
+            {children}
+          </TooltipProvider>
+          <Toaster richColors position="bottom-right" />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

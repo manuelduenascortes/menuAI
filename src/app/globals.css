@@ -62,7 +62,7 @@
   --secondary: #F3EDE4;
   --secondary-foreground: #44403C;
   --muted: #F5F0EB;
-  --muted-foreground: #78716C;
+  --muted-foreground: #6B6560;
   --accent: #D4A574;
   --accent-foreground: #1C1917;
   --destructive: #B91C1C;
@@ -229,3 +229,18 @@
 .delay-4 { animation-delay: 0.32s; }
 .delay-5 { animation-delay: 0.40s; }
 .delay-6 { animation-delay: 0.48s; }
+
+/* ─── REDUCED MOTION ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+

@@ -53,10 +53,11 @@ export default function HomePage() {
         {/* Mobile Menu Toggle */}
         <div className="flex items-center gap-4 md:hidden">
           <ThemeToggle />
-          <button 
+          <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="text-foreground p-1"
-            aria-label="Toggle menu"
+            aria-label={isMobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={isMobileMenuOpen}
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -100,6 +101,7 @@ export default function HomePage() {
       )}
 
       {/* ─── HERO ─── */}
+      <main id="main-content">
       <section className="px-[6vw] pt-32 pb-20 border-b border-border">
         {/* Badge */}
         <div className="animate-fade-up inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-card mb-10 text-sm text-muted-foreground">
@@ -373,6 +375,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      </main>
+
       {/* ─── FOOTER ─── */}
       <footer className="px-[6vw] py-16 border-t border-border bg-card/30">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
@@ -405,8 +409,8 @@ export default function HomePage() {
           <div>
             <p className="font-serif text-lg text-foreground mb-6">Legal</p>
             <ul className="space-y-4 text-sm font-medium text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">Política de Privacidad</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Términos y Condiciones</a></li>
+              <li><Link href="/privacidad" className="hover:text-foreground transition-colors">Política de Privacidad</Link></li>
+              <li><Link href="/terminos" className="hover:text-foreground transition-colors">Términos y Condiciones</Link></li>
             </ul>
           </div>
         </div>

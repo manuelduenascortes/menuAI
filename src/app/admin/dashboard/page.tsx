@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import RestaurantSetupForm from '@/components/admin/RestaurantSetupForm'
 import OnboardingChecklist from '@/components/admin/OnboardingChecklist'
-import { BookOpen, QrCode, CheckCircle2, ExternalLink, MapPin, Phone, Store, Pencil } from 'lucide-react'
+import { BookOpen, QrCode, CheckCircle2, ExternalLink, MapPin, Phone, Store, Pencil, CreditCard } from 'lucide-react'
+import SubscriptionCard from '@/components/admin/SubscriptionCard'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabase()
@@ -103,6 +104,13 @@ export default async function DashboardPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* ─── SUSCRIPCIÓN ─── */}
+          <SubscriptionCard
+            subscriptionStatus={restaurant.subscription_status}
+            trialEndsAt={restaurant.trial_ends_at}
+            stripeCustomerId={restaurant.stripe_customer_id}
+          />
 
           {/* ─── ONBOARDING ─── */}
           <OnboardingChecklist

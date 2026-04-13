@@ -1,10 +1,10 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase-client'
-import { UtensilsCrossed, Loader2, ChevronLeft } from 'lucide-react'
+import { UtensilsCrossed, Loader2, ChevronLeft, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,13 +20,43 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const isTrial = searchParams.get('trial') === '1'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [mode, setMode] = useState<'login' | 'signup'>(isTrial ? 'signup' : 'login')
+  const [mode, setMode] = useState<'login' | 'signup' | 'reset' | 'update_password'>('login')
+  const [mounted, setMounted] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const isTrial = searchParams.get('trial') === '1'
+    const urlMode = searchParams.get('mode')
+    const urlError = searchParams.get('error')
+
+    if (urlError) {
+      setError(urlError)
+    }
+
+    if (urlMode === 'update_password') {
+      setMode('update_password')
+      setSuccess('Por favor, introduce tu nueva contraseña.')
+    } else if (isTrial) {
+      setMode('signup')
+    }
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setMode('update_password')
+        setSuccess('Por favor, introduce tu nueva contraseña.')
+      }
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
+  }, [searchParams])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -35,7 +65,19 @@ function LoginForm() {
     setSuccess('')
 
     try {
-      if (mode === 'login') {
+      if (mode === 'reset') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/api/auth/callback/recovery`,
+        })
+        if (error) throw error
+        setSuccess('Te hemos enviado un email para restablecer tu contraseña.')
+      } else if (mode === 'update_password') {
+        const { error } = await supabase.auth.updateUser({ password })
+        if (error) throw error
+        setSuccess('Contraseña actualizada correctamente.')
+        setMode('login')
+        setPassword('')
+      } else if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
         router.push('/admin/dashboard')
@@ -46,10 +88,16 @@ function LoginForm() {
         setSuccess('Revisa tu email para confirmar la cuenta.')
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error desconocido')
+      console.error('Auth error:', err)
+      setError(err instanceof Error ? err.message : JSON.stringify(err))
     } finally {
       setLoading(false)
     }
+  }
+
+  // Prevents hydration mismatch while allowing SSR
+  if (!mounted) {
+    return <div className="min-h-screen bg-background" /> // Placeholder to prevent hydration mismatch
   }
 
   return (
@@ -82,44 +130,69 @@ function LoginForm() {
       </div>
 
       {/* ─── RIGHT: FORM ─── */}
-      <div className="md:w-1/2 flex items-center justify-center p-6 md:p-12 relative bg-background">
+      <div id="main-content" className="md:w-1/2 flex items-center justify-center p-6 md:p-12 relative bg-background">
         <div className="w-full max-w-md animate-fade-up">
           <div className="mb-10 text-center md:text-left">
             <h2 className="font-serif text-3xl text-foreground mb-2">
-              {mode === 'login' ? 'Bienvenido de nuevo' : (isTrial ? 'Prueba gratuita de 14 días' : 'Crea tu cuenta')}
+              {mode === 'reset' ? 'Recuperar contraseña' : mode === 'update_password' ? 'Nueva contraseña' : mode === 'login' ? 'Bienvenido de nuevo' : (searchParams.get('trial') === '1' ? 'Prueba gratuita de 14 días' : 'Crea tu cuenta')}
             </h2>
             <p key={mode} className="text-base text-muted-foreground animate-fade-up">
-              {mode === 'login' ? 'Accede a tu panel de gestión' : (isTrial ? 'Crea tu cuenta para empezar. Sin tarjeta de crédito.' : 'Comienza tu prueba y digitaliza tu restaurante')}
+              {mode === 'reset' ? 'Introduce tu email y te enviaremos un enlace' : mode === 'update_password' ? 'Crea una contraseña segura para tu cuenta' : mode === 'login' ? 'Accede a tu panel de gestión' : (searchParams.get('trial') === '1' ? 'Crea tu cuenta para empezar. Sin tarjeta de crédito.' : 'Comienza tu prueba y digitaliza tu restaurante')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2.5">
-              <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
-              <Input
-                id="login-email"
-                type="email"
-                placeholder="restaurante@ejemplo.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                className="h-12 text-base px-4"
-              />
-            </div>
-            <div className="space-y-2.5">
-              <Label htmlFor="login-password" className="text-sm font-medium">Contraseña</Label>
-              <Input
-                id="login-password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                className="h-12 text-base px-4"
-              />
-            </div>
+            {mode !== 'update_password' && (
+              <div className="space-y-2.5">
+                <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
+                <Input
+                  id="login-email"
+                  type="email"
+                  placeholder="restaurante@ejemplo.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  className="h-12 text-base px-4"
+                />
+              </div>
+            )}
+            {mode !== 'reset' && (
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="login-password" className="text-sm font-medium">Contraseña</Label>
+                  {mode === 'login' && (
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                      onClick={() => { setMode('reset'); setError(''); setSuccess('') }}
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    className="h-12 text-base px-4 pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {error && (
               <p className="text-sm text-destructive bg-destructive/10 p-4 rounded-xl border border-destructive/20">
@@ -137,20 +210,34 @@ function LoginForm() {
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'
+                mode === 'reset' ? 'Enviar enlace' : mode === 'update_password' ? 'Actualizar contraseña' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'
               )}
             </Button>
 
-            <p className="text-center text-sm text-muted-foreground mt-8">
-              {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
-              <button
-                type="button"
-                className="text-primary font-medium hover:underline underline-offset-4 cursor-pointer transition-all"
-                onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-              >
-                {mode === 'login' ? 'Regístrate aquí' : 'Inicia sesión'}
-              </button>
-            </p>
+            {mode !== 'update_password' && (
+              <p className="text-center text-sm text-muted-foreground mt-8">
+                {mode === 'reset' ? (
+                  <button
+                    type="button"
+                    className="text-primary font-medium hover:underline underline-offset-4 cursor-pointer transition-all"
+                    onClick={() => { setMode('login'); setError(''); setSuccess('') }}
+                  >
+                    Volver a iniciar sesión
+                  </button>
+                ) : (
+                  <>
+                    {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
+                    <button
+                      type="button"
+                      className="text-primary font-medium hover:underline underline-offset-4 cursor-pointer transition-all"
+                      onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setSuccess('') }}
+                    >
+                      {mode === 'login' ? 'Regístrate aquí' : 'Inicia sesión'}
+                    </button>
+                  </>
+                )}
+              </p>
+            )}
           </form>
         </div>
       </div>

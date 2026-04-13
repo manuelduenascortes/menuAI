@@ -88,11 +88,12 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
           </div>
 
           {/* Dietary filters */}
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div role="group" aria-label="Filtros dietéticos" className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {FILTER_TAGS.map(tag => (
               <button
                 key={tag}
                 onClick={() => toggleFilter(tag)}
+                aria-pressed={activeFilters.includes(tag)}
                 className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
                   activeFilters.includes(tag)
                     ? 'bg-primary text-primary-foreground border-primary'
@@ -105,7 +106,7 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
           </div>
 
           {/* Category navigation */}
-          <div className="flex gap-1.5 mt-2.5 overflow-x-auto pb-0.5 scrollbar-hide">
+          <nav aria-label="Categorías del menú" className="flex gap-1.5 mt-2.5 overflow-x-auto pb-0.5 scrollbar-hide">
             {filteredCategories.map(cat => (
               <button
                 key={cat.id}
@@ -113,6 +114,7 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
                   setActiveCategory(cat.id)
                   document.getElementById(`cat-${cat.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }}
+                aria-current={activeCategory === cat.id ? 'true' : undefined}
                 className={`shrink-0 text-sm px-3.5 py-1.5 rounded-full transition-colors cursor-pointer ${
                   activeCategory === cat.id
                     ? 'bg-foreground text-background font-medium'
@@ -123,12 +125,12 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
                 {cat.name}
               </button>
             ))}
-          </div>
+          </nav>
         </div>
       </header>
 
       {/* ─── MENU CONTENT ─── */}
-      <main className="max-w-2xl mx-auto px-5 py-6 pb-28 space-y-10">
+      <main id="main-content" className="max-w-2xl mx-auto px-5 py-6 pb-28 space-y-10">
         {filteredCategories.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <Search className="w-8 h-8 mx-auto mb-3 opacity-40" />
@@ -153,11 +155,13 @@ export default function MenuView({ restaurant, categories, tableId, tableNumber 
                 )}
               </div>
 
-              <div className="space-y-3">
+              <ul role="list" className="space-y-3">
                 {cat.menu_items.map(item => (
-                  <MenuItemCard key={item.id} item={item} />
+                  <li key={item.id}>
+                    <MenuItemCard item={item} />
+                  </li>
                 ))}
-              </div>
+              </ul>
             </section>
           ))
         )}
@@ -251,6 +255,7 @@ function MenuItemCard({ item }: { item: MenuItem }) {
               {item.menu_item_allergens.length > 3 && (
                 <span className="text-xs text-muted-foreground">
                   +{item.menu_item_allergens.length - 3}
+                  <span className="sr-only"> alérgenos más</span>
                 </span>
               )}
             </div>
