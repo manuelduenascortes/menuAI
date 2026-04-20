@@ -2,7 +2,8 @@ import { createServerSupabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import RestaurantEditForm from '@/components/admin/RestaurantEditForm'
-import { Settings } from 'lucide-react'
+import PasswordChangeForm from '@/components/admin/PasswordChangeForm'
+import { Settings, Shield } from 'lucide-react'
 
 export default async function AjustesPage() {
   const supabase = await createServerSupabase()
@@ -25,20 +26,37 @@ export default async function AjustesPage() {
         <p className="text-muted-foreground mt-1">Edita los datos de tu restaurante</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-serif text-xl flex items-center gap-2">
-            <Settings className="w-5 h-5 text-primary" />
-            Datos del negocio
-          </CardTitle>
-          <CardDescription>
-            URL pública: <span className="font-mono">/{restaurant.slug}</span>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RestaurantEditForm restaurant={restaurant} />
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-serif text-xl flex items-center gap-2">
+              <Settings className="w-5 h-5 text-primary" />
+              Datos del negocio
+            </CardTitle>
+            <CardDescription>
+              URL pública: <span className="font-mono">/{restaurant.slug}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RestaurantEditForm restaurant={restaurant} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-serif text-xl flex items-center gap-2">
+              <Shield className="w-5 h-5 text-primary" />
+              Seguridad
+            </CardTitle>
+            <CardDescription>
+              Actualiza la contraseña de tu cuenta
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PasswordChangeForm />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
