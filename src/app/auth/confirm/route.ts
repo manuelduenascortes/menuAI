@@ -16,9 +16,7 @@ export async function GET(request: Request) {
 
     if (!error) {
       if (type === 'recovery') {
-        return NextResponse.redirect(
-          `${origin}/admin/login?mode=update_password`,
-        )
+        return NextResponse.redirect(`${origin}/auth/update-password`)
       }
       return NextResponse.redirect(`${origin}/admin/dashboard`)
     }
