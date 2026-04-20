@@ -6,6 +6,7 @@ import { UtensilsCrossed, Loader2, Eye, EyeOff } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 function getPasswordStrength(pwd: string): { level: 0 | 1 | 2 | 3; label: string; color: string } {
@@ -49,6 +50,7 @@ export default function UpdatePasswordPage() {
       setSuccess('Contraseña actualizada correctamente. Redirigiendo...')
       setTimeout(() => { window.location.href = '/admin/dashboard' }, 1500)
     } catch (err: unknown) {
+      console.error('Update password error:', err)
       setError(err instanceof Error ? err.message : 'Error desconocido')
     } finally {
       setLoading(false)
@@ -74,9 +76,9 @@ export default function UpdatePasswordPage() {
           <p className="text-muted-foreground mb-6">
             Este enlace ya no es válido o ha expirado. Solicita uno nuevo desde la pantalla de inicio de sesión.
           </p>
-          <a href="/admin/login" className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'w-full justify-center')}>
+          <Link href="/admin/login" className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'w-full justify-center')}>
             Volver al inicio de sesión
-          </a>
+          </Link>
         </div>
       </div>
     )
@@ -108,13 +110,14 @@ export default function UpdatePasswordPage() {
                 required
                 autoComplete="new-password"
                 className="h-12 text-base px-4 pr-12"
-                minLength={6}
+                minLength={8}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 tabIndex={-1}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -148,12 +151,14 @@ export default function UpdatePasswordPage() {
                 required
                 autoComplete="new-password"
                 className={`h-12 text-base px-4 pr-12 ${mismatch ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                aria-invalid={mismatch ? true : undefined}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 tabIndex={-1}
+                aria-label={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
                 {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -164,7 +169,7 @@ export default function UpdatePasswordPage() {
           </div>
 
           {error && (
-            <p className="text-sm text-destructive bg-destructive/10 p-4 rounded-xl border border-destructive/20">
+            <p role="alert" className="text-sm text-destructive bg-destructive/10 p-4 rounded-xl border border-destructive/20">
               {error}
             </p>
           )}
