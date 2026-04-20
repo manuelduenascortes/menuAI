@@ -98,7 +98,7 @@ export default function PasswordChangeForm() {
             onChange={e => setConfirmPassword(e.target.value)}
             required
             autoComplete="new-password"
-            className="h-11 pr-12"
+            className={`h-11 pr-12 ${mismatch ? 'border-destructive focus-visible:ring-destructive' : ''}`}
             aria-invalid={mismatch ? true : undefined}
           />
           <button

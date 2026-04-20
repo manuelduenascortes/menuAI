@@ -25,36 +25,21 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [mode, setMode] = useState<'login' | 'signup' | 'reset' | 'update_password'>('login')
+  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login')
   const [mounted, setMounted] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     setMounted(true)
     const isTrial = searchParams.get('trial') === '1'
-    const urlMode = searchParams.get('mode')
     const urlError = searchParams.get('error')
 
     if (urlError) {
       setError(urlError)
     }
 
-    if (urlMode === 'update_password') {
-      setMode('update_password')
-      setSuccess('Por favor, introduce tu nueva contraseña.')
-    } else if (isTrial) {
+    if (isTrial) {
       setMode('signup')
-    }
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setMode('update_password')
-        setSuccess('Por favor, introduce tu nueva contraseña.')
-      }
-    })
-
-    return () => {
-      authListener.subscription.unsubscribe()
     }
   }, [searchParams])
 
@@ -71,12 +56,6 @@ function LoginForm() {
         })
         if (error) throw error
         setSuccess('Te hemos enviado un email para restablecer tu contraseña.')
-      } else if (mode === 'update_password') {
-        const { error } = await supabase.auth.updateUser({ password })
-        if (error) throw error
-        setSuccess('Contraseña actualizada correctamente.')
-        setMode('login')
-        setPassword('')
       } else if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
@@ -134,29 +113,27 @@ function LoginForm() {
         <div className="w-full max-w-md animate-fade-up">
           <div className="mb-10 text-center md:text-left">
             <h2 className="font-serif text-3xl text-foreground mb-2">
-              {mode === 'reset' ? 'Recuperar contraseña' : mode === 'update_password' ? 'Nueva contraseña' : mode === 'login' ? 'Bienvenido de nuevo' : (searchParams.get('trial') === '1' ? 'Prueba gratuita de 14 días' : 'Crea tu cuenta')}
+              {mode === 'reset' ? 'Recuperar contraseña' : mode === 'login' ? 'Bienvenido de nuevo' : (searchParams.get('trial') === '1' ? 'Prueba gratuita de 14 días' : 'Crea tu cuenta')}
             </h2>
             <p key={mode} className="text-base text-muted-foreground animate-fade-up">
-              {mode === 'reset' ? 'Introduce tu email y te enviaremos un enlace' : mode === 'update_password' ? 'Crea una contraseña segura para tu cuenta' : mode === 'login' ? 'Accede a tu panel de gestión' : (searchParams.get('trial') === '1' ? 'Crea tu cuenta para empezar. Sin tarjeta de crédito.' : 'Comienza tu prueba y digitaliza tu restaurante')}
+              {mode === 'reset' ? 'Introduce tu email y te enviaremos un enlace' : mode === 'login' ? 'Accede a tu panel de gestión' : (searchParams.get('trial') === '1' ? 'Crea tu cuenta para empezar. Sin tarjeta de crédito.' : 'Comienza tu prueba y digitaliza tu restaurante')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {mode !== 'update_password' && (
-              <div className="space-y-2.5">
-                <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
-                <Input
-                  id="login-email"
-                  type="email"
-                  placeholder="restaurante@ejemplo.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  className="h-12 text-base px-4"
-                />
-              </div>
-            )}
+            <div className="space-y-2.5">
+              <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
+              <Input
+                id="login-email"
+                type="email"
+                placeholder="restaurante@ejemplo.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                className="h-12 text-base px-4"
+              />
+            </div>
             {mode !== 'reset' && (
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
@@ -210,34 +187,32 @@ function LoginForm() {
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                mode === 'reset' ? 'Enviar enlace' : mode === 'update_password' ? 'Actualizar contraseña' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'
+                mode === 'reset' ? 'Enviar enlace' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'
               )}
             </Button>
 
-            {mode !== 'update_password' && (
-              <p className="text-center text-sm text-muted-foreground mt-8">
-                {mode === 'reset' ? (
+            <p className="text-center text-sm text-muted-foreground mt-8">
+              {mode === 'reset' ? (
+                <button
+                  type="button"
+                  className="text-primary font-medium hover:underline underline-offset-4 cursor-pointer transition-all"
+                  onClick={() => { setMode('login'); setError(''); setSuccess('') }}
+                >
+                  Volver a iniciar sesión
+                </button>
+              ) : (
+                <>
+                  {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
                   <button
                     type="button"
                     className="text-primary font-medium hover:underline underline-offset-4 cursor-pointer transition-all"
-                    onClick={() => { setMode('login'); setError(''); setSuccess('') }}
+                    onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setSuccess('') }}
                   >
-                    Volver a iniciar sesión
+                    {mode === 'login' ? 'Regístrate aquí' : 'Inicia sesión'}
                   </button>
-                ) : (
-                  <>
-                    {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
-                    <button
-                      type="button"
-                      className="text-primary font-medium hover:underline underline-offset-4 cursor-pointer transition-all"
-                      onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setSuccess('') }}
-                    >
-                      {mode === 'login' ? 'Regístrate aquí' : 'Inicia sesión'}
-                    </button>
-                  </>
-                )}
-              </p>
-            )}
+                </>
+              )}
+            </p>
           </form>
         </div>
       </div>
