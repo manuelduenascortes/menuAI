@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { groq, GROQ_MODEL_FAST } from '@/lib/groq'
+import { groq, GROQ_MODEL } from '@/lib/groq'
 import { createAdminSupabase } from '@/lib/supabase'
 import { buildMenuSystemPromptV2 } from '@/lib/menu-context'
 import { checkRateLimit } from '@/lib/redis'
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
     req.signal.addEventListener('abort', () => abortController.abort())
 
     const stream = await groq.chat.completions.create({
-      model: GROQ_MODEL_FAST,
+      model: GROQ_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         ...messages,
