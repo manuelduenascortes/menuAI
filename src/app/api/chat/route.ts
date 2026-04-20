@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
       ],
       stream: true,
       max_tokens: 512,
-      temperature: 0.7,
+      temperature: 0.1,
     }, { signal: abortController.signal })
 
     // Increment usage after successful Groq call start
