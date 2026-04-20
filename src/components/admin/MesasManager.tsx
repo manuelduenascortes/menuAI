@@ -33,9 +33,9 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
   const [multiDialog, setMultiDialog] = useState(false)
   const [multiCount, setMultiCount] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const baseUrl = typeof window !== 'undefined'
-    ? window.location.origin
-    : process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ??
+    (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')
 
   function getTableUrl(tableId: string) {
     return `${baseUrl}/${restaurant.slug}/mesa/${tableId}`
