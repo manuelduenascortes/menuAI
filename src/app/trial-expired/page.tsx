@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { UtensilsCrossed, Clock, LogOut, Loader2, CheckCircle2 } from 'lucide-react'
+import { UtensilsCrossed, Clock, LogOut, Loader2, CheckCircle2, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
@@ -73,6 +73,14 @@ export default function TrialExpiredPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <Button
+        variant="ghost"
+        onClick={() => router.back()}
+        className="absolute top-6 left-6 text-muted-foreground hover:text-foreground cursor-pointer"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Volver
+      </Button>
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-destructive/10 mb-8">
