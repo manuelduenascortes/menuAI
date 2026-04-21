@@ -20,8 +20,6 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  // Start with 100dvh so the chat always covers the full screen on first render
-  const [viewportStyle, setViewportStyle] = useState<React.CSSProperties>({ height: '100dvh' })
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -29,30 +27,8 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus()
-  }, [])
-
-  // Track visualViewport so the input stays above the virtual keyboard (iOS Safari)
-  useEffect(() => {
-    const vv = window.visualViewport
-    if (!vv) return
-    const update = () => {
-      setViewportStyle({
-        height: `${vv.height}px`,
-        top: `${vv.offsetTop}px`,
-      })
-      // Keep latest message visible when keyboard opens
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
-    update()
-    vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
-    return () => {
-      vv.removeEventListener('resize', update)
-      vv.removeEventListener('scroll', update)
-    }
   }, [])
 
   const abortRef = useRef<AbortController | null>(null)
@@ -154,8 +130,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
       aria-modal="true"
       aria-label="Chat con asistente IA"
       onKeyDown={handleKeyDown}
-      className="fixed inset-x-0 top-0 z-50 flex flex-col bg-background animate-fade-in"
-      style={viewportStyle}
+      className="fixed inset-0 z-50 flex flex-col bg-background animate-fade-in"
     >
       {/* ─── HEADER ─── */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
@@ -178,7 +153,10 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
       </div>
 
       {/* ─── MESSAGES ─── */}
-      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
+      <div
+        className="flex-1 overflow-y-auto px-5 py-5 space-y-4"
+        onTouchStart={() => inputRef.current?.blur()}
+      >
         {messages.map((msg, i) => (
           <div
             key={i}
