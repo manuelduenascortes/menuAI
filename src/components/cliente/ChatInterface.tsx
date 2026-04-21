@@ -31,6 +31,13 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
     inputRef.current?.focus()
   }, [])
 
+  // Prevent background menu from showing through when chat is open
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
   const abortRef = useRef<AbortController | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const [liveMessage, setLiveMessage] = useState('')
@@ -130,7 +137,8 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
       aria-modal="true"
       aria-label="Chat con asistente IA"
       onKeyDown={handleKeyDown}
-      className="fixed inset-0 z-50 flex flex-col bg-background animate-fade-in"
+      className="fixed inset-x-0 top-0 z-50 flex flex-col bg-background animate-fade-in"
+      style={{ height: '100dvh' }}
     >
       {/* ─── HEADER ─── */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
