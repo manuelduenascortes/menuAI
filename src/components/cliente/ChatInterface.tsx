@@ -20,7 +20,8 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [viewportStyle, setViewportStyle] = useState<React.CSSProperties>({})
+  // Start with 100dvh so the chat always covers the full screen on first render
+  const [viewportStyle, setViewportStyle] = useState<React.CSSProperties>({ height: '100dvh' })
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -33,7 +34,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
     inputRef.current?.focus()
   }, [])
 
-  // Adjust layout when virtual keyboard appears/disappears
+  // Track visualViewport so the input stays above the virtual keyboard (iOS Safari)
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
@@ -42,6 +43,8 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
         height: `${vv.height}px`,
         top: `${vv.offsetTop}px`,
       })
+      // Keep latest message visible when keyboard opens
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
     update()
     vv.addEventListener('resize', update)
@@ -223,7 +226,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
             placeholder="Escribe tu mensaje..."
             aria-label="Escribe tu mensaje"
             disabled={loading}
-            className="flex-1 bg-secondary text-foreground placeholder:text-muted-foreground rounded-full px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-shadow disabled:opacity-60"
+            className="flex-1 bg-secondary text-foreground placeholder:text-muted-foreground rounded-full px-4 py-2.5 text-base outline-none focus:ring-2 focus:ring-primary/30 transition-shadow disabled:opacity-60"
             autoComplete="off"
           />
           <button
