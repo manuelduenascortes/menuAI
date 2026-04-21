@@ -20,6 +20,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [viewportStyle, setViewportStyle] = useState<React.CSSProperties>({})
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -30,6 +31,25 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
   // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus()
+  }, [])
+
+  // Adjust layout when virtual keyboard appears/disappears
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () => {
+      setViewportStyle({
+        height: `${vv.height}px`,
+        top: `${vv.offsetTop}px`,
+      })
+    }
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
   }, [])
 
   const abortRef = useRef<AbortController | null>(null)
@@ -131,7 +151,8 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
       aria-modal="true"
       aria-label="Chat con asistente IA"
       onKeyDown={handleKeyDown}
-      className="fixed inset-0 z-50 flex flex-col bg-background animate-fade-in"
+      className="fixed inset-x-0 top-0 z-50 flex flex-col bg-background animate-fade-in"
+      style={viewportStyle}
     >
       {/* ─── HEADER ─── */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
