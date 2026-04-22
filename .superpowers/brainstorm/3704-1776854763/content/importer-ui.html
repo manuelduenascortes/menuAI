@@ -1,0 +1,35 @@
+<h2>Vista previa del importador con PDF</h2>
+<p class="subtitle">¿Cómo se ve la integración del tab de PDF en el importador actual?</p>
+
+<div class="mockup" style="max-width:560px;margin:0 auto">
+  <div class="mockup-header">Importar carta con IA</div>
+  <div class="mockup-body" style="padding:20px;font-family:sans-serif">
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;border:1px solid #e7e0d8;border-radius:10px;overflow:hidden;margin-bottom:20px">
+      <button style="flex:1;padding:10px;background:#f3ede4;border:none;font-size:13px;color:#6b6560;cursor:pointer">📷 Foto</button>
+      <button style="flex:1;padding:10px;background:#f3ede4;border:none;font-size:13px;color:#6b6560;cursor:pointer;border-left:1px solid #e7e0d8">📄 PDF</button>
+      <button style="flex:1;padding:10px;background:#fff;border:none;font-size:13px;color:#8B5E3C;font-weight:600;cursor:pointer;border-left:1px solid #e7e0d8">✏️ Texto</button>
+    </div>
+
+    <!-- PDF tab content (active) -->
+    <div style="border:2px dashed #d4a574;border-radius:12px;padding:32px;text-align:center;background:#fafaf7">
+      <div style="font-size:36px;margin-bottom:8px">📄</div>
+      <div style="font-weight:600;color:#1c1917;margin-bottom:4px">Sube tu carta en PDF</div>
+      <div style="font-size:13px;color:#6b6560;margin-bottom:16px">Digital o escaneado · Hasta 20 MB · Todas las páginas</div>
+      <button style="background:#8B5E3C;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer">Seleccionar PDF</button>
+    </div>
+
+    <!-- Progress state (shown after upload) -->
+    <div style="margin-top:20px;background:#f5f0eb;border-radius:10px;padding:16px">
+      <div style="font-size:13px;font-weight:600;color:#1c1917;margin-bottom:8px">Extrayendo carta…</div>
+      <div style="background:#e7e0d8;border-radius:999px;height:8px;overflow:hidden;margin-bottom:6px">
+        <div style="background:#8B5E3C;width:60%;height:100%;border-radius:999px;transition:width 0.3s"></div>
+      </div>
+      <div style="font-size:12px;color:#6b6560">Página 3 de 5 · 12 platos encontrados hasta ahora</div>
+    </div>
+
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px;text-align:center">Una vez terminado, aparece la misma pantalla de revisión que con foto o texto</p>

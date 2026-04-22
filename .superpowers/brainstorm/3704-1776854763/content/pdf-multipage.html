@@ -1,0 +1,55 @@
+<h2>¿Cómo manejar PDFs de varias páginas?</h2>
+<p class="subtitle">El restaurante sube un PDF de 5 páginas. ¿Qué hace la app?</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Procesar todo automáticamente</h3>
+      <p>La IA analiza todas las páginas de golpe y extrae la carta completa. El usuario solo sube el PDF y espera el resultado — sin pasos extra.</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>Ventajas</h4><ul><li>Flujo más simple</li><li>Menos clics</li></ul></div>
+        <div class="cons"><h4>Riesgo</h4><ul><li>PDFs muy largos pueden tardar más o exceder límites de la IA</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Selector de páginas</h3>
+      <p>Se muestran miniaturas de cada página. El usuario elige cuáles incluir antes de lanzar la extracción.</p>
+      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
+        <div style="width:56px;height:72px;background:#e5e7eb;border:2px solid #8B5E3C;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#8B5E3C;font-weight:600">Pág 1 ✓</div>
+        <div style="width:56px;height:72px;background:#e5e7eb;border:2px solid #8B5E3C;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#8B5E3C;font-weight:600">Pág 2 ✓</div>
+        <div style="width:56px;height:72px;background:#f3f4f6;border:2px solid #d1d5db;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9ca3af">Pág 3</div>
+        <div style="width:56px;height:72px;background:#f3f4f6;border:2px solid #d1d5db;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9ca3af">Portada</div>
+      </div>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>Ventajas</h4><ul><li>Control total</li><li>Excluir portadas/contraportadas innecesarias</li></ul></div>
+        <div class="cons"><h4>Coste</h4><ul><li>Más pasos para el usuario</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Procesar página a página</h3>
+      <p>La IA procesa cada página por separado y combina los resultados al final. El usuario ve una barra de progreso: "Procesando página 2 de 5…"</p>
+      <div style="margin-top:12px;background:#f3f4f6;border-radius:8px;padding:12px">
+        <div style="font-size:12px;color:#6b7280;margin-bottom:6px">Extrayendo carta…</div>
+        <div style="background:#e5e7eb;border-radius:999px;height:8px;overflow:hidden">
+          <div style="background:#8B5E3C;width:40%;height:100%;border-radius:999px"></div>
+        </div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:4px">Página 2 de 5</div>
+      </div>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>Ventajas</h4><ul><li>Funciona con PDFs de cualquier tamaño</li><li>Más robusto</li></ul></div>
+        <div class="cons"><h4>Coste</h4><ul><li>Más tiempo de espera total</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
