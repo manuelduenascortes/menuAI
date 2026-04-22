@@ -36,6 +36,28 @@ interface ExtractedMenu {
 
 type Step = 'input' | 'loading' | 'preview' | 'saving' | 'done'
 
+function mergeExtractedMenus(a: ExtractedMenu, b: ExtractedMenu): ExtractedMenu {
+  const result: ExtractedMenu = {
+    categories: a.categories.map(c => ({ ...c, items: [...c.items] })),
+  }
+  for (const bCat of b.categories) {
+    const existing = result.categories.find(
+      c => c.name.toLowerCase() === bCat.name.toLowerCase()
+    )
+    if (existing) {
+      for (const bItem of bCat.items) {
+        const isDuplicate = existing.items.some(
+          i => i.name.toLowerCase() === bItem.name.toLowerCase()
+        )
+        if (!isDuplicate) existing.items.push(bItem)
+      }
+    } else {
+      result.categories.push({ ...bCat, items: [...bCat.items] })
+    }
+  }
+  return result
+}
+
 export default function MenuImport({ restaurantId, allergens, onComplete }: {
   restaurantId: string
   allergens: Allergen[]
@@ -55,28 +77,6 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
   const pdfRef = useRef<HTMLInputElement>(null)
   const [pdfProgress, setPdfProgress] = useState<{ current: number; total: number; itemsFound: number } | null>(null)
   const [pdfFileName, setPdfFileName] = useState<string | null>(null)
-
-  function mergeExtractedMenus(a: ExtractedMenu, b: ExtractedMenu): ExtractedMenu {
-    const result: ExtractedMenu = {
-      categories: a.categories.map(c => ({ ...c, items: [...c.items] })),
-    }
-    for (const bCat of b.categories) {
-      const existing = result.categories.find(
-        c => c.name.toLowerCase() === bCat.name.toLowerCase()
-      )
-      if (existing) {
-        for (const bItem of bCat.items) {
-          const isDuplicate = existing.items.some(
-            i => i.name.toLowerCase() === bItem.name.toLowerCase()
-          )
-          if (!isDuplicate) existing.items.push(bItem)
-        }
-      } else {
-        result.categories.push({ ...bCat, items: [...bCat.items] })
-      }
-    }
-    return result
-  }
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -102,30 +102,101 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
       .filter((id): id is string => !!id)
   }
 
+  async function processPdf(file: File): Promise<ExtractedMenu> {
+    const pdfjsLib = await import('pdfjs-dist')
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
+
+    const arrayBuffer = await file.arrayBuffer()
+    let pdf: Awaited<ReturnType<typeof pdfjsLib.getDocument>['promise']>
+    try {
+      pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+    } catch (err: unknown) {
+      if ((err as { name?: string }).name === 'PasswordException') {
+        throw new Error('Este PDF está protegido. Desbloquéalo antes de subirlo.')
+      }
+      throw new Error('El archivo no es un PDF válido.')
+    }
+
+    const total = pdf.numPages
+    let merged: ExtractedMenu = { categories: [] }
+
+    for (let pageNum = 1; pageNum <= total; pageNum++) {
+      setPdfProgress({
+        current: pageNum,
+        total,
+        itemsFound: merged.categories.reduce((acc, c) => acc + c.items.length, 0),
+      })
+
+      const page = await pdf.getPage(pageNum)
+      const viewport = page.getViewport({ scale: 1.5 })
+      const canvas = document.createElement('canvas')
+      canvas.width = viewport.width
+      canvas.height = viewport.height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('No se pudo preparar la página del PDF.')
+      await page.render({ canvas, canvasContext: ctx, viewport }).promise
+      const base64 = canvas.toDataURL('image/jpeg', 0.85)
+
+      let pageResult: ExtractedMenu | null = null
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const res = await fetch('/api/menu/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'image', content: base64 }),
+          })
+          if (res.ok) {
+            pageResult = await res.json()
+            break
+          }
+        } catch {
+          // retry
+        }
+      }
+
+      if (pageResult?.categories?.length) {
+        merged = mergeExtractedMenus(merged, pageResult)
+      }
+    }
+
+    return merged
+  }
+
   async function handleExtract() {
     setError('')
     setStep('loading')
-
-    const body = mode === 'image'
-      ? { type: 'image', content: imagePreview }
-      : { type: 'text', content: textContent }
+    setPdfProgress(null)
 
     try {
-      const res = await fetch('/api/menu/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
+      let data: ExtractedMenu
 
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Error procesando')
+      if (mode === 'pdf') {
+        const file = pdfRef.current?.files?.[0]
+        if (!file) throw new Error('No se ha seleccionado ningún PDF')
+        data = await processPdf(file)
+        setPdfProgress(null)
+      } else {
+        const body = mode === 'image'
+          ? { type: 'image', content: imagePreview }
+          : { type: 'text', content: textContent }
+
+        const res = await fetch('/api/menu/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+
+        if (!res.ok) {
+          const errData = await res.json()
+          throw new Error(errData.error || 'Error procesando')
+        }
+
+        data = await res.json()
       }
 
-      const data: ExtractedMenu = await res.json()
-
       if (!data.categories?.length) {
-        throw new Error('No se encontraron platos en la carta')
+        throw new Error('No se encontraron platos. Prueba con la opción Foto o Texto.')
       }
 
       // Resolve allergen names → IDs
@@ -141,6 +212,7 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
       const msg = err instanceof Error ? err.message : 'Error desconocido'
       setError(msg)
       toast.error(msg)
+      setPdfProgress(null)
       setStep('input')
     }
   }
