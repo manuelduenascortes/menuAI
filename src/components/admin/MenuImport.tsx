@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Camera, FileText, Sparkles, Trash2, ArrowLeft, Save, Loader2, CheckCircle2, X, ChevronDown, ChevronUp, ImagePlus, AlertTriangle } from 'lucide-react'
+import { Camera, FileText, FileUp, Sparkles, Trash2, ArrowLeft, Save, Loader2, CheckCircle2, X, ChevronDown, ChevronUp, ImagePlus, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Allergen } from '@/lib/types'
 
@@ -427,7 +427,7 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
             Importar carta con IA
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Sube una foto de tu carta en papel o pega el texto. La IA extraerá los platos automáticamente.
+            Sube una foto, un PDF o pega el texto de tu carta. La IA extraerá los platos automáticamente.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -450,6 +450,15 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
             >
               <FileText className="w-4 h-4 mr-1.5" />
               Pegar texto
+            </Button>
+            <Button
+              variant={mode === 'pdf' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setMode('pdf')}
+              className="cursor-pointer"
+            >
+              <FileUp className="w-4 h-4 mr-1.5" />
+              PDF
             </Button>
           </div>
 
@@ -480,6 +489,42 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
                 </div>
               )}
             </div>
+          ) : mode === 'pdf' ? (
+            <div className="space-y-3">
+              <Label>Sube tu carta en PDF</Label>
+              <div
+                className="border-2 border-dashed border-primary/30 rounded-xl p-8 text-center cursor-pointer hover:border-primary/60 transition-colors bg-muted/30"
+                onClick={() => pdfRef.current?.click()}
+              >
+                <FileUp className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm font-medium text-foreground">Haz clic para seleccionar un PDF</p>
+                <p className="text-xs text-muted-foreground mt-1">Digital o escaneado · Máx. 20 MB</p>
+                <input
+                  ref={pdfRef}
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    if (file.size > 20 * 1024 * 1024) {
+                      setError('El PDF es demasiado grande (máx. 20 MB).')
+                      e.target.value = ''
+                      setPdfFileName(null)
+                      return
+                    }
+                    setError('')
+                    setPdfFileName(file.name)
+                  }}
+                />
+              </div>
+              {pdfFileName && (
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <FileUp className="w-4 h-4 text-primary" />
+                  {pdfFileName}
+                </p>
+              )}
+            </div>
           ) : (
             <div className="space-y-2">
               <Label>Pega aquí el texto de tu carta</Label>
@@ -499,7 +544,11 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
 
           <Button
             onClick={handleExtract}
-            disabled={mode === 'image' ? !imagePreview : !textContent.trim()}
+            disabled={
+              mode === 'image' ? !imagePreview :
+              mode === 'pdf' ? !pdfFileName :
+              !textContent.trim()
+            }
             className="w-full cursor-pointer"
             size="lg"
           >
