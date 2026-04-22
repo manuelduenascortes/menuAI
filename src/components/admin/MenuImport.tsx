@@ -42,7 +42,7 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
   onComplete: () => void
 }) {
   const [step, setStep] = useState<Step>('input')
-  const [mode, setMode] = useState<'image' | 'text'>('image')
+  const [mode, setMode] = useState<'image' | 'text' | 'pdf'>('image')
   const [textContent, setTextContent] = useState('')
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [extracted, setExtracted] = useState<ExtractedMenu | null>(null)
@@ -52,6 +52,31 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
   const [ingredientTexts, setIngredientTexts] = useState<Record<string, string>>({})
   const [uploadingImage, setUploadingImage] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const pdfRef = useRef<HTMLInputElement>(null)
+  const [pdfProgress, setPdfProgress] = useState<{ current: number; total: number; itemsFound: number } | null>(null)
+  const [pdfFileName, setPdfFileName] = useState<string | null>(null)
+
+  function mergeExtractedMenus(a: ExtractedMenu, b: ExtractedMenu): ExtractedMenu {
+    const result: ExtractedMenu = {
+      categories: a.categories.map(c => ({ ...c, items: [...c.items] })),
+    }
+    for (const bCat of b.categories) {
+      const existing = result.categories.find(
+        c => c.name.toLowerCase() === bCat.name.toLowerCase()
+      )
+      if (existing) {
+        for (const bItem of bCat.items) {
+          const isDuplicate = existing.items.some(
+            i => i.name.toLowerCase() === bItem.name.toLowerCase()
+          )
+          if (!isDuplicate) existing.items.push(bItem)
+        }
+      } else {
+        result.categories.push({ ...bCat, items: [...bCat.items] })
+      }
+    }
+    return result
+  }
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
