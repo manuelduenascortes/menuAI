@@ -104,18 +104,24 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
 
   async function processPdf(file: File): Promise<ExtractedMenu> {
     const pdfjsLib = await import('pdfjs-dist')
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.min.mjs',
+      import.meta.url
+    ).toString()
 
     const arrayBuffer = await file.arrayBuffer()
     let pdf: Awaited<ReturnType<typeof pdfjsLib.getDocument>['promise']>
     try {
-      pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+      pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise
     } catch (err: unknown) {
-      if ((err as { name?: string }).name === 'PasswordException') {
+      const pdfError = err as { name?: string }
+      if (pdfError.name === 'PasswordException') {
         throw new Error('Este PDF está protegido. Desbloquéalo antes de subirlo.')
       }
-      throw new Error('El archivo no es un PDF válido.')
+      if (pdfError.name === 'InvalidPDFException') {
+        throw new Error('El archivo no es un PDF válido.')
+      }
+      throw new Error('No se pudo leer el PDF. Prueba de nuevo o usa la opción Foto o Texto.')
     }
 
     const total = pdf.numPages
