@@ -566,8 +566,25 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
       <Card>
         <CardContent className="py-20 text-center">
           <Loader2 className="w-10 h-10 mx-auto mb-4 text-primary animate-spin" />
-          <p className="text-lg font-medium text-foreground">Analizando tu carta...</p>
-          <p className="text-sm text-muted-foreground mt-2">La IA está extrayendo los platos y detectando alérgenos. Esto puede tardar unos segundos.</p>
+          {pdfProgress ? (
+            <>
+              <p className="text-lg font-medium text-foreground">Extrayendo carta del PDF...</p>
+              <div className="max-w-xs mx-auto mt-6 space-y-2">
+                <Progress value={Math.round((pdfProgress.current / pdfProgress.total) * 100)} className="h-2" />
+                <p className="text-sm text-muted-foreground">
+                  Página {pdfProgress.current} de {pdfProgress.total}
+                  {pdfProgress.itemsFound > 0 && (
+                    <> · {pdfProgress.itemsFound} platos encontrados</>
+                  )}
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-lg font-medium text-foreground">Analizando tu carta...</p>
+              <p className="text-sm text-muted-foreground mt-2">La IA está extrayendo los platos y detectando alérgenos. Esto puede tardar unos segundos.</p>
+            </>
+          )}
         </CardContent>
       </Card>
     )
