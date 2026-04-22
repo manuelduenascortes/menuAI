@@ -26,11 +26,9 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login')
-  const [mounted, setMounted] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     const isTrial = searchParams.get('trial') === '1'
     const urlError = searchParams.get('error')
 
@@ -81,11 +79,6 @@ function LoginForm() {
     } finally {
       setLoading(false)
     }
-  }
-
-  // Prevents hydration mismatch while allowing SSR
-  if (!mounted) {
-    return <div className="min-h-screen bg-background" /> // Placeholder to prevent hydration mismatch
   }
 
   return (
