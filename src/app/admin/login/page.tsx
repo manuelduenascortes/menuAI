@@ -62,9 +62,18 @@ function LoginForm() {
         router.push('/admin/dashboard')
         router.refresh()
       } else {
-        const { error } = await supabase.auth.signUp({ email, password })
-        if (error) throw error
-        setSuccess('Revisa tu email para confirmar la cuenta.')
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error)
+        // User is auto-confirmed — sign in immediately
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+        if (signInError) throw signInError
+        router.push('/admin/dashboard')
+        router.refresh()
       }
     } catch (err: unknown) {
       console.error('Auth error:', err)

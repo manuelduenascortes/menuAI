@@ -230,6 +230,56 @@
 .delay-5 { animation-delay: 0.40s; }
 .delay-6 { animation-delay: 0.48s; }
 
+/* ─── LOADING SCREEN (fork + knife loop) ─── */
+/*
+  Cycle 4 s — dos mitades del icono UtensilsCrossed:
+    TENEDOR  (↘): tines ↖, mango ↘  → entra/sale desde ↖
+    CUCHILLO (↙): hoja ↗, mango ↙  → entra/sale desde ↗
+
+  0%  –  10%  : pausa inicial
+  10% –  27%  : entran los dos
+  27% –  31%  : flash + ocultar mitades
+  33% –  60%  : logo completo visible
+  60% –  64%  : logo se desvanece, mitades reaparecen
+  64% –  80%  : salen a sus esquinas
+  80% – 100%  : pausa
+*/
+@keyframes loader-fork {
+  0%   { transform: translate(-65px, -65px); opacity: 0; }
+  10%  { transform: translate(-65px, -65px); opacity: 0; }
+  27%  { transform: translate(0, 0);          opacity: 1; }
+  31%  { transform: translate(0, 0);          opacity: 0; }
+  60%  { transform: translate(0, 0);          opacity: 0; }
+  64%  { transform: translate(0, 0);          opacity: 1; }
+  80%  { transform: translate(-65px, -65px); opacity: 0; }
+  100% { transform: translate(-65px, -65px); opacity: 0; }
+}
+@keyframes loader-knife {
+  0%   { transform: translate(65px, -65px); opacity: 0; }
+  10%  { transform: translate(65px, -65px); opacity: 0; }
+  27%  { transform: translate(0, 0);         opacity: 1; }
+  31%  { transform: translate(0, 0);         opacity: 0; }
+  60%  { transform: translate(0, 0);         opacity: 0; }
+  64%  { transform: translate(0, 0);         opacity: 1; }
+  80%  { transform: translate(65px, -65px); opacity: 0; }
+  100% { transform: translate(65px, -65px); opacity: 0; }
+}
+@keyframes loader-flash {
+  0%   { transform: scale(0.1); opacity: 0; }
+  27%  { transform: scale(0.1); opacity: 0; }
+  30%  { transform: scale(0.1); opacity: 1; }
+  40%  { transform: scale(3);   opacity: 0; }
+  100% { transform: scale(0.1); opacity: 0; }
+}
+@keyframes loader-combined {
+  0%   { opacity: 0; transform: scale(0.75) rotate(-6deg); }
+  33%  { opacity: 0; transform: scale(0.75) rotate(-6deg); }
+  40%  { opacity: 1; transform: scale(1)    rotate(0deg);  }
+  60%  { opacity: 1; transform: scale(1)    rotate(0deg);  }
+  64%  { opacity: 0; transform: scale(0.9);                }
+  100% { opacity: 0; transform: scale(0.75) rotate(-6deg); }
+}
+
 /* ─── REDUCED MOTION ─── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
