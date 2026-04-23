@@ -7,8 +7,19 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+
+const ESTABLISHMENT_TYPES = [
+  'Bar',
+  'Restaurante',
+  'Cafetería',
+  'Cervecería',
+  'Taberna',
+  'Chiringuito',
+  'Otro',
+]
 
 function slugify(text: string) {
   return text
@@ -26,6 +37,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
     description: '',
     address: '',
     phone: '',
+    establishment_type: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -44,6 +56,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
       description: form.description || null,
       address: form.address || null,
       phone: form.phone || null,
+      establishment_type: form.establishment_type || null,
     })
 
     if (error) {
@@ -102,6 +115,22 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
           value={form.phone}
           onChange={e => setForm({ ...form, phone: e.target.value })}
         />
+      </div>
+      <div className="space-y-2">
+        <Label>Tipo de establecimiento</Label>
+        <Select
+          value={form.establishment_type || null}
+          onValueChange={(value) => setForm({ ...form, establishment_type: value ?? '' })}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Seleccionar tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            {ESTABLISHMENT_TYPES.map(type => (
+              <SelectItem key={type} value={type}>{type}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {error && <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>}

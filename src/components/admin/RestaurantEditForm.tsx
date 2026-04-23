@@ -7,9 +7,20 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+
+const ESTABLISHMENT_TYPES = [
+  'Bar',
+  'Restaurante',
+  'Cafetería',
+  'Cervecería',
+  'Taberna',
+  'Chiringuito',
+  'Otro',
+]
 
 interface Restaurant {
   id: string
@@ -18,6 +29,7 @@ interface Restaurant {
   description: string | null
   address: string | null
   phone: string | null
+  establishment_type?: string | null
 }
 
 export default function RestaurantEditForm({ restaurant }: { restaurant: Restaurant }) {
@@ -27,6 +39,7 @@ export default function RestaurantEditForm({ restaurant }: { restaurant: Restaur
     description: restaurant.description ?? '',
     address: restaurant.address ?? '',
     phone: restaurant.phone ?? '',
+    establishment_type: restaurant.establishment_type ?? '',
   })
   const [loading, setLoading] = useState(false)
 
@@ -41,6 +54,7 @@ export default function RestaurantEditForm({ restaurant }: { restaurant: Restaur
         description: form.description || null,
         address: form.address || null,
         phone: form.phone || null,
+        establishment_type: form.establishment_type || null,
       })
       .eq('id', restaurant.id)
 
@@ -94,6 +108,22 @@ export default function RestaurantEditForm({ restaurant }: { restaurant: Restaur
           value={form.phone}
           onChange={e => setForm({ ...form, phone: e.target.value })}
         />
+      </div>
+      <div className="space-y-2">
+        <Label>Tipo de establecimiento</Label>
+        <Select
+          value={form.establishment_type || null}
+          onValueChange={(value) => setForm({ ...form, establishment_type: value ?? '' })}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Seleccionar tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            {ESTABLISHMENT_TYPES.map(type => (
+              <SelectItem key={type} value={type}>{type}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex gap-3 pt-2">

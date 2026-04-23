@@ -133,8 +133,14 @@ export default async function DashboardPage() {
                     <Pencil className="w-4 h-4" />
                   </Link>
                 </div>
-                {restaurant.description && (
-                  <CardDescription className="mt-1">{restaurant.description}</CardDescription>
+                {(restaurant.establishment_type || restaurant.description) && (
+                  <CardDescription className="mt-1">
+                    {restaurant.establishment_type && (
+                      <span className="font-medium">{restaurant.establishment_type}</span>
+                    )}
+                    {restaurant.establishment_type && restaurant.description && ' · '}
+                    {restaurant.description}
+                  </CardDescription>
                 )}
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">

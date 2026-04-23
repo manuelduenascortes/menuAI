@@ -13,7 +13,7 @@ export default async function AjustesPage() {
 
   const { data: restaurant } = await supabase
     .from('restaurants')
-    .select('id, name, slug, description, address, phone')
+    .select('id, name, slug, description, address, phone, establishment_type')
     .eq('user_id', user.id)
     .single()
 
