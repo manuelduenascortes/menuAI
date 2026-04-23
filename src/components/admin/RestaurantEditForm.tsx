@@ -11,26 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
-
-const ESTABLISHMENT_TYPES = [
-  'Bar',
-  'Restaurante',
-  'Cafetería',
-  'Cervecería',
-  'Taberna',
-  'Chiringuito',
-  'Otro',
-]
-
-interface Restaurant {
-  id: string
-  name: string
-  slug: string
-  description: string | null
-  address: string | null
-  phone: string | null
-  establishment_type?: string | null
-}
+import { ESTABLISHMENT_TYPES } from '@/lib/constants'
+import type { Restaurant } from '@/lib/types'
 
 export default function RestaurantEditForm({ restaurant }: { restaurant: Restaurant }) {
   const router = useRouter()
@@ -113,7 +95,7 @@ export default function RestaurantEditForm({ restaurant }: { restaurant: Restaur
         <Label>Tipo de establecimiento</Label>
         <Select
           value={form.establishment_type || undefined}
-          onValueChange={(value) => setForm({ ...form, establishment_type: value ?? '' })}
+          onValueChange={(value) => setForm({ ...form, establishment_type: value })}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Seleccionar tipo" />

@@ -10,16 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-
-const ESTABLISHMENT_TYPES = [
-  'Bar',
-  'Restaurante',
-  'Cafetería',
-  'Cervecería',
-  'Taberna',
-  'Chiringuito',
-  'Otro',
-]
+import { ESTABLISHMENT_TYPES } from '@/lib/constants'
 
 function slugify(text: string) {
   return text
@@ -120,7 +111,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
         <Label>Tipo de establecimiento</Label>
         <Select
           value={form.establishment_type || undefined}
-          onValueChange={(value) => setForm({ ...form, establishment_type: value ?? '' })}
+          onValueChange={(value) => setForm({ ...form, establishment_type: value })}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Seleccionar tipo" />
