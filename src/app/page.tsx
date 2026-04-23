@@ -13,6 +13,7 @@ import {
   Menu,
   X
 } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 import {
   Accordion,
   AccordionItem,
@@ -28,10 +29,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-background text-foreground">
       {/* ─── NAV ─── */}
       <nav className="fixed top-0 left-0 right-0 z-50 px-[6vw] h-16 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur-md">
-        <div className="flex items-center gap-2">
-          <UtensilsCrossed className="w-5 h-5 text-primary" />
-          <span className="font-serif text-xl">MenuAI</span>
-        </div>
+        <BrandLogo />
         
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6">
@@ -105,7 +103,7 @@ export default function HomePage() {
       <section className="px-[6vw] pt-32 pb-20 border-b border-border">
         {/* Badge */}
         <div className="animate-fade-up inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-card mb-10 text-sm text-muted-foreground">
-          <UtensilsCrossed className="w-3.5 h-3.5 text-primary" />
+          <BrandLogo showText={false} iconClassName="w-3.5 h-3.5" />
           Carta digital con IA
         </div>
 
@@ -382,10 +380,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <UtensilsCrossed className="w-6 h-6 text-primary" />
-              <span className="font-serif text-2xl text-foreground">MenuAI</span>
-            </div>
+            <BrandLogo iconClassName="w-6 h-6" textClassName="text-2xl text-foreground" className="mb-4" />
             <p className="text-base text-muted-foreground leading-relaxed max-w-sm mb-6">
               Carta digital inteligente para hostelería. Revoluciona la experiencia de tus clientes con nuestro recomendador IA integrado.
             </p>

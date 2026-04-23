@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase-client'
-import { UtensilsCrossed, LayoutDashboard, BookOpen, QrCode, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, BookOpen, QrCode, LogOut, Menu, X } from 'lucide-react'
+import BrandLogo from '@/components/BrandLogo'
 import ThemeToggle from '@/components/ThemeToggle'
 import type { User } from '@supabase/supabase-js'
 
@@ -34,9 +35,8 @@ export default function AdminNav({ user }: AdminNavProps) {
       <div className="max-w-7xl mx-auto px-5 h-14 flex items-center justify-between">
         {/* Logo + nav links */}
         <div className="flex items-center gap-8">
-          <Link href="/admin/dashboard" className="flex items-center gap-2 cursor-pointer">
-            <UtensilsCrossed className="w-5 h-5 text-primary" />
-            <span className="font-serif text-lg text-foreground">MenuAI</span>
+          <Link href="/admin/dashboard" className="cursor-pointer">
+            <BrandLogo textClassName="text-lg text-foreground" />
           </Link>
 
           {/* Desktop nav */}
