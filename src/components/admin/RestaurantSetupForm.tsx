@@ -119,7 +119,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
       <div className="space-y-2">
         <Label>Tipo de establecimiento</Label>
         <Select
-          value={form.establishment_type || null}
+          value={form.establishment_type || undefined}
           onValueChange={(value) => setForm({ ...form, establishment_type: value ?? '' })}
         >
           <SelectTrigger className="w-full">
