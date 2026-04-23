@@ -19,6 +19,7 @@ export function getSupabaseClient(): SupabaseClient {
 // Backwards-compatible named export used across the codebase
 export const supabase = new Proxy({} as SupabaseClient, {
   get(_target, prop) {
-    return (getSupabaseClient() as Record<string | symbol, unknown>)[prop]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (getSupabaseClient() as any)[prop]
   },
 })
