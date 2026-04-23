@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { openRouter, OR_MODEL } from '@/lib/openrouter'
+import {
+  createOpenRouterChatCompletion,
+  type OpenRouterMessage,
+  OR_MODEL,
+} from '@/lib/openrouter'
 import { createServerSupabase } from '@/lib/supabase'
 
 const MAX_PAYLOAD_BYTES = 5 * 1024 * 1024
@@ -61,7 +65,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
     }
 
-    let messages: Parameters<typeof openRouter.chat.completions.create>[0]['messages']
+    let messages: OpenRouterMessage[]
 
     if (type === 'image') {
       messages = [
@@ -81,14 +85,14 @@ export async function POST(req: NextRequest) {
       ]
     }
 
-    const completion = await openRouter.chat.completions.create({
+    const completion = await createOpenRouterChatCompletion({
       model: OR_MODEL,
       messages,
       temperature: 0.1,
       max_tokens: 4096,
     })
 
-    const raw = completion.choices[0]?.message?.content ?? ''
+    const raw = completion.choices?.[0]?.message?.content ?? ''
 
     let parsed
     try {

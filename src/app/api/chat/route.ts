@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { openRouter, OR_MODEL } from '@/lib/openrouter'
+import { createOpenRouterChatStream, OR_MODEL } from '@/lib/openrouter'
 import { createAdminSupabase } from '@/lib/supabase'
 import { buildMenuSystemPromptV2 } from '@/lib/menu-context'
 import { checkRateLimit } from '@/lib/redis'
@@ -134,17 +134,16 @@ export async function POST(req: NextRequest) {
     const abortController = new AbortController()
     req.signal.addEventListener('abort', () => abortController.abort())
 
-    const stream = await openRouter.chat.completions.create({
+    const stream = await createOpenRouterChatStream({
       model: OR_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ...(messages as any[]),
       ],
-      stream: true,
       max_tokens: 512,
       temperature: 0.1,
-    }, { signal: abortController.signal })
+    }, abortController.signal)
 
     await incrementChatUsage(restaurantId).catch(() => {})
 
