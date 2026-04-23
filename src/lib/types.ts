@@ -1,8 +1,14 @@
+export type VenueType = 'restaurant' | 'bar_cafe' | 'cocktail_bar'
+
+export type MenuAccessMode = 'general_qr' | 'table_qr' | 'both'
+
 export interface Restaurant {
   id: string
   user_id: string
   name: string
   slug: string
+  venue_type?: VenueType | null
+  menu_access_mode?: MenuAccessMode | null
   description?: string
   logo_url?: string
   address?: string

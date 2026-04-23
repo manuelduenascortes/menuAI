@@ -13,7 +13,7 @@ export default async function AjustesPage() {
 
   const { data: restaurant } = await supabase
     .from('restaurants')
-    .select('id, name, slug, description, address, phone')
+    .select('id, name, slug, venue_type, menu_access_mode, description, address, phone')
     .eq('user_id', user.id)
     .single()
 
@@ -23,7 +23,7 @@ export default async function AjustesPage() {
     <div className="max-w-2xl mx-auto px-5 py-10">
       <div className="mb-8">
         <h1 className="font-serif text-3xl text-foreground">Ajustes</h1>
-        <p className="text-muted-foreground mt-1">Edita los datos de tu restaurante</p>
+        <p className="text-muted-foreground mt-1">Edita los datos de tu local</p>
       </div>
 
       <div className="space-y-6">
@@ -34,7 +34,7 @@ export default async function AjustesPage() {
               Datos del negocio
             </CardTitle>
             <CardDescription>
-              URL pública: <span className="font-mono">/{restaurant.slug}</span>
+              URL publica: <span className="font-mono">/{restaurant.slug}</span>
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -49,7 +49,7 @@ export default async function AjustesPage() {
               Seguridad
             </CardTitle>
             <CardDescription>
-              Actualiza la contraseña de tu cuenta
+              Actualiza la contrasena de tu cuenta
             </CardDescription>
           </CardHeader>
           <CardContent>

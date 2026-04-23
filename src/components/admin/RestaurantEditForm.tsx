@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,21 +10,33 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import Link from 'next/link'
+import type { MenuAccessMode, Restaurant, VenueType } from '@/lib/types'
+import {
+  getVenueConfig,
+  MENU_ACCESS_OPTIONS,
+  normalizeMenuAccessMode,
+  normalizeVenueType,
+  VENUE_OPTIONS,
+} from '@/lib/venue-config'
 
-interface Restaurant {
-  id: string
-  name: string
-  slug: string
-  description: string | null
-  address: string | null
-  phone: string | null
-}
+type EditableRestaurant = Pick<
+  Restaurant,
+  'id' | 'name' | 'venue_type' | 'menu_access_mode' | 'description' | 'address' | 'phone'
+>
 
-export default function RestaurantEditForm({ restaurant }: { restaurant: Restaurant }) {
+export default function RestaurantEditForm({ restaurant }: { restaurant: EditableRestaurant }) {
   const router = useRouter()
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    name: string
+    venue_type: VenueType
+    menu_access_mode: MenuAccessMode
+    description: string
+    address: string
+    phone: string
+  }>({
     name: restaurant.name,
+    venue_type: normalizeVenueType(restaurant.venue_type),
+    menu_access_mode: normalizeMenuAccessMode(restaurant.menu_access_mode),
     description: restaurant.description ?? '',
     address: restaurant.address ?? '',
     phone: restaurant.phone ?? '',
@@ -38,6 +51,8 @@ export default function RestaurantEditForm({ restaurant }: { restaurant: Restaur
       .from('restaurants')
       .update({
         name: form.name,
+        venue_type: form.venue_type,
+        menu_access_mode: form.menu_access_mode,
         description: form.description || null,
         address: form.address || null,
         phone: form.phone || null,
@@ -50,44 +65,89 @@ export default function RestaurantEditForm({ restaurant }: { restaurant: Restaur
       return
     }
 
-    toast.success('Datos actualizados ✓')
+    toast.success('Datos actualizados')
     router.push('/admin/dashboard')
     router.refresh()
   }
 
+  const venueConfig = getVenueConfig(form.venue_type)
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="edit-name">Nombre del restaurante *</Label>
+        <Label htmlFor="edit-name">Nombre del local *</Label>
         <Input
           id="edit-name"
-          placeholder="Ej: Bar La Malagueña"
+          placeholder="Ej: Bar La Malaguena"
           value={form.name}
           onChange={e => setForm({ ...form, name: e.target.value })}
           required
         />
       </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="edit-venue-type">Tipo de local *</Label>
+          <select
+            id="edit-venue-type"
+            value={form.venue_type}
+            onChange={e => setForm({ ...form, venue_type: e.target.value as VenueType })}
+            className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+          >
+            {VENUE_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            {VENUE_OPTIONS.find(option => option.value === form.venue_type)?.description}
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="edit-access-mode">Acceso a la carta *</Label>
+          <select
+            id="edit-access-mode"
+            value={form.menu_access_mode}
+            onChange={e => setForm({ ...form, menu_access_mode: e.target.value as MenuAccessMode })}
+            className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+          >
+            {MENU_ACCESS_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            {MENU_ACCESS_OPTIONS.find(option => option.value === form.menu_access_mode)?.description}
+          </p>
+        </div>
+      </div>
+
       <div className="space-y-2">
-        <Label htmlFor="edit-description">Descripción</Label>
+        <Label htmlFor="edit-description">Descripcion</Label>
         <Textarea
           id="edit-description"
-          placeholder="Cocina mediterránea con productos de temporada..."
+          placeholder={venueConfig.descriptionPlaceholder}
           value={form.description}
           onChange={e => setForm({ ...form, description: e.target.value })}
           rows={3}
         />
       </div>
+
       <div className="space-y-2">
-        <Label htmlFor="edit-address">Dirección</Label>
+        <Label htmlFor="edit-address">Direccion</Label>
         <Input
           id="edit-address"
-          placeholder="Calle Mayor 1, Málaga"
+          placeholder="Calle Mayor 1, Malaga"
           value={form.address}
           onChange={e => setForm({ ...form, address: e.target.value })}
         />
       </div>
+
       <div className="space-y-2">
-        <Label htmlFor="edit-phone">Teléfono</Label>
+        <Label htmlFor="edit-phone">Telefono</Label>
         <Input
           id="edit-phone"
           placeholder="952 123 456"

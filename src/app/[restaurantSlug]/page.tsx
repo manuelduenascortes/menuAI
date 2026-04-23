@@ -3,6 +3,7 @@ import { getFullMenuBySlug } from '@/lib/queries'
 import { notFound } from 'next/navigation'
 import MenuView from '@/components/cliente/MenuView'
 import type { Metadata } from 'next'
+import { getVenueConfig } from '@/lib/venue-config'
 
 interface Props {
   params: Promise<{ restaurantSlug: string }>
@@ -14,17 +15,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { data: restaurant } = await supabase
     .from('restaurants')
-    .select('name, description')
+    .select('name, description, venue_type')
     .eq('slug', restaurantSlug)
     .single()
 
-  if (!restaurant) return { title: 'Restaurante no encontrado' }
+  if (!restaurant) return { title: 'Local no encontrado' }
+
+  const venueConfig = getVenueConfig(restaurant.venue_type)
 
   return {
-    title: `${restaurant.name} — Carta digital`,
-    description: restaurant.description || `Consulta la carta de ${restaurant.name} y recibe recomendaciones personalizadas con IA.`,
+    title: `${restaurant.name} - Carta digital`,
+    description: restaurant.description || `${venueConfig.publicDescription} ${restaurant.name}.`,
     openGraph: {
-      title: `${restaurant.name} — Carta digital`,
+      title: `${restaurant.name} - Carta digital`,
       description: restaurant.description || `Carta digital de ${restaurant.name} con asistente IA.`,
       type: 'website',
     },

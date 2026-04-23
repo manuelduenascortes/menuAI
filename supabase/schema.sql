@@ -12,6 +12,8 @@ create table if not exists restaurants (
   user_id uuid references auth.users(id) on delete cascade,
   name text not null,
   slug text not null unique,
+  venue_type text not null default 'restaurant' check (venue_type in ('restaurant', 'bar_cafe', 'cocktail_bar')),
+  menu_access_mode text not null default 'both' check (menu_access_mode in ('general_qr', 'table_qr', 'both')),
   description text,
   logo_url text,
   address text,
@@ -27,6 +29,8 @@ create table if not exists restaurants (
 -- Migración para BD existentes:
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS trial_ends_at timestamptz DEFAULT (now() + interval '14 days');
 -- UPDATE restaurants SET trial_ends_at = created_at + interval '14 days' WHERE trial_ends_at IS NULL;
+-- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS venue_type text NOT NULL DEFAULT 'restaurant';
+-- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS menu_access_mode text NOT NULL DEFAULT 'both';
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS stripe_customer_id text;
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS stripe_subscription_id text;
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS subscription_status text;

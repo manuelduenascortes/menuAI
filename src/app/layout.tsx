@@ -1,58 +1,58 @@
-import type { Metadata, Viewport } from "next";
-import { DM_Serif_Display, Outfit, Geist_Mono } from "next/font/google";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import ThemeProvider from "@/components/ThemeProvider";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next'
+import { DM_Serif_Display, Outfit, Geist_Mono } from 'next/font/google'
+import { Toaster } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import ThemeProvider from '@/components/ThemeProvider'
+import './globals.css'
 
 const dmSerif = DM_Serif_Display({
-  variable: "--font-dm-serif",
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-});
+  variable: '--font-dm-serif',
+  subsets: ['latin'],
+  weight: '400',
+  display: 'swap',
+})
 
 const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  display: "swap",
-});
+  variable: '--font-outfit',
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 export const metadata: Metadata = {
-  title: "MenuAI — Carta digital inteligente para hostelería",
+  title: 'MenuAI - Carta digital inteligente para hosteleria',
   description:
-    "Digitaliza la carta de tu restaurante y ofrece un asistente IA que ayuda a tus clientes a elegir según sus gustos, alergias y preferencias.",
-  keywords: ["carta digital", "menú QR", "restaurante", "IA", "asistente", "hostelería", "alérgenos"],
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://menuai.es"),
+    'Digitaliza la carta de tu local y ofrece un asistente IA que ayuda a tus clientes a elegir comida, cafe, copas o cualquier consumicion.',
+  keywords: ['carta digital', 'menu qr', 'hosteleria', 'bar', 'cafeteria', 'restaurante', 'cocteleria', 'ia'],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://menuai.es'),
   openGraph: {
-    title: "MenuAI — Carta digital inteligente",
-    description: "Digitaliza la carta de tu restaurante con IA. Chatbot que recomienda platos según gustos, alergias y preferencias.",
-    type: "website",
-    siteName: "MenuAI",
+    title: 'MenuAI - Carta digital inteligente',
+    description: 'Carta digital con IA para restaurantes, bares, cafeterias y coctelerias.',
+    type: 'website',
+    siteName: 'MenuAI',
   },
   twitter: {
-    card: "summary_large_image",
-    title: "MenuAI — Carta digital inteligente",
-    description: "Digitaliza la carta de tu restaurante con IA",
+    card: 'summary_large_image',
+    title: 'MenuAI - Carta digital inteligente',
+    description: 'Carta digital con IA para todo tipo de locales de hosteleria',
   },
-};
+}
 
 export const viewport: Viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#8B5E3C",
-};
+  themeColor: '#8B5E3C',
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html
@@ -75,5 +75,5 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

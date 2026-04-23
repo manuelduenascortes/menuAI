@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase-client'
@@ -32,13 +32,8 @@ function LoginForm() {
     const isTrial = searchParams.get('trial') === '1'
     const urlError = searchParams.get('error')
 
-    if (urlError) {
-      setError(urlError)
-    }
-
-    if (isTrial) {
-      setMode('signup')
-    }
+    if (urlError) setError(urlError)
+    if (isTrial) setMode('signup')
   }, [searchParams])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -49,14 +44,14 @@ function LoginForm() {
 
     try {
       if (mode === 'reset') {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/api/auth/callback/recovery`,
         })
-        if (error) throw error
-        setSuccess('Te hemos enviado un email para restablecer tu contraseña.')
+        if (resetError) throw resetError
+        setSuccess('Te hemos enviado un email para restablecer tu contrasena.')
       } else if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
+        if (loginError) throw loginError
         router.push('/admin/dashboard')
         router.refresh()
       } else {
@@ -67,7 +62,6 @@ function LoginForm() {
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error)
-        // User is auto-confirmed — sign in immediately
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
         if (signInError) throw signInError
         router.push('/admin/dashboard')
@@ -81,11 +75,26 @@ function LoginForm() {
     }
   }
 
+  const heading = mode === 'reset'
+    ? 'Recuperar contrasena'
+    : mode === 'login'
+      ? 'Bienvenido de nuevo'
+      : searchParams.get('trial') === '1'
+        ? 'Prueba gratuita de 14 dias'
+        : 'Crea tu cuenta'
+
+  const subheading = mode === 'reset'
+    ? 'Introduce tu email y te enviaremos un enlace.'
+    : mode === 'login'
+      ? 'Accede a tu panel de gestion.'
+      : searchParams.get('trial') === '1'
+        ? 'Crea tu cuenta para empezar. Sin tarjeta de credito.'
+        : 'Comienza tu prueba y digitaliza la carta de tu local.'
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
-      {/* ─── LEFT: BRANDING ─── */}
       <div className="md:w-1/2 bg-gradient-to-br from-primary/10 via-secondary/30 to-primary/5 flex flex-col justify-between p-8 md:p-16 border-b md:border-b-0 md:border-r border-border relative">
-        <Link 
+        <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground transition-colors cursor-pointer self-start animate-fade-up z-10"
         >
@@ -94,31 +103,28 @@ function LoginForm() {
           </div>
           <span>Volver al inicio</span>
         </Link>
-        
+
         <div className="flex flex-col items-center justify-center flex-1 py-12 md:py-0 text-center animate-fade-up delay-1">
           <div className="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full bg-background/60 shadow-sm backdrop-blur-md border border-primary/10 mb-8">
             <UtensilsCrossed className="w-10 h-10 md:w-12 md:h-12 text-primary" />
           </div>
           <h1 className="font-serif text-3xl md:text-5xl text-foreground mb-4">MenuAI</h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-sm">
-            Digitaliza tu carta en minutos y enamora a tus clientes.
+            Carta digital con IA para restaurantes, bares, cafeterias y coctelerias.
           </p>
         </div>
-        
+
         <div className="hidden md:block text-sm text-muted-foreground text-center">
           © {new Date().getFullYear()} MenuAI. Todos los derechos reservados.
         </div>
       </div>
 
-      {/* ─── RIGHT: FORM ─── */}
       <div id="main-content" className="md:w-1/2 flex items-center justify-center p-6 md:p-12 relative bg-background">
         <div className="w-full max-w-md animate-fade-up">
           <div className="mb-10 text-center md:text-left">
-            <h2 className="font-serif text-3xl text-foreground mb-2">
-              {mode === 'reset' ? 'Recuperar contraseña' : mode === 'login' ? 'Bienvenido de nuevo' : (searchParams.get('trial') === '1' ? 'Prueba gratuita de 14 días' : 'Crea tu cuenta')}
-            </h2>
+            <h2 className="font-serif text-3xl text-foreground mb-2">{heading}</h2>
             <p key={mode} className="text-base text-muted-foreground animate-fade-up">
-              {mode === 'reset' ? 'Introduce tu email y te enviaremos un enlace' : mode === 'login' ? 'Accede a tu panel de gestión' : (searchParams.get('trial') === '1' ? 'Crea tu cuenta para empezar. Sin tarjeta de crédito.' : 'Comienza tu prueba y digitaliza tu restaurante')}
+              {subheading}
             </p>
           </div>
 
@@ -128,7 +134,7 @@ function LoginForm() {
               <Input
                 id="login-email"
                 type="email"
-                placeholder="restaurante@ejemplo.com"
+                placeholder="local@ejemplo.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -136,17 +142,18 @@ function LoginForm() {
                 className="h-12 text-base px-4"
               />
             </div>
+
             {mode !== 'reset' && (
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="login-password" className="text-sm font-medium">Contraseña</Label>
+                  <Label htmlFor="login-password" className="text-sm font-medium">Contrasena</Label>
                   {mode === 'login' && (
                     <button
                       type="button"
                       className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                       onClick={() => { setMode('reset'); setError(''); setSuccess('') }}
                     >
-                      ¿Olvidaste tu contraseña?
+                      Olvidaste tu contrasena?
                     </button>
                   )}
                 </div>
@@ -154,7 +161,7 @@ function LoginForm() {
                   <Input
                     id="login-password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
+                    placeholder="********"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
@@ -189,7 +196,7 @@ function LoginForm() {
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                mode === 'reset' ? 'Enviar enlace' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'
+                mode === 'reset' ? 'Enviar enlace' : mode === 'login' ? 'Iniciar sesion' : 'Crear cuenta'
               )}
             </Button>
 
@@ -200,17 +207,17 @@ function LoginForm() {
                   className="text-primary font-medium hover:underline underline-offset-4 cursor-pointer transition-all"
                   onClick={() => { setMode('login'); setError(''); setSuccess('') }}
                 >
-                  Volver a iniciar sesión
+                  Volver a iniciar sesion
                 </button>
               ) : (
                 <>
-                  {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
+                  {mode === 'login' ? 'No tienes cuenta?' : 'Ya tienes cuenta?'}{' '}
                   <button
                     type="button"
                     className="text-primary font-medium hover:underline underline-offset-4 cursor-pointer transition-all"
                     onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setSuccess('') }}
                   >
-                    {mode === 'login' ? 'Regístrate aquí' : 'Inicia sesión'}
+                    {mode === 'login' ? 'Registrate aqui' : 'Inicia sesion'}
                   </button>
                 </>
               )}
@@ -221,4 +228,3 @@ function LoginForm() {
     </div>
   )
 }
-

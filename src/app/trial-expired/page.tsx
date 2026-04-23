@@ -9,27 +9,27 @@ import { useRouter } from 'next/navigation'
 const plans = [
   {
     name: 'Mensual',
-    price: '19,99 €',
+    price: '19,99 EUR',
     period: '/mes',
-    detail: 'Facturación mes a mes',
+    detail: 'Facturacion mes a mes',
     priceEnv: 'monthly',
     featured: false,
     badge: null,
   },
   {
     name: 'Semestral',
-    price: '14,99 €',
+    price: '14,99 EUR',
     period: '/mes',
-    detail: '89,94 € cada 6 meses',
+    detail: '89,94 EUR cada 6 meses',
     priceEnv: 'semestral',
     featured: false,
     badge: 'Ahorra 25%',
   },
   {
     name: 'Anual',
-    price: '9,99 €',
+    price: '9,99 EUR',
     period: '/mes',
-    detail: '119,88 € al año',
+    detail: '119,88 EUR al ano',
     priceEnv: 'annual',
     featured: true,
     badge: 'Ahorra 50%',
@@ -96,13 +96,12 @@ export default function TrialExpiredPage() {
             Tu prueba gratuita ha finalizado
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            Elige un plan para seguir usando MenuAI y que tus clientes
-            sigan disfrutando de la carta digital con IA.
+            Elige un plan para seguir usando MenuAI y mantener tu carta digital con IA activa para tu local.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          {plans.map((plan) => (
+          {plans.map(plan => (
             <div
               key={plan.priceEnv}
               className={`flex flex-col p-8 rounded-2xl border bg-background relative transition-shadow ${
@@ -113,7 +112,7 @@ export default function TrialExpiredPage() {
             >
               {plan.featured && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                  Más popular
+                  Mas popular
                 </div>
               )}
               <h3 className="font-serif text-2xl mb-2">{plan.name}</h3>
@@ -146,8 +145,8 @@ export default function TrialExpiredPage() {
               </Button>
               <ul className="flex-1 space-y-2 text-sm text-muted-foreground mt-6">
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Carta digital ilimitada</li>
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> QR + Chatbot IA</li>
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Panel de administración</li>
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> QR y asistente IA</li>
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Panel de administracion</li>
               </ul>
             </div>
           ))}
@@ -160,10 +159,10 @@ export default function TrialExpiredPage() {
             className="text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <LogOut className="w-4 h-4 mr-2" />
-            Cerrar sesión
+            Cerrar sesion
           </Button>
           <p className="text-sm text-muted-foreground">
-            ¿Tienes dudas? Escríbenos a{' '}
+            Tienes dudas? Escribenos a{' '}
             <a href="mailto:hola@menuai.es" className="text-primary hover:underline">
               hola@menuai.es
             </a>

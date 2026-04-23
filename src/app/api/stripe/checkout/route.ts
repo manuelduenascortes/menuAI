@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (!restaurant) {
-    return NextResponse.json({ error: 'Restaurante no encontrado' }, { status: 404 })
+    return NextResponse.json({ error: 'Local no encontrado' }, { status: 404 })
   }
 
   // Get or create Stripe customer

@@ -6,22 +6,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { CheckCircle2, Circle, Store, BookOpen, QrCode, X } from 'lucide-react'
+import type { MenuAccessMode } from '@/lib/types'
+import { getAccessChecklistStep, normalizeMenuAccessMode, supportsTableQr } from '@/lib/venue-config'
 
 interface Props {
   hasRestaurant: boolean
   hasItems: boolean
   hasTables: boolean
+  accessMode?: MenuAccessMode | null
 }
 
-export default function OnboardingChecklist({ hasRestaurant, hasItems, hasTables }: Props) {
+export default function OnboardingChecklist({ hasRestaurant, hasItems, hasTables, accessMode }: Props) {
   const [hidden, setHidden] = useState(false)
 
   if (hidden) return null
 
+  const normalizedAccessMode = normalizeMenuAccessMode(accessMode)
+  const accessDone = supportsTableQr(normalizedAccessMode) ? hasTables : hasRestaurant
+
   const steps = [
-    { label: 'Crear restaurante', done: hasRestaurant, icon: Store, href: '/admin/dashboard' },
-    { label: 'Añadir carta', done: hasItems, icon: BookOpen, href: '/admin/carta' },
-    { label: 'Crear mesas', done: hasTables, icon: QrCode, href: '/admin/mesas' },
+    { label: 'Crear local', done: hasRestaurant, icon: Store, href: '/admin/dashboard' },
+    { label: 'Anadir carta', done: hasItems, icon: BookOpen, href: '/admin/carta' },
+    { label: getAccessChecklistStep(normalizedAccessMode), done: accessDone, icon: QrCode, href: '/admin/mesas' },
   ]
 
   const completed = steps.filter(s => s.done).length
@@ -51,7 +57,7 @@ export default function OnboardingChecklist({ hasRestaurant, hasItems, hasTables
           <span className="text-xs text-muted-foreground tabular-nums">{completed}/{steps.length}</span>
         </div>
         <div className="space-y-2">
-          {steps.map((step) => (
+          {steps.map(step => (
             <Link
               key={step.label}
               href={step.href}
@@ -71,7 +77,7 @@ export default function OnboardingChecklist({ hasRestaurant, hasItems, hasTables
         </div>
         {allDone && (
           <p className="text-xs text-primary text-center font-medium">
-            ¡Todo listo! Tu restaurante está configurado 🎉
+            Todo listo. Tu local ya esta configurado.
           </p>
         )}
       </CardContent>
