@@ -16,7 +16,7 @@ export default function BrandLogo({
 }: BrandLogoProps) {
   return (
     <span className={cn('flex items-center gap-2', className)}>
-      <UtensilsCrossed className={cn('w-5 h-5 text-primary', iconClassName)} />
+      <UtensilsCrossed aria-hidden={!showText} className={cn('w-5 h-5 text-primary', iconClassName)} />
       {showText && (
         <span className={cn('font-serif text-xl', textClassName)}>MenuAI</span>
       )}
