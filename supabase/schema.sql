@@ -20,6 +20,7 @@ create table if not exists restaurants (
   stripe_customer_id text,
   stripe_subscription_id text,
   subscription_status text,
+  establishment_type text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -30,6 +31,7 @@ create table if not exists restaurants (
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS stripe_customer_id text;
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS stripe_subscription_id text;
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS subscription_status text;
+-- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS establishment_type text;
 
 -- ============================================
 -- TABLA: tables (mesas)

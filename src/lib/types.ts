@@ -11,6 +11,7 @@ export interface Restaurant {
   stripe_customer_id?: string
   stripe_subscription_id?: string
   subscription_status?: string
+  establishment_type?: string
   created_at: string
   updated_at: string
 }
