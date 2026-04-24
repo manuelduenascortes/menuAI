@@ -16,7 +16,8 @@
       "Bash(xargs cat *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git merge-base *)"
+      "Bash(git merge-base *)",
+      "Bash(npx supabase *)"
     ]
   }
 }

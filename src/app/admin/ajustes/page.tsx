@@ -22,7 +22,7 @@ export default async function AjustesPage() {
   if (!restaurant) redirect('/admin/dashboard')
 
   const chatCount = await getChatUsage(restaurant.id)
-  const chatLimit = getChatLimit((restaurant.subscription_status as string | null) ?? null)
+  const chatLimit = getChatLimit(restaurant.subscription_status ?? null)
   const chatPercent = Math.min(Math.round((chatCount / chatLimit) * 100), 100)
 
   return (
@@ -74,10 +74,10 @@ export default async function AjustesPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Progress value={chatPercent} className="h-2" />
+            <Progress value={chatPercent} aria-label="Uso mensual del asistente IA" />
             <p className={`text-sm ${chatCount >= chatLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
-              {chatCount} de {chatLimit} consultas usadas este mes
-              {chatCount >= chatLimit && ' — limite alcanzado'}
+              {Math.min(chatCount, chatLimit)} de {chatLimit} consultas usadas este mes
+              {chatCount >= chatLimit && ' — límite alcanzado'}
             </p>
           </CardContent>
         </Card>

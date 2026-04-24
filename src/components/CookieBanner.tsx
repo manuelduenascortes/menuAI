@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { useHydrated } from '@/lib/use-hydrated'
+import { shouldShowCookieBanner } from '@/components/cookie-banner-visibility.mjs'
 
 function safeGet(key: string): string | null {
   try {
@@ -23,18 +25,13 @@ function safeSet(key: string, value: string): void {
 
 export default function CookieBanner() {
   const pathname = usePathname()
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    const isCustomerRoute = pathname?.includes('/mesa/')
-    if (!isCustomerRoute && safeGet('cookie_consent') === null) {
-      setVisible(true)
-    }
-  }, [pathname])
+  const mounted = useHydrated()
+  const [consent, setConsent] = useState<string | null>(() => safeGet('cookie_consent'))
+  const visible = mounted && shouldShowCookieBanner(pathname, consent)
 
   function accept() {
     safeSet('cookie_consent', 'accepted')
-    setVisible(false)
+    setConsent('accepted')
   }
 
   if (!visible) return null

@@ -14,13 +14,8 @@ import {
   X,
 } from 'lucide-react'
 import BrandLogo from '@/components/BrandLogo'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
 import ThemeToggle from '@/components/ThemeToggle'
+import { toggleSingleAccordionItem } from '@/lib/single-accordion-state.mjs'
 
 const faqs = [
   {
@@ -51,6 +46,7 @@ const faqs = [
 
 export default function HomePage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [openFaq, setOpenFaq] = useState<string | null>(null)
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -381,18 +377,34 @@ export default function HomePage() {
             <h2 className="mb-12 text-center font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight">
               Preguntas frecuentes
             </h2>
-            <Accordion multiple={false} className="w-full">
-              {faqs.map((faq, index) => (
-                <AccordionItem key={faq.q} value={`faq-${index}`}>
-                  <AccordionTrigger className="text-left text-lg font-medium transition-colors hover:text-primary">
-                    {faq.q}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <p className="text-base leading-relaxed text-muted-foreground">{faq.a}</p>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+            <div className="w-full">
+              {faqs.map((faq, index) => {
+                const faqId = `faq-${index}`
+                const isOpen = openFaq === faqId
+
+                return (
+                  <div key={faq.q} className="border-b border-border">
+                    <h3 className="flex">
+                      <button
+                        type="button"
+                        className="flex w-full items-start justify-between rounded-lg py-2.5 text-left text-lg font-medium transition-colors hover:text-primary"
+                        aria-expanded={isOpen}
+                        aria-controls={`${faqId}-panel`}
+                        onClick={() => setOpenFaq((current) => toggleSingleAccordionItem(current, faqId))}
+                      >
+                        <span>{faq.q}</span>
+                        <span className="ml-4 text-muted-foreground">{isOpen ? '−' : '+'}</span>
+                      </button>
+                    </h3>
+                    {isOpen && (
+                      <div id={`${faqId}-panel`} className="pb-4">
+                        <p className="text-base leading-relaxed text-muted-foreground">{faq.a}</p>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </section>
 
