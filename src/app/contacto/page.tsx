@@ -10,14 +10,14 @@ export default function ContactoPage() {
     <div className="min-h-screen bg-background text-foreground">
       <nav className="flex h-16 items-center justify-between border-b border-border px-[6vw]">
         <Link href="/" className="flex items-center gap-2">
-          <Store className="h-5 w-5 text-primary" />
+          <Store className="h-5 w-5 text-primary" aria-hidden="true" />
           <span className="font-serif text-xl">MenuAI</span>
         </Link>
         <Link
           href="/"
           className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           Volver
         </Link>
       </nav>
@@ -28,7 +28,7 @@ export default function ContactoPage() {
 
         <div className="space-y-6">
           <div className="flex items-start gap-4">
-            <Mail className="mt-1 h-5 w-5 shrink-0 text-primary" />
+            <Mail className="mt-1 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
             <div>
               <p className="font-medium text-foreground">Email</p>
               <a
@@ -40,7 +40,7 @@ export default function ContactoPage() {
             </div>
           </div>
           <div className="flex items-start gap-4">
-            <MapPin className="mt-1 h-5 w-5 shrink-0 text-primary" />
+            <MapPin className="mt-1 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
             <div>
               <p className="font-medium text-foreground">Ubicacion</p>
               <p className="text-muted-foreground">Malaga, Espana</p>

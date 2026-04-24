@@ -125,7 +125,11 @@ export default function PrivacidadPage() {
             <h2 className="mb-3 font-serif text-xl text-foreground">8. Cookies</h2>
             <p>
               Utilizamos cookies tecnicas estrictamente necesarias para el funcionamiento del servicio
-              (autenticacion y sesion). No utilizamos cookies de seguimiento ni publicidad.
+              (autenticacion y sesion). No utilizamos cookies de seguimiento ni publicidad.{' '}
+              <Link href="/cookies" className="text-primary hover:underline">
+                Politica de Cookies
+              </Link>
+              .
             </p>
           </section>
         </div>
