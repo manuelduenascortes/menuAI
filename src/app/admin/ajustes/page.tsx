@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import RestaurantEditForm from '@/components/admin/RestaurantEditForm'
 import PasswordChangeForm from '@/components/admin/PasswordChangeForm'
-import { Settings, Shield } from 'lucide-react'
+import { Settings, Shield, MessageSquare } from 'lucide-react'
+import { getChatUsage, getChatLimit } from '@/lib/usage'
+import { Progress } from '@/components/ui/progress'
 
 export default async function AjustesPage() {
   const supabase = await createServerSupabase()
@@ -13,11 +15,15 @@ export default async function AjustesPage() {
 
   const { data: restaurant } = await supabase
     .from('restaurants')
-    .select('id, name, slug, venue_type, menu_access_mode, description, address, phone, establishment_type')
+    .select('id, name, slug, venue_type, menu_access_mode, description, address, phone, establishment_type, subscription_status')
     .eq('user_id', user.id)
     .single()
 
   if (!restaurant) redirect('/admin/dashboard')
+
+  const chatCount = await getChatUsage(restaurant.id)
+  const chatLimit = getChatLimit((restaurant.subscription_status as string | null) ?? null)
+  const chatPercent = Math.min(Math.round((chatCount / chatLimit) * 100), 100)
 
   return (
     <div className="max-w-2xl mx-auto px-5 py-10">
@@ -54,6 +60,25 @@ export default async function AjustesPage() {
           </CardHeader>
           <CardContent>
             <PasswordChangeForm />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-serif text-xl flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-primary" aria-hidden="true" />
+              Uso del asistente IA
+            </CardTitle>
+            <CardDescription>
+              Consultas del chatbot este mes
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Progress value={chatPercent} className="h-2" />
+            <p className={`text-sm ${chatCount >= chatLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {chatCount} de {chatLimit} consultas usadas este mes
+              {chatCount >= chatLimit && ' — limite alcanzado'}
+            </p>
           </CardContent>
         </Card>
       </div>
