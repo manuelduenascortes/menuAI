@@ -1,18 +1,34 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Camera,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  FileUp,
+  ImagePlus,
+  Loader2,
+  Save,
+  Sparkles,
+  Trash2,
+  X,
+} from 'lucide-react'
+import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase-client'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import type { Allergen, Restaurant } from '@/lib/types'
+import { getVenueConfig, normalizeVenueType } from '@/lib/venue-config'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Camera, FileText, FileUp, Sparkles, Trash2, ArrowLeft, Save, Loader2, CheckCircle2, X, ChevronDown, ChevronUp, ImagePlus, AlertTriangle } from 'lucide-react'
-import { toast } from 'sonner'
-import type { Allergen } from '@/lib/types'
+import { Textarea } from '@/components/ui/textarea'
 
 interface ExtractedItem {
   name: string
@@ -35,55 +51,54 @@ interface ExtractedMenu {
 }
 
 type Step = 'input' | 'loading' | 'preview' | 'saving' | 'done'
+type ImportMode = 'image' | 'text' | 'pdf'
 
-function mergeExtractedMenus(a: ExtractedMenu, b: ExtractedMenu): ExtractedMenu {
-  const result: ExtractedMenu = {
-    categories: a.categories.map(c => ({ ...c, items: [...c.items] })),
-  }
-  for (const bCat of b.categories) {
-    const existing = result.categories.find(
-      c => c.name.toLowerCase() === bCat.name.toLowerCase()
-    )
-    if (existing) {
-      for (const bItem of bCat.items) {
-        const isDuplicate = existing.items.some(
-          i => i.name.toLowerCase() === bItem.name.toLowerCase()
-        )
-        if (!isDuplicate) existing.items.push(bItem)
-      }
-    } else {
-      result.categories.push({ ...bCat, items: [...bCat.items] })
-    }
-  }
-  return result
-}
-
-export default function MenuImport({ restaurantId, allergens, onComplete }: {
+export default function MenuImport({
+  restaurantId,
+  allergens,
+  venueType,
+  onComplete,
+}: {
   restaurantId: string
   allergens: Allergen[]
+  venueType?: Restaurant['venue_type']
   onComplete: () => void
 }) {
+  const venueConfig = getVenueConfig(venueType)
+  const normalizedVenueType = normalizeVenueType(venueType)
+  const itemSingular = venueConfig.itemSingular
+  const itemPlural = venueConfig.itemPlural
+
   const [step, setStep] = useState<Step>('input')
-  const [mode, setMode] = useState<'image' | 'text' | 'pdf'>('image')
+  const [mode, setMode] = useState<ImportMode>('image')
   const [textContent, setTextContent] = useState('')
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [extracted, setExtracted] = useState<ExtractedMenu | null>(null)
   const [error, setError] = useState('')
-  const [saveProgress, setSaveProgress] = useState({ catIdx: 0, itemIdx: 0, totalCats: 0, totalItems: 0 })
+  const [saveProgress, setSaveProgress] = useState({
+    catIdx: 0,
+    itemIdx: 0,
+    totalCats: 0,
+    totalItems: 0,
+  })
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const [ingredientTexts, setIngredientTexts] = useState<Record<string, string>>({})
   const [uploadingImage, setUploadingImage] = useState<string | null>(null)
+  const [pdfProgress, setPdfProgress] = useState<{
+    current: number
+    total: number
+    itemsFound: number
+  } | null>(null)
+  const [pdfFileName, setPdfFileName] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const pdfRef = useRef<HTMLInputElement>(null)
-  const [pdfProgress, setPdfProgress] = useState<{ current: number; total: number; itemsFound: number } | null>(null)
-  const [pdfFileName, setPdfFileName] = useState<string | null>(null)
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
+  function handleFileSelect(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
     if (!file) return
 
     if (file.size > 10 * 1024 * 1024) {
-      setError('Archivo demasiado grande (máx. 10MB)')
+      setError('Archivo demasiado grande (max. 10 MB).')
       return
     }
 
@@ -95,43 +110,160 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
     reader.readAsDataURL(file)
   }
 
-  // Match AI-returned allergen names to DB allergen IDs
   function resolveAllergenIds(allergenNames: string[]): string[] {
     return allergenNames
-      .map(name => allergens.find(a => a.name.toLowerCase() === name.toLowerCase())?.id)
+      .map((name) => allergens.find((allergen) => allergen.name.toLowerCase() === name.toLowerCase())?.id)
       .filter((id): id is string => !!id)
+  }
+
+  function removeCategory(index: number) {
+    if (!extracted) return
+
+    setExtracted({
+      categories: extracted.categories.filter((_, categoryIndex) => categoryIndex !== index),
+    })
+  }
+
+  function removeItem(catIdx: number, itemIdx: number) {
+    if (!extracted) return
+
+    setExtracted({
+      categories: extracted.categories.map((category, categoryIndex) =>
+        categoryIndex === catIdx
+          ? { ...category, items: category.items.filter((_, currentItemIndex) => currentItemIndex !== itemIdx) }
+          : category,
+      ),
+    })
+  }
+
+  function toggleAllergen(catIdx: number, itemIdx: number, allergenId: string) {
+    if (!extracted) return
+
+    setExtracted({
+      categories: extracted.categories.map((category, categoryIndex) =>
+        categoryIndex === catIdx
+          ? {
+              ...category,
+              items: category.items.map((item, currentItemIndex) =>
+                currentItemIndex === itemIdx
+                  ? {
+                      ...item,
+                      _allergenIds: item._allergenIds?.includes(allergenId)
+                        ? item._allergenIds.filter((id) => id !== allergenId)
+                        : [...(item._allergenIds ?? []), allergenId],
+                    }
+                  : item,
+              ),
+            }
+          : category,
+      ),
+    })
+  }
+
+  function updateItem(catIdx: number, itemIdx: number, patch: Partial<ExtractedItem>) {
+    if (!extracted) return
+
+    setExtracted({
+      categories: extracted.categories.map((category, categoryIndex) =>
+        categoryIndex === catIdx
+          ? {
+              ...category,
+              items: category.items.map((item, currentItemIndex) =>
+                currentItemIndex === itemIdx ? { ...item, ...patch } : item,
+              ),
+            }
+          : category,
+      ),
+    })
+  }
+
+  function updateCategory(catIdx: number, patch: Partial<ExtractedCategory>) {
+    if (!extracted) return
+
+    setExtracted({
+      categories: extracted.categories.map((category, categoryIndex) =>
+        categoryIndex === catIdx ? { ...category, ...patch } : category,
+      ),
+    })
+  }
+
+  function toggleExpanded(key: string) {
+    setExpandedItems((previous) => {
+      const next = new Set(previous)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  async function handleImageUpload(catIdx: number, itemIdx: number, file: File) {
+    const key = `${catIdx}-${itemIdx}`
+    setUploadingImage(key)
+
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      body.append('restaurantId', restaurantId)
+
+      const response = await fetch('/api/upload', { method: 'POST', body })
+      const data = await response.json()
+
+      if (!response.ok) throw new Error(data.error || 'Upload failed')
+
+      setExtracted((previous) => {
+        if (!previous) return previous
+
+        return {
+          categories: previous.categories.map((category, categoryIndex) =>
+            categoryIndex === catIdx
+              ? {
+                  ...category,
+                  items: category.items.map((item, currentItemIndex) =>
+                    currentItemIndex === itemIdx ? { ...item, _imageUrl: data.url } : item,
+                  ),
+                }
+              : category,
+          ),
+        }
+      })
+    } catch {
+      toast.error('Error subiendo imagen')
+    } finally {
+      setUploadingImage(null)
+    }
   }
 
   async function processPdf(file: File): Promise<ExtractedMenu> {
     const pdfjsLib = await import('pdfjs-dist')
     pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
       'pdfjs-dist/build/pdf.worker.min.mjs',
-      import.meta.url
+      import.meta.url,
     ).toString()
 
     const arrayBuffer = await file.arrayBuffer()
     let pdf: Awaited<ReturnType<typeof pdfjsLib.getDocument>['promise']>
+
     try {
       pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise
-    } catch (err: unknown) {
-      const pdfError = err as { name?: string }
+    } catch (error: unknown) {
+      const pdfError = error as { name?: string }
       if (pdfError.name === 'PasswordException') {
-        throw new Error('Este PDF está protegido. Desbloquéalo antes de subirlo.')
+        throw new Error('Este PDF esta protegido. Desbloquealo antes de subirlo.')
       }
       if (pdfError.name === 'InvalidPDFException') {
-        throw new Error('El archivo no es un PDF válido.')
+        throw new Error('El archivo no es un PDF valido.')
       }
-      throw new Error('No se pudo leer el PDF. Prueba de nuevo o usa la opción Foto o Texto.')
+
+      throw new Error('No se pudo leer el PDF. Prueba otra vez o usa Foto o Texto.')
     }
 
-    const total = pdf.numPages
     let merged: ExtractedMenu = { categories: [] }
 
-    for (let pageNum = 1; pageNum <= total; pageNum++) {
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
       setPdfProgress({
         current: pageNum,
-        total,
-        itemsFound: merged.categories.reduce((acc, c) => acc + c.items.length, 0),
+        total: pdf.numPages,
+        itemsFound: merged.categories.reduce((acc, category) => acc + category.items.length, 0),
       })
 
       const page = await pdf.getPage(pageNum)
@@ -139,21 +271,25 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
       const canvas = document.createElement('canvas')
       canvas.width = viewport.width
       canvas.height = viewport.height
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('No se pudo preparar la página del PDF.')
-      await page.render({ canvas, canvasContext: ctx, viewport }).promise
+      const context = canvas.getContext('2d')
+
+      if (!context) throw new Error('No se pudo preparar la pagina del PDF.')
+
+      await page.render({ canvas, canvasContext: context, viewport }).promise
       const base64 = canvas.toDataURL('image/jpeg', 0.85)
 
       let pageResult: ExtractedMenu | null = null
+
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const res = await fetch('/api/menu/import', {
+          const response = await fetch('/api/menu/import', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'image', content: base64 }),
           })
-          if (res.ok) {
-            pageResult = await res.json()
+
+          if (response.ok) {
+            pageResult = await response.json()
             break
           }
         } catch {
@@ -179,265 +315,156 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
 
       if (mode === 'pdf') {
         const file = pdfRef.current?.files?.[0]
-        if (!file) throw new Error('No se ha seleccionado ningún PDF')
+        if (!file) throw new Error('No has seleccionado ningun PDF.')
         data = await processPdf(file)
         setPdfProgress(null)
       } else {
-        const body = mode === 'image'
-          ? { type: 'image', content: imagePreview }
-          : { type: 'text', content: textContent }
+        const body =
+          mode === 'image'
+            ? { type: 'image', content: imagePreview }
+            : { type: 'text', content: textContent }
 
-        const res = await fetch('/api/menu/import', {
+        const response = await fetch('/api/menu/import', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
 
-        if (!res.ok) {
-          const errData = await res.json()
-          throw new Error(errData.error || 'Error procesando')
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Error procesando la carta.')
         }
 
-        data = await res.json()
+        data = await response.json()
       }
 
       if (!data.categories?.length) {
-        throw new Error('No se encontraron platos. Prueba con la opción Foto o Texto.')
+        throw new Error(`No se encontraron ${itemPlural}. Prueba con Foto, PDF o Texto.`)
       }
 
-      // Resolve allergen names → IDs
-      for (const cat of data.categories) {
-        for (const item of cat.items) {
+      for (const category of data.categories) {
+        for (const item of category.items) {
           item._allergenIds = resolveAllergenIds(item.allergens ?? [])
         }
       }
 
       setExtracted(data)
       setStep('preview')
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Error desconocido'
-      setError(msg)
-      toast.error(msg)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido'
+      setError(message)
+      toast.error(message)
       setPdfProgress(null)
       setStep('input')
     }
   }
 
-  function removeCategory(idx: number) {
-    if (!extracted) return
-    setExtracted({
-      categories: extracted.categories.filter((_, i) => i !== idx),
-    })
-  }
-
-  function removeItem(catIdx: number, itemIdx: number) {
-    if (!extracted) return
-    setExtracted({
-      categories: extracted.categories.map((cat, ci) =>
-        ci === catIdx
-          ? { ...cat, items: cat.items.filter((_, ii) => ii !== itemIdx) }
-          : cat
-      ),
-    })
-  }
-
-  function toggleAllergen(catIdx: number, itemIdx: number, allergenId: string) {
-    if (!extracted) return
-    setExtracted({
-      categories: extracted.categories.map((cat, ci) =>
-        ci === catIdx
-          ? {
-              ...cat,
-              items: cat.items.map((item, ii) =>
-                ii === itemIdx
-                  ? {
-                      ...item,
-                      _allergenIds: item._allergenIds?.includes(allergenId)
-                        ? item._allergenIds.filter(id => id !== allergenId)
-                        : [...(item._allergenIds ?? []), allergenId],
-                    }
-                  : item
-              ),
-            }
-          : cat
-      ),
-    })
-  }
-
-  function updateItem(catIdx: number, itemIdx: number, patch: Partial<ExtractedItem>) {
-    if (!extracted) return
-    setExtracted({
-      categories: extracted.categories.map((cat, ci) =>
-        ci === catIdx
-          ? {
-              ...cat,
-              items: cat.items.map((item, ii) =>
-                ii === itemIdx ? { ...item, ...patch } : item
-              ),
-            }
-          : cat
-      ),
-    })
-  }
-
-  function updateCategory(catIdx: number, patch: Partial<ExtractedCategory>) {
-    if (!extracted) return
-    setExtracted({
-      categories: extracted.categories.map((cat, ci) =>
-        ci === catIdx ? { ...cat, ...patch } : cat
-      ),
-    })
-  }
-
-  function toggleExpanded(key: string) {
-    setExpandedItems(prev => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }
-
-  async function handleImageUpload(catIdx: number, itemIdx: number, file: File) {
-    const key = `${catIdx}-${itemIdx}`
-    setUploadingImage(key)
-
-    try {
-      const body = new FormData()
-      body.append('file', file)
-      body.append('restaurantId', restaurantId)
-
-      const res = await fetch('/api/upload', { method: 'POST', body })
-      const data = await res.json()
-
-      if (!res.ok) throw new Error(data.error || 'Upload failed')
-
-      setExtracted(prev => {
-        if (!prev) return prev
-        return {
-          categories: prev.categories.map((cat, ci) =>
-            ci === catIdx
-              ? {
-                  ...cat,
-                  items: cat.items.map((item, ii) =>
-                    ii === itemIdx ? { ...item, _imageUrl: data.url } : item
-                  ),
-                }
-              : cat
-          ),
-        }
-      })
-    } catch {
-      toast.error('Error subiendo imagen')
-    } finally {
-      setUploadingImage(null)
-    }
-  }
-
   async function handleSave() {
     if (!extracted) return
-    const totalItems = extracted.categories.reduce((acc, c) => acc + c.items.length, 0)
-    setSaveProgress({ catIdx: 0, itemIdx: 0, totalCats: extracted.categories.length, totalItems })
+
+    const totalItems = extracted.categories.reduce((acc, category) => acc + category.items.length, 0)
+    setSaveProgress({
+      catIdx: 0,
+      itemIdx: 0,
+      totalCats: extracted.categories.length,
+      totalItems,
+    })
     setStep('saving')
 
     try {
       let itemsDone = 0
-      let failedCats = 0
+      let failedCategories = 0
       let failedItems = 0
 
-      for (let i = 0; i < extracted.categories.length; i++) {
-        const cat = extracted.categories[i]
-        setSaveProgress(prev => ({ ...prev, catIdx: i + 1 }))
+      for (let categoryIndex = 0; categoryIndex < extracted.categories.length; categoryIndex++) {
+        const category = extracted.categories[categoryIndex]
+        setSaveProgress((previous) => ({ ...previous, catIdx: categoryIndex + 1 }))
 
-        const { data: catData, error: catErr } = await supabase
+        const { data: categoryData, error: categoryError } = await supabase
           .from('categories')
           .insert({
             restaurant_id: restaurantId,
-            name: cat.name,
-            emoji: cat.emoji || null,
-            display_order: i,
+            name: category.name,
+            emoji: category.emoji || null,
+            display_order: categoryIndex,
           })
           .select()
           .single()
 
-        if (catErr || !catData) {
-          failedCats++
-          failedItems += cat.items.length
+        if (categoryError || !categoryData) {
+          failedCategories++
+          failedItems += category.items.length
           continue
         }
 
-        for (let j = 0; j < cat.items.length; j++) {
-          const item = cat.items[j]
+        for (let itemIndex = 0; itemIndex < category.items.length; itemIndex++) {
+          const item = category.items[itemIndex]
           itemsDone++
-          setSaveProgress(prev => ({ ...prev, itemIdx: itemsDone }))
+          setSaveProgress((previous) => ({ ...previous, itemIdx: itemsDone }))
 
-          const { data: itemData, error: itemErr } = await supabase
+          const { data: itemData, error: itemError } = await supabase
             .from('menu_items')
             .insert({
-              category_id: catData.id,
+              category_id: categoryData.id,
               name: item.name,
               description: item.description || null,
               price: item.price || 0,
               available: true,
-              display_order: j,
+              display_order: itemIndex,
               image_url: item._imageUrl || null,
             })
             .select()
             .single()
 
-          if (itemErr || !itemData) {
+          if (itemError || !itemData) {
             failedItems++
             continue
           }
 
           if (item.ingredients?.length) {
             await supabase.from('ingredients').insert(
-              item.ingredients.map(name => ({
-                menu_item_id: itemData.id,
-                name,
-              }))
+              item.ingredients.map((name) => ({ menu_item_id: itemData.id, name })),
             )
           }
 
           if (item._allergenIds?.length) {
             await supabase.from('menu_item_allergens').insert(
-              item._allergenIds.map(allergen_id => ({
-                menu_item_id: itemData.id,
-                allergen_id,
-              }))
+              item._allergenIds.map((allergen_id) => ({ menu_item_id: itemData.id, allergen_id })),
             )
           }
         }
       }
 
-      if (failedCats > 0 || failedItems > 0) {
-        toast.warning(`Importación parcial: ${failedCats} categorías y ${failedItems} platos no se pudieron guardar.`)
+      if (failedCategories > 0 || failedItems > 0) {
+        toast.warning(
+          `Importacion parcial: ${failedCategories} categorias y ${failedItems} ${itemPlural} no se pudieron guardar.`,
+        )
       } else {
-        toast.success('Carta importada correctamente ✓')
+        toast.success('Carta importada correctamente')
       }
+
       setStep('done')
     } catch {
-      toast.error('Error guardando en base de datos')
-      setError('Error guardando en base de datos')
+      toast.error('Error guardando en la base de datos')
+      setError('Error guardando en la base de datos')
       setStep('preview')
     }
   }
 
-  // ─── STEP: INPUT ───
   if (step === 'input') {
     return (
-      <Card className="border-dashed border-2 border-primary/20">
+      <Card className="border-2 border-dashed border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-serif text-xl">
-            <Sparkles className="w-5 h-5 text-primary" />
-            Importar carta con IA
+            <Sparkles className="h-5 w-5 text-primary" />
+            Importar carta del local con IA
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Sube una foto, un PDF o pega el texto de tu carta. La IA extraerá los platos automáticamente.
+            Sube una foto, un PDF o pega texto. La IA extraera categorias, {itemPlural}, precios e ingredientes.
           </p>
         </CardHeader>
+
         <CardContent className="space-y-4">
-          {/* Mode toggle */}
           <div className="flex gap-2">
             <Button
               variant={mode === 'image' ? 'default' : 'outline'}
@@ -445,8 +472,8 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
               onClick={() => setMode('image')}
               className="cursor-pointer"
             >
-              <Camera className="w-4 h-4 mr-1.5" />
-              Foto de carta
+              <Camera className="mr-1.5 h-4 w-4" />
+              Foto
             </Button>
             <Button
               variant={mode === 'text' ? 'default' : 'outline'}
@@ -454,8 +481,8 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
               onClick={() => setMode('text')}
               className="cursor-pointer"
             >
-              <FileText className="w-4 h-4 mr-1.5" />
-              Pegar texto
+              <FileText className="mr-1.5 h-4 w-4" />
+              Texto
             </Button>
             <Button
               variant={mode === 'pdf' ? 'default' : 'outline'}
@@ -463,34 +490,32 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
               onClick={() => setMode('pdf')}
               className="cursor-pointer"
             >
-              <FileUp className="w-4 h-4 mr-1.5" />
+              <FileUp className="mr-1.5 h-4 w-4" />
               PDF
             </Button>
           </div>
 
           {mode === 'image' ? (
             <div className="space-y-3">
-              <Label>Sube una foto o captura de tu carta</Label>
-              <Input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleFileSelect}
-              />
+              <Label>Sube una foto o captura de la carta</Label>
+              <Input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} />
               {imagePreview && (
                 <div className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imagePreview}
-                    alt="Preview carta"
-                    className="max-h-64 rounded-lg border border-border object-contain mx-auto"
+                    alt="Vista previa de la carta"
+                    className="mx-auto max-h-64 rounded-lg border border-border object-contain"
                   />
                   <button
-                    className="absolute top-2 right-2 bg-destructive text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
-                    onClick={() => { setImagePreview(null); if (fileRef.current) fileRef.current.value = '' }}
+                    type="button"
+                    className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-white"
+                    onClick={() => {
+                      setImagePreview(null)
+                      if (fileRef.current) fileRef.current.value = ''
+                    }}
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               )}
@@ -499,96 +524,93 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
             <div className="space-y-3">
               <Label>Sube tu carta en PDF</Label>
               <div
-                className="border-2 border-dashed border-primary/30 rounded-xl p-8 text-center cursor-pointer hover:border-primary/60 transition-colors bg-muted/30"
+                className="cursor-pointer rounded-xl border-2 border-dashed border-primary/30 bg-muted/30 p-8 text-center transition-colors hover:border-primary/60"
                 onClick={() => pdfRef.current?.click()}
               >
-                <FileUp className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                <FileUp className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
                 <p className="text-sm font-medium text-foreground">Haz clic para seleccionar un PDF</p>
-                <p className="text-xs text-muted-foreground mt-1">Digital o escaneado · Máx. 20 MB</p>
+                <p className="mt-1 text-xs text-muted-foreground">Digital o escaneado · Max. 20 MB</p>
                 <input
                   ref={pdfRef}
                   type="file"
                   accept=".pdf"
                   className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
                     if (!file) return
+
                     if (file.size > 20 * 1024 * 1024) {
-                      setError('El PDF es demasiado grande (máx. 20 MB).')
-                      e.target.value = ''
+                      setError('El PDF es demasiado grande (max. 20 MB).')
+                      event.target.value = ''
                       setPdfFileName(null)
                       return
                     }
+
                     setError('')
                     setPdfFileName(file.name)
                   }}
                 />
               </div>
               {pdfFileName && (
-                <p className="text-sm text-muted-foreground flex items-center gap-2">
-                  <FileUp className="w-4 h-4 text-primary" />
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <FileUp className="h-4 w-4 text-primary" />
                   {pdfFileName}
                 </p>
               )}
             </div>
           ) : (
             <div className="space-y-2">
-              <Label>Pega aquí el texto de tu carta</Label>
+              <Label>Pega aqui el texto de la carta</Label>
               <Textarea
-                placeholder={"ENTRANTES\nEnsalada César - 9.50€\nCroquetas caseras - 7.00€\n\nPRINCIPALES\nEntrecot de ternera - 18.00€\nMerluza a la plancha - 15.50€"}
+                placeholder={getImportTextPlaceholder(normalizedVenueType)}
                 value={textContent}
-                onChange={e => setTextContent(e.target.value)}
+                onChange={(event) => setTextContent(event.target.value)}
                 rows={10}
                 className="font-mono text-sm"
               />
             </div>
           )}
 
-          {error && (
-            <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>
-          )}
+          {error && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
 
           <Button
             onClick={handleExtract}
             disabled={
-              mode === 'image' ? !imagePreview :
-              mode === 'pdf' ? !pdfFileName :
-              !textContent.trim()
+              mode === 'image' ? !imagePreview : mode === 'pdf' ? !pdfFileName : !textContent.trim()
             }
             className="w-full cursor-pointer"
             size="lg"
           >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Extraer carta con IA
+            <Sparkles className="mr-2 h-4 w-4" />
+            Extraer {itemPlural} con IA
           </Button>
         </CardContent>
       </Card>
     )
   }
 
-  // ─── STEP: LOADING ───
   if (step === 'loading') {
     return (
       <Card>
         <CardContent className="py-20 text-center">
-          <Loader2 className="w-10 h-10 mx-auto mb-4 text-primary animate-spin" />
+          <Loader2 className="mx-auto mb-4 h-10 w-10 animate-spin text-primary" />
           {pdfProgress ? (
             <>
-              <p className="text-lg font-medium text-foreground">Extrayendo carta del PDF...</p>
-              <div className="max-w-xs mx-auto mt-6 space-y-2">
+              <p className="text-lg font-medium text-foreground">Extrayendo la carta del PDF...</p>
+              <div className="mx-auto mt-6 max-w-xs space-y-2">
                 <Progress value={Math.round((pdfProgress.current / pdfProgress.total) * 100)} className="h-2" />
                 <p className="text-sm text-muted-foreground">
-                  Página {pdfProgress.current} de {pdfProgress.total}
-                  {pdfProgress.itemsFound > 0 && (
-                    <> · {pdfProgress.itemsFound} platos encontrados</>
-                  )}
+                  Pagina {pdfProgress.current} de {pdfProgress.total}
+                  {pdfProgress.itemsFound > 0 && <> · {pdfProgress.itemsFound} {itemPlural} encontrados</>}
                 </p>
               </div>
             </>
           ) : (
             <>
-              <p className="text-lg font-medium text-foreground">Analizando tu carta...</p>
-              <p className="text-sm text-muted-foreground mt-2">La IA está extrayendo los platos y detectando alérgenos. Esto puede tardar unos segundos.</p>
+              <p className="text-lg font-medium text-foreground">Analizando la carta...</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                La IA esta detectando categorias, {itemPlural}, ingredientes y alergenos.
+              </p>
             </>
           )}
         </CardContent>
@@ -596,31 +618,37 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
     )
   }
 
-  // ─── STEP: PREVIEW ───
   if (step === 'preview' && extracted) {
-    const totalItems = extracted.categories.reduce((acc, c) => acc + c.items.length, 0)
+    const totalItems = extracted.categories.reduce((acc, category) => acc + category.items.length, 0)
 
     return (
       <div className="space-y-4">
         <Card className="border-primary/20">
           <CardContent className="py-4">
-            <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="font-medium text-foreground flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-primary" />
-                  Se encontraron {extracted.categories.length} categorías y {totalItems} platos
+                <p className="flex items-center gap-2 font-medium text-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  Se encontraron {extracted.categories.length} categorias y {totalItems} {itemPlural}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Revisa y edita el resultado antes de guardar. Puedes modificar cualquier campo, alérgenos y fotos.
+                  Revisa y edita el resultado antes de guardar. Puedes ajustar nombres, alergenos, imagenes y precios.
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => { setStep('input'); setExtracted(null) }} className="cursor-pointer">
-                  <ArrowLeft className="w-4 h-4 mr-1.5" />
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setStep('input')
+                    setExtracted(null)
+                  }}
+                  className="cursor-pointer"
+                >
+                  <ArrowLeft className="mr-1.5 h-4 w-4" />
                   Volver
                 </Button>
                 <Button onClick={handleSave} className="cursor-pointer">
-                  <Save className="w-4 h-4 mr-1.5" />
+                  <Save className="mr-1.5 h-4 w-4" />
                   Guardar todo
                 </Button>
               </div>
@@ -628,163 +656,202 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
           </CardContent>
         </Card>
 
-        {extracted.categories.map((cat, catIdx) => (
-          <Card key={catIdx}>
+        {extracted.categories.map((category, catIdx) => (
+          <Card key={`${category.name}-${catIdx}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
                   <Input
-                    value={cat.emoji}
-                    onChange={e => updateCategory(catIdx, { emoji: e.target.value })}
-                    className="w-12 text-center px-1"
-                    placeholder="🍕"
+                    value={category.emoji}
+                    onChange={(event) => updateCategory(catIdx, { emoji: event.target.value })}
+                    className="w-12 px-1 text-center"
+                    placeholder="🍽"
                   />
                   <Input
-                    value={cat.name}
-                    onChange={e => updateCategory(catIdx, { name: e.target.value })}
+                    value={category.name}
+                    onChange={(event) => updateCategory(catIdx, { name: event.target.value })}
                     className="flex-1 font-serif font-semibold"
-                    placeholder="Nombre categoría"
+                    placeholder="Nombre de categoria"
                   />
-                  <Badge variant="secondary" className="text-xs font-normal shrink-0">{cat.items.length} platos</Badge>
+                  <Badge variant="secondary" className="shrink-0 text-xs font-normal">
+                    {category.items.length} {itemPlural}
+                  </Badge>
                 </div>
+
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-destructive hover:text-destructive cursor-pointer"
+                  className="cursor-pointer text-destructive hover:text-destructive"
                   onClick={() => removeCategory(catIdx)}
                 >
-                  <Trash2 className="w-4 h-4 mr-1" />
+                  <Trash2 className="mr-1 h-4 w-4" />
                   Eliminar
                 </Button>
               </div>
             </CardHeader>
+
             <CardContent>
               <div className="space-y-2">
-                {cat.items.map((item, itemIdx) => {
+                {category.items.map((item, itemIdx) => {
                   const itemKey = `${catIdx}-${itemIdx}`
                   const isExpanded = expandedItems.has(itemKey)
                   const allergenCount = item._allergenIds?.length ?? 0
 
                   return (
-                    <div
-                      key={itemIdx}
-                      className="p-3 bg-muted/50 rounded-lg space-y-2"
-                    >
-                      {/* Item header */}
+                    <div key={itemKey} className="space-y-2 rounded-lg bg-muted/50 p-3">
                       <div className="flex items-start justify-between">
-                        <div className="flex gap-3 flex-1 min-w-0">
-                          {/* Image thumbnail or upload */}
+                        <div className="flex min-w-0 flex-1 gap-3">
                           {item._imageUrl ? (
                             <div className="relative shrink-0">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={item._imageUrl}
                                 alt={item.name}
-                                className="w-14 h-14 rounded-lg object-cover border border-border"
+                                className="h-14 w-14 rounded-lg border border-border object-cover"
                               />
                               <button
-                                className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full w-4 h-4 flex items-center justify-center cursor-pointer"
+                                type="button"
+                                className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-white"
                                 onClick={() => {
-                                  setExtracted(prev => {
-                                    if (!prev) return prev
+                                  setExtracted((previous) => {
+                                    if (!previous) return previous
+
                                     return {
-                                      categories: prev.categories.map((c, ci) =>
-                                        ci === catIdx
-                                          ? { ...c, items: c.items.map((it, ii) => ii === itemIdx ? { ...it, _imageUrl: undefined } : it) }
-                                          : c
+                                      categories: previous.categories.map((currentCategory, categoryIndex) =>
+                                        categoryIndex === catIdx
+                                          ? {
+                                              ...currentCategory,
+                                              items: currentCategory.items.map((currentItem, currentItemIndex) =>
+                                                currentItemIndex === itemIdx
+                                                  ? { ...currentItem, _imageUrl: undefined }
+                                                  : currentItem,
+                                              ),
+                                            }
+                                          : currentCategory,
                                       ),
                                     }
                                   })
                                 }}
                               >
-                                <X className="w-2.5 h-2.5" />
+                                <X className="h-2.5 w-2.5" />
                               </button>
                             </div>
                           ) : (
-                            <label className="shrink-0 w-14 h-14 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                            <label className="flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 transition-colors hover:border-primary/50">
                               {uploadingImage === itemKey ? (
-                                <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                               ) : (
-                                <ImagePlus className="w-5 h-5 text-muted-foreground" />
+                                <ImagePlus className="h-5 w-5 text-muted-foreground" />
                               )}
                               <input
                                 type="file"
                                 accept="image/*"
                                 className="hidden"
-                                onChange={(e) => {
-                                  const f = e.target.files?.[0]
-                                  if (f) handleImageUpload(catIdx, itemIdx, f)
-                                  e.target.value = ''
+                                onChange={(event) => {
+                                  const file = event.target.files?.[0]
+                                  if (file) handleImageUpload(catIdx, itemIdx, file)
+                                  event.target.value = ''
                                 }}
                               />
                             </label>
                           )}
 
-                          <div className="flex-1 min-w-0 space-y-1.5">
+                          <div className="min-w-0 flex-1 space-y-1.5">
                             <div className="flex items-center gap-2">
                               <Input
                                 value={item.name}
-                                onChange={e => updateItem(catIdx, itemIdx, { name: e.target.value })}
-                                className="flex-1 h-8 text-sm font-medium"
-                                placeholder="Nombre del plato"
+                                onChange={(event) => updateItem(catIdx, itemIdx, { name: event.target.value })}
+                                className="h-8 flex-1 text-sm font-medium"
+                                placeholder={`Nombre del ${itemSingular}`}
                               />
-                              <div className="flex items-center gap-1 shrink-0">
+                              <div className="flex shrink-0 items-center gap-1">
                                 <Input
                                   type="number"
                                   step="0.01"
                                   min="0"
                                   value={item.price || ''}
-                                  onChange={e => updateItem(catIdx, itemIdx, { price: parseFloat(e.target.value) || 0 })}
-                                  className="w-20 h-8 text-sm text-right tabular-nums"
+                                  onChange={(event) =>
+                                    updateItem(catIdx, itemIdx, {
+                                      price: parseFloat(event.target.value) || 0,
+                                    })
+                                  }
+                                  className="h-8 w-24 text-right text-sm tabular-nums"
                                   placeholder="0.00"
                                 />
-                                <span className="text-sm text-muted-foreground">€</span>
+                                <span className="text-sm text-muted-foreground">EUR</span>
                               </div>
                             </div>
+
                             <Input
                               value={item.description ?? ''}
-                              onChange={e => updateItem(catIdx, itemIdx, { description: e.target.value || null })}
+                              onChange={(event) =>
+                                updateItem(catIdx, itemIdx, {
+                                  description: event.target.value || null,
+                                })
+                              }
                               className="h-7 text-xs text-muted-foreground"
-                              placeholder="Descripción (opcional)"
+                              placeholder={`Descripcion del ${itemSingular} (opcional)`}
                             />
+
                             <Input
                               value={ingredientTexts[itemKey] ?? item.ingredients?.join(', ') ?? ''}
-                              onChange={e => setIngredientTexts(prev => ({ ...prev, [itemKey]: e.target.value }))}
+                              onChange={(event) =>
+                                setIngredientTexts((previous) => ({
+                                  ...previous,
+                                  [itemKey]: event.target.value,
+                                }))
+                              }
                               onBlur={() => {
                                 const text = ingredientTexts[itemKey]
                                 if (text != null) {
                                   updateItem(catIdx, itemIdx, {
-                                    ingredients: text.split(',').map(s => s.trim()).filter(Boolean)
+                                    ingredients: text
+                                      .split(',')
+                                      .map((value) => value.trim())
+                                      .filter(Boolean),
                                   })
                                 }
                               }}
                               className="h-7 text-xs text-muted-foreground"
-                              placeholder="Ingredientes separados por comas"
+                              placeholder="Ingredientes o componentes separados por comas"
                             />
-                            {/* Allergen summary badges */}
-                            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+
+                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                               {allergenCount > 0 ? (
-                                item._allergenIds?.map(aId => {
-                                  const a = allergens.find(al => al.id === aId)
-                                  if (!a) return null
+                                item._allergenIds?.map((allergenId) => {
+                                  const allergen = allergens.find((current) => current.id === allergenId)
+                                  if (!allergen) return null
+
                                   return (
-                                    <Badge key={aId} variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5">
-                                      <AlertTriangle className="w-2.5 h-2.5" />
-                                      {a.icon} {a.name}
+                                    <Badge
+                                      key={allergenId}
+                                      variant="outline"
+                                      className="gap-0.5 px-1.5 py-0 text-[10px]"
+                                    >
+                                      <AlertTriangle className="h-2.5 w-2.5" />
+                                      {allergen.icon} {allergen.name}
                                     </Badge>
                                   )
                                 })
                               ) : (
-                                <span className="text-[10px] text-muted-foreground">Sin alérgenos detectados</span>
+                                <span className="text-[10px] text-muted-foreground">Sin alergenos detectados</span>
                               )}
+
                               <button
-                                className="text-[10px] text-primary hover:underline cursor-pointer ml-1"
+                                type="button"
+                                className="ml-1 cursor-pointer text-[10px] text-primary hover:underline"
                                 onClick={() => toggleExpanded(itemKey)}
                               >
                                 {isExpanded ? (
-                                  <span className="flex items-center gap-0.5"><ChevronUp className="w-3 h-3" /> Cerrar</span>
+                                  <span className="flex items-center gap-0.5">
+                                    <ChevronUp className="h-3 w-3" />
+                                    Cerrar
+                                  </span>
                                 ) : (
-                                  <span className="flex items-center gap-0.5"><ChevronDown className="w-3 h-3" /> Editar alérgenos</span>
+                                  <span className="flex items-center gap-0.5">
+                                    <ChevronDown className="h-3 w-3" />
+                                    Editar alergenos
+                                  </span>
                                 )}
                               </button>
                             </div>
@@ -792,30 +859,30 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
                         </div>
 
                         <button
-                          className="text-muted-foreground hover:text-destructive ml-2 shrink-0 cursor-pointer transition-colors"
+                          type="button"
+                          className="ml-2 shrink-0 cursor-pointer text-muted-foreground transition-colors hover:text-destructive"
                           onClick={() => removeItem(catIdx, itemIdx)}
                         >
-                          <X className="w-4 h-4" />
+                          <X className="h-4 w-4" />
                         </button>
                       </div>
 
-                      {/* Expanded allergen editor */}
                       {isExpanded && (
-                        <div className="pt-2 border-t border-border/50">
-                          <Label className="text-xs text-muted-foreground mb-2 block">Alérgenos</Label>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                            {allergens.map((a) => (
-                              <div key={a.id} className="flex items-center gap-1.5">
+                        <div className="border-t border-border/50 pt-2">
+                          <Label className="mb-2 block text-xs text-muted-foreground">Alergenos</Label>
+                          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                            {allergens.map((allergen) => (
+                              <div key={allergen.id} className="flex items-center gap-1.5">
                                 <Checkbox
-                                  id={`import-allergen-${catIdx}-${itemIdx}-${a.id}`}
-                                  checked={item._allergenIds?.includes(a.id) ?? false}
-                                  onCheckedChange={() => toggleAllergen(catIdx, itemIdx, a.id)}
+                                  id={`import-allergen-${catIdx}-${itemIdx}-${allergen.id}`}
+                                  checked={item._allergenIds?.includes(allergen.id) ?? false}
+                                  onCheckedChange={() => toggleAllergen(catIdx, itemIdx, allergen.id)}
                                 />
                                 <label
-                                  htmlFor={`import-allergen-${catIdx}-${itemIdx}-${a.id}`}
-                                  className="text-xs cursor-pointer"
+                                  htmlFor={`import-allergen-${catIdx}-${itemIdx}-${allergen.id}`}
+                                  className="cursor-pointer text-xs"
                                 >
-                                  {a.icon} {a.name}
+                                  {allergen.icon} {allergen.name}
                                 </label>
                               </div>
                             ))}
@@ -830,39 +897,49 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
           </Card>
         ))}
 
-        <div className="flex gap-2 justify-end">
-          <Button variant="outline" onClick={() => { setStep('input'); setExtracted(null) }} className="cursor-pointer">
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setStep('input')
+              setExtracted(null)
+            }}
+            className="cursor-pointer"
+          >
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
             Volver
           </Button>
           <Button onClick={handleSave} className="cursor-pointer">
-            <Save className="w-4 h-4 mr-1.5" />
-            Guardar {totalItems} platos
+            <Save className="mr-1.5 h-4 w-4" />
+            Guardar {totalItems} {itemPlural}
           </Button>
         </div>
       </div>
     )
   }
 
-  // ─── STEP: SAVING ───
   if (step === 'saving') {
-    const pct = saveProgress.totalItems > 0
-      ? Math.round((saveProgress.itemIdx / saveProgress.totalItems) * 100)
-      : 0
+    const percent =
+      saveProgress.totalItems > 0
+        ? Math.round((saveProgress.itemIdx / saveProgress.totalItems) * 100)
+        : 0
 
     return (
       <Card>
-        <CardContent className="py-16 space-y-6">
+        <CardContent className="space-y-6 py-16">
           <div className="text-center">
-            <Loader2 className="w-10 h-10 mx-auto mb-4 text-primary animate-spin" />
-            <p className="text-lg font-medium text-foreground">Guardando carta...</p>
+            <Loader2 className="mx-auto mb-4 h-10 w-10 animate-spin text-primary" />
+            <p className="text-lg font-medium text-foreground">Guardando la carta...</p>
           </div>
-          <div className="max-w-md mx-auto space-y-3">
-            <Progress value={pct} className="h-2" />
-            <p className="text-sm text-muted-foreground text-center">
-              Guardando categoría {saveProgress.catIdx} de {saveProgress.totalCats}
+          <div className="mx-auto max-w-md space-y-3">
+            <Progress value={percent} className="h-2" />
+            <p className="text-center text-sm text-muted-foreground">
+              Guardando categoria {saveProgress.catIdx} de {saveProgress.totalCats}
               {saveProgress.totalItems > 0 && (
-                <> · plato {saveProgress.itemIdx} de {saveProgress.totalItems}</>
+                <>
+                  {' '}
+                  · {itemSingular} {saveProgress.itemIdx} de {saveProgress.totalItems}
+                </>
               )}
             </p>
           </div>
@@ -871,14 +948,13 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
     )
   }
 
-  // ─── STEP: DONE ───
   return (
     <Card className="border-primary/20">
       <CardContent className="py-16 text-center">
-        <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-primary" />
-        <p className="text-xl font-serif text-foreground">¡Carta importada!</p>
-        <p className="text-sm text-muted-foreground mt-2">
-          Todos los platos se han guardado correctamente.
+        <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-primary" />
+        <p className="font-serif text-xl text-foreground">Carta importada</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Todos los {itemPlural} se han guardado correctamente.
         </p>
         <Button className="mt-6 cursor-pointer" onClick={onComplete}>
           Ver mi carta
@@ -886,4 +962,60 @@ export default function MenuImport({ restaurantId, allergens, onComplete }: {
       </CardContent>
     </Card>
   )
+}
+
+function mergeExtractedMenus(first: ExtractedMenu, second: ExtractedMenu): ExtractedMenu {
+  const result: ExtractedMenu = {
+    categories: first.categories.map((category) => ({ ...category, items: [...category.items] })),
+  }
+
+  for (const secondCategory of second.categories) {
+    const existing = result.categories.find(
+      (currentCategory) => currentCategory.name.toLowerCase() === secondCategory.name.toLowerCase(),
+    )
+
+    if (existing) {
+      for (const secondItem of secondCategory.items) {
+        const isDuplicate = existing.items.some(
+          (currentItem) => currentItem.name.toLowerCase() === secondItem.name.toLowerCase(),
+        )
+
+        if (!isDuplicate) existing.items.push(secondItem)
+      }
+    } else {
+      result.categories.push({ ...secondCategory, items: [...secondCategory.items] })
+    }
+  }
+
+  return result
+}
+
+function getImportTextPlaceholder(venueType: ReturnType<typeof normalizeVenueType>) {
+  if (venueType === 'bar_cafe') {
+    return `CAFES
+Cafe con leche - 1.80
+Americano - 1.70
+
+DESAYUNOS
+Tostada de tomate - 2.90
+Croissant mixto - 3.50`
+  }
+
+  if (venueType === 'cocktail_bar') {
+    return `CLASICOS
+Negroni - 10.00
+Mojito - 9.50
+
+SIN ALCOHOL
+Virgin Colada - 8.00
+Spritz 0,0 - 7.50`
+  }
+
+  return `ENTRANTES
+Ensalada Cesar - 9.50
+Croquetas caseras - 7.00
+
+PRINCIPALES
+Entrecot de ternera - 18.00
+Merluza a la plancha - 15.50`
 }

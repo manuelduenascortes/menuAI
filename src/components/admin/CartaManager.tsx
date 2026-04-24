@@ -1,8 +1,40 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase-client'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { CSS } from '@dnd-kit/utilities'
+import {
+  AlertTriangle,
+  GripVertical,
+  ImagePlus,
+  Leaf,
+  Loader2,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { supabase } from '@/lib/supabase-client'
+import type { Allergen, DietaryTag, Restaurant } from '@/lib/types'
+import { getVenueConfig, normalizeVenueType } from '@/lib/venue-config'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,34 +43,19 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { Plus, Trash2, X, AlertTriangle, Leaf, Pencil, GripVertical, ImagePlus, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
-import type { Restaurant, Allergen, DietaryTag } from '@/lib/types'
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import type { DragEndEvent } from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { Switch } from '@/components/ui/switch'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface Props {
   restaurant: Restaurant
@@ -68,16 +85,22 @@ interface MenuItemFull {
   menu_item_tags: { tag_id: string; dietary_tags: DietaryTag }[]
 }
 
-export default function CartaManager({ restaurant, initialCategories, allergens, dietaryTags }: Props) {
+export default function CartaManager({
+  restaurant,
+  initialCategories,
+  allergens,
+  dietaryTags,
+}: Props) {
   const router = useRouter()
+  const venueConfig = getVenueConfig(restaurant.venue_type)
+  const itemSingular = venueConfig.itemSingular
+  const itemPlural = venueConfig.itemPlural
+  const itemSingularTitle = capitalize(itemSingular)
+  const categoryExamples = getCategoryExamples(restaurant.venue_type)
+
   const [categories, setCategories] = useState<CategoryWithItems[]>(initialCategories)
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
-
-  useEffect(() => {
-    setCategories(initialCategories)
-  }, [initialCategories])
-
   const [newCategory, setNewCategory] = useState({ name: '', emoji: '', description: '' })
   const [addingCategory, setAddingCategory] = useState(false)
   const [loadingCategory, setLoadingCategory] = useState(false)
@@ -87,18 +110,51 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
     description: string
     onConfirm: () => void
   }>({ open: false, title: '', description: '', onConfirm: () => {} })
+  const totalItems = categories.reduce((acc, category) => acc + category.menu_items.length, 0)
+
+  useEffect(() => {
+    setCategories(initialCategories)
+  }, [initialCategories])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
 
   function toggleSelectAll() {
-    const allCatIds = categories.map(c => c.id)
-    const allItemIds = categories.flatMap(c => c.menu_items.map(i => i.id))
-    
-    if (selectedCategories.size === allCatIds.length && selectedItems.size === allItemIds.length && allCatIds.length + allItemIds.length > 0) {
+    const allCategoryIds = categories.map((category) => category.id)
+    const allItemIds = categories.flatMap((category) => category.menu_items.map((item) => item.id))
+
+    if (
+      selectedCategories.size === allCategoryIds.length &&
+      selectedItems.size === allItemIds.length &&
+      allCategoryIds.length + allItemIds.length > 0
+    ) {
       setSelectedCategories(new Set())
       setSelectedItems(new Set())
-    } else {
-      setSelectedCategories(new Set(allCatIds))
-      setSelectedItems(new Set(allItemIds))
+      return
     }
+
+    setSelectedCategories(new Set(allCategoryIds))
+    setSelectedItems(new Set(allItemIds))
+  }
+
+  function toggleCategorySelection(id: string) {
+    setSelectedCategories((previous) => {
+      const next = new Set(previous)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleItemSelection(id: string) {
+    setSelectedItems((previous) => {
+      const next = new Set(previous)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
 
   function handleBulkDelete() {
@@ -107,93 +163,84 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
 
     setConfirmDialog({
       open: true,
-      title: '¿Borrar selección?',
-      description: `Se eliminarán ${selectedCategories.size} categorías y ${selectedItems.size} platos. Esta acción no se puede deshacer.`,
+      title: 'Borrar seleccion?',
+      description: `Se eliminaran ${selectedCategories.size} categorias y ${selectedItems.size} ${itemPlural}. Esta accion no se puede deshacer.`,
       onConfirm: async () => {
         let errorOccurred = false
+
         if (selectedCategories.size > 0) {
-          const { error } = await supabase.from('categories').delete().in('id', Array.from(selectedCategories))
+          const { error } = await supabase
+            .from('categories')
+            .delete()
+            .in('id', Array.from(selectedCategories))
+
           if (error) errorOccurred = true
         }
+
         if (selectedItems.size > 0) {
-          const itemsToExplicitlyDelete = Array.from(selectedItems).filter(itemId => {
-             const cat = categories.find(c => c.menu_items.some(i => i.id === itemId))
-             return cat && !selectedCategories.has(cat.id)
+          const itemsToDelete = Array.from(selectedItems).filter((itemId) => {
+            const category = categories.find((currentCategory) =>
+              currentCategory.menu_items.some((item) => item.id === itemId),
+            )
+
+            return !!category && !selectedCategories.has(category.id)
           })
-          if (itemsToExplicitlyDelete.length > 0) {
-            const { error } = await supabase.from('menu_items').delete().in('id', itemsToExplicitlyDelete)
+
+          if (itemsToDelete.length > 0) {
+            const { error } = await supabase
+              .from('menu_items')
+              .delete()
+              .in('id', itemsToDelete)
+
             if (error) errorOccurred = true
           }
         }
 
         if (errorOccurred) {
-          toast.error('Ocurrió un error al borrar algunos elementos')
+          toast.error('Ocurrio un error al borrar algunos elementos')
         } else {
           toast.success('Elementos seleccionados eliminados')
         }
 
-        setCategories(prev => prev
-          .filter(c => !selectedCategories.has(c.id))
-          .map(c => ({
-            ...c,
-            menu_items: c.menu_items.filter(i => !selectedItems.has(i.id))
-          }))
+        setCategories((previous) =>
+          previous
+            .filter((category) => !selectedCategories.has(category.id))
+            .map((category) => ({
+              ...category,
+              menu_items: category.menu_items.filter((item) => !selectedItems.has(item.id)),
+            })),
         )
         setSelectedCategories(new Set())
         setSelectedItems(new Set())
-      }
+      },
     })
   }
-
-  function toggleCategorySelection(id: string) {
-    setSelectedCategories(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  function toggleItemSelection(id: string) {
-    setSelectedItems(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  )
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const oldIndex = categories.findIndex((i) => i.id === active.id)
-    const newIndex = categories.findIndex((i) => i.id === over.id)
+    const oldIndex = categories.findIndex((category) => category.id === active.id)
+    const newIndex = categories.findIndex((category) => category.id === over.id)
     const newArray = arrayMove(categories, oldIndex, newIndex)
 
-    // Optimistic update
-    setCategories(newArray.map((cat, idx) => ({ ...cat, display_order: idx })))
+    setCategories(newArray.map((category, index) => ({ ...category, display_order: index })))
 
-    // Batch update with error recovery
     const results = await Promise.all(
-      newArray.map((cat, idx) =>
-        supabase.from('categories').update({ display_order: idx }).eq('id', cat.id)
-      )
+      newArray.map((category, index) =>
+        supabase.from('categories').update({ display_order: index }).eq('id', category.id),
+      ),
     )
-    const failed = results.some((r) => r.error)
-    if (failed) {
-      toast.error('Error al guardar orden. Recargando...')
+
+    if (results.some((result) => result.error)) {
+      toast.error('Error al guardar el orden. Recargando...')
       router.refresh()
     }
   }
 
   async function addCategory() {
     if (!newCategory.name.trim()) return
+
     setLoadingCategory(true)
     const { data, error } = await supabase
       .from('categories')
@@ -211,109 +258,149 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
       setCategories([...categories, { ...data, menu_items: [] }])
       setNewCategory({ name: '', emoji: '', description: '' })
       setAddingCategory(false)
-      toast.success('Categoría añadida ✓')
+      toast.success('Categoria anadida')
     } else {
-      toast.error('Error al añadir categoría')
+      toast.error('Error al anadir categoria')
     }
+
     setLoadingCategory(false)
   }
 
   function deleteCategory(categoryId: string) {
     setConfirmDialog({
       open: true,
-      title: '¿Eliminar esta categoría?',
-      description: 'Se eliminarán también todos los platos de esta categoría. Esta acción no se puede deshacer.',
+      title: 'Eliminar esta categoria?',
+      description: `Se eliminaran tambien todos los ${itemPlural} de esta categoria. Esta accion no se puede deshacer.`,
       onConfirm: async () => {
         const { error } = await supabase.from('categories').delete().eq('id', categoryId)
-        if (error) { toast.error('Error al eliminar categoría'); return }
-        setCategories(prev => prev.filter(c => c.id !== categoryId))
-        toast.success('Categoría eliminada')
+
+        if (error) {
+          toast.error('Error al eliminar categoria')
+          return
+        }
+
+        setCategories((previous) => previous.filter((category) => category.id !== categoryId))
+        toast.success('Categoria eliminada')
       },
     })
   }
 
   async function toggleItemAvailable(itemId: string, available: boolean, categoryId: string) {
     const { error } = await supabase.from('menu_items').update({ available }).eq('id', itemId)
-    if (error) { toast.error('Error al cambiar disponibilidad'); return }
-    setCategories(categories.map(c =>
-      c.id === categoryId
-        ? { ...c, menu_items: c.menu_items.map(i => i.id === itemId ? { ...i, available } : i) }
-        : c
-    ))
-    toast.success(available ? 'Plato disponible' : 'Plato no disponible')
+    if (error) {
+      toast.error('Error al cambiar disponibilidad')
+      return
+    }
+
+    setCategories((previous) =>
+      previous.map((category) =>
+        category.id === categoryId
+          ? {
+              ...category,
+              menu_items: category.menu_items.map((item) =>
+                item.id === itemId ? { ...item, available } : item,
+              ),
+            }
+          : category,
+      ),
+    )
+
+    toast.success(available ? `${itemSingularTitle} disponible` : `${itemSingularTitle} no disponible`)
   }
 
   function deleteItem(itemId: string, categoryId: string) {
     setConfirmDialog({
       open: true,
-      title: '¿Eliminar este plato?',
-      description: 'El plato se eliminará permanentemente. Esta acción no se puede deshacer.',
+      title: `Eliminar este ${itemSingular}?`,
+      description: `El ${itemSingular} se eliminara permanentemente. Esta accion no se puede deshacer.`,
       onConfirm: async () => {
         const { error } = await supabase.from('menu_items').delete().eq('id', itemId)
-        if (error) { toast.error('Error al eliminar plato'); return }
-        setCategories(prev => prev.map(c =>
-          c.id === categoryId ? { ...c, menu_items: c.menu_items.filter(i => i.id !== itemId) } : c
-        ))
-        toast.success('Plato eliminado')
+
+        if (error) {
+          toast.error(`Error al eliminar ${itemSingular}`)
+          return
+        }
+
+        setCategories((previous) =>
+          previous.map((category) =>
+            category.id === categoryId
+              ? {
+                  ...category,
+                  menu_items: category.menu_items.filter((item) => item.id !== itemId),
+                }
+              : category,
+          ),
+        )
+        toast.success(`${itemSingularTitle} eliminado`)
       },
     })
   }
 
   return (
     <div className="space-y-6">
-      {/* Header bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-3">
-          <p className="text-sm text-muted-foreground mr-2">
-            {categories.length} categorías · {categories.reduce((acc, c) => acc + c.menu_items.length, 0)} platos
+          <p className="mr-2 text-sm text-muted-foreground">
+            {categories.length} categorias · {categories.reduce((acc, category) => acc + category.menu_items.length, 0)} {itemPlural}
           </p>
-          <Button variant="outline" size="sm" onClick={toggleSelectAll} className="cursor-pointer text-xs h-8 hidden sm:flex">
-            {selectedCategories.size === categories.length && selectedItems.size === categories.reduce((a,c) => a + c.menu_items.length, 0) && categories.length > 0 
-              ? 'Deseleccionar todo' 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleSelectAll}
+            className="hidden h-8 cursor-pointer text-xs sm:flex"
+          >
+            {selectedCategories.size === categories.length && selectedItems.size === totalItems && categories.length > 0
+              ? 'Deseleccionar todo'
               : 'Seleccionar todo'}
           </Button>
           {(selectedCategories.size > 0 || selectedItems.size > 0) && (
-            <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="cursor-pointer text-xs h-8">
-              <Trash2 className="w-3.5 h-3.5 mr-1" />
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              className="h-8 cursor-pointer text-xs"
+            >
+              <Trash2 className="mr-1 h-3.5 w-3.5" />
               Borrar ({selectedCategories.size + selectedItems.size})
             </Button>
           )}
         </div>
-        <Button
-          onClick={() => setAddingCategory(!addingCategory)}
-          className="cursor-pointer"
-        >
-          <Plus className="w-4 h-4 mr-1.5" />
-          Añadir categoría
+
+        <Button onClick={() => setAddingCategory((current) => !current)} className="cursor-pointer">
+          <Plus className="mr-1.5 h-4 w-4" />
+          Anadir categoria
         </Button>
       </div>
 
-      {/* New category form */}
       {addingCategory && (
-        <Card className="border-dashed border-2 border-primary/30">
-          <CardContent className="pt-5 space-y-3">
+        <Card className="border-2 border-dashed border-primary/30">
+          <CardContent className="space-y-3 pt-5">
             <div className="flex gap-2">
               <Input
-                placeholder="Emoji (ej: 🍕)"
+                placeholder="Emoji"
                 value={newCategory.emoji}
-                onChange={e => setNewCategory({ ...newCategory, emoji: e.target.value })}
+                onChange={(event) => setNewCategory({ ...newCategory, emoji: event.target.value })}
                 className="w-24"
               />
               <Input
-                placeholder="Nombre de la categoría *"
+                placeholder="Nombre de la categoria *"
                 value={newCategory.name}
-                onChange={e => setNewCategory({ ...newCategory, name: e.target.value })}
+                onChange={(event) => setNewCategory({ ...newCategory, name: event.target.value })}
                 className="flex-1"
               />
             </div>
             <Input
-              placeholder="Descripción (opcional)"
+              placeholder="Descripcion (opcional)"
               value={newCategory.description}
-              onChange={e => setNewCategory({ ...newCategory, description: e.target.value })}
+              onChange={(event) => setNewCategory({ ...newCategory, description: event.target.value })}
             />
             <div className="flex gap-2">
-              <Button onClick={addCategory} disabled={loadingCategory || !newCategory.name.trim()} className="cursor-pointer">
-                {loadingCategory ? 'Guardando...' : 'Guardar categoría'}
+              <Button
+                onClick={addCategory}
+                disabled={loadingCategory || !newCategory.name.trim()}
+                className="cursor-pointer"
+              >
+                {loadingCategory ? 'Guardando...' : 'Guardar categoria'}
               </Button>
               <Button variant="outline" onClick={() => setAddingCategory(false)} className="cursor-pointer">
                 Cancelar
@@ -323,25 +410,26 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
         </Card>
       )}
 
-      {/* Empty state */}
       {categories.length === 0 && !addingCategory && (
-        <div className="text-center py-20">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
-            <BookOpenIcon className="w-8 h-8 text-primary" />
+        <div className="py-20 text-center">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+            <BookOpenIcon className="h-8 w-8 text-primary" />
           </div>
-          <p className="font-serif text-xl text-foreground mb-2">Tu carta está vacía</p>
-          <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-6">
-            Empieza creando tu primera categoría (ej: Entrantes, Principales, Postres...)
+          <p className="mb-2 font-serif text-xl text-foreground">Tu carta esta vacia</p>
+          <p className="mx-auto mb-6 max-w-xs text-sm text-muted-foreground">
+            Empieza creando tu primera categoria. Por ejemplo: {categoryExamples.join(', ')}.
           </p>
           <Button onClick={() => setAddingCategory(true)} className="cursor-pointer">
-            <Plus className="w-4 h-4 mr-1.5" />
-            Añadir primera categoría
+            <Plus className="mr-1.5 h-4 w-4" />
+            Anadir primera categoria
           </Button>
         </div>
       )}
 
-      {/* Confirm dialog */}
-      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => !open && setConfirmDialog(prev => ({ ...prev, open: false }))}>
+      <AlertDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => !open && setConfirmDialog((previous) => ({ ...previous, open: false }))}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
@@ -350,8 +438,11 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
           <AlertDialogFooter>
             <AlertDialogCancel className="cursor-pointer">Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-white hover:bg-destructive/90 cursor-pointer"
-              onClick={() => { confirmDialog.onConfirm(); setConfirmDialog(prev => ({ ...prev, open: false })) }}
+              className="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+              onClick={() => {
+                confirmDialog.onConfirm()
+                setConfirmDialog((previous) => ({ ...previous, open: false }))
+              }}
             >
               Eliminar
             </AlertDialogAction>
@@ -359,24 +450,26 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Category list */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
         modifiers={[restrictToVerticalAxis]}
       >
-        <SortableContext items={categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={categories.map((category) => category.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-6">
-            {categories.map(category => (
+            {categories.map((category) => (
               <SortableCategory key={category.id} categoryId={category.id}>
                 {(dragHandleProps) => (
                   <Card>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center gap-2 font-serif text-xl">
-                          <div {...dragHandleProps} className="cursor-grab hover:bg-muted p-1 rounded md:-ml-2 text-muted-foreground mr-1">
-                            <GripVertical className="w-5 h-5" />
+                          <div
+                            {...dragHandleProps}
+                            className="mr-1 cursor-grab rounded p-1 text-muted-foreground hover:bg-muted md:-ml-2"
+                          >
+                            <GripVertical className="h-5 w-5" />
                           </div>
                           <Checkbox
                             checked={selectedCategories.has(category.id)}
@@ -386,166 +479,248 @@ export default function CartaManager({ restaurant, initialCategories, allergens,
                           {category.emoji && <span>{category.emoji}</span>}
                           {category.name}
                           <Badge variant="secondary" className="text-xs font-normal">
-                            {category.menu_items.length} platos
+                            {category.menu_items.length} {itemPlural}
                           </Badge>
                         </CardTitle>
-              <div className="flex gap-2">
-                <ItemFormDialog
-                  mode="add"
-                  categoryId={category.id}
-                  allergens={allergens}
-                  dietaryTags={dietaryTags}
-                  restaurantId={restaurant.id}
-                  onSave={(item) => setCategories(categories.map(c =>
-                    c.id === category.id ? { ...c, menu_items: [...c.menu_items, item] } : c
-                  ))}
-                />
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive cursor-pointer"
-                        onClick={() => deleteCategory(category.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    }
-                  />
-                  <TooltipContent>Eliminar categoría</TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-            {category.description && (
-              <p className="text-sm text-muted-foreground">{category.description}</p>
-            )}
-          </CardHeader>
-          <CardContent>
-            {category.menu_items.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="font-serif text-base text-foreground mb-1">Sin platos todavía</p>
-                <p className="text-sm text-muted-foreground mb-3">Añade el primer plato a esta categoría</p>
-                <ItemFormDialog
-                  mode="add"
-                  categoryId={category.id}
-                  allergens={allergens}
-                  dietaryTags={dietaryTags}
-                  restaurantId={restaurant.id}
-                  onSave={(item) => setCategories(categories.map(c =>
-                    c.id === category.id ? { ...c, menu_items: [...c.menu_items, item] } : c
-                  ))}
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {category.menu_items.map(item => (
-                  <div key={item.id} className="flex items-start justify-between p-3 bg-muted/50 rounded-lg">
-                    <div className="flex-1 min-w-0 flex items-start gap-3">
-                      <Checkbox
-                        checked={selectedItems.has(item.id)}
-                        onCheckedChange={() => toggleItemSelection(item.id)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-foreground">{item.name}</span>
-                        <span className="text-primary font-semibold tabular-nums">{item.price.toFixed(2)}€</span>
-                        {!item.available && (
-                          <Badge variant="destructive" className="text-xs">No disponible</Badge>
-                        )}
-                      </div>
-                      {item.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                      )}
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {item.menu_item_allergens.map(ma => (
-                          <Badge key={ma.allergen_id} variant="outline" className="text-xs">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            {ma.allergens.name}
-                          </Badge>
-                        ))}
-                        {item.menu_item_tags.map(mt => (
-                          <Badge key={mt.tag_id} className="text-xs bg-secondary text-secondary-foreground border-0">
-                            <Leaf className="w-3 h-3 mr-1" />
-                            {mt.dietary_tags.name}
-                          </Badge>
-                        ))}
-                      </div>
-                      {item.ingredients.length > 0 && (
-                        <p className="text-xs text-muted-foreground mt-1.5">
-                          {item.ingredients.map(i => i.name).join(', ')}
-                        </p>
-                      )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-3 shrink-0">
-                      <ItemFormDialog
-                        mode="edit"
-                        item={item}
-                        allergens={allergens}
-                        dietaryTags={dietaryTags}
-                        restaurantId={restaurant.id}
-                        onSave={(updated) => setCategories(categories.map(c =>
-                          c.id === category.id
-                            ? { ...c, menu_items: c.menu_items.map(i => i.id === updated.id ? updated : i) }
-                            : c
-                        ))}
-                      />
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Switch
-                              checked={item.available}
-                              onCheckedChange={v => toggleItemAvailable(item.id, v, category.id)}
+
+                        <div className="flex gap-2">
+                          <ItemFormDialog
+                            mode="add"
+                            categoryId={category.id}
+                            restaurantId={restaurant.id}
+                            venueType={restaurant.venue_type}
+                            allergens={allergens}
+                            dietaryTags={dietaryTags}
+                            onSave={(item) =>
+                              setCategories((previous) =>
+                                previous.map((currentCategory) =>
+                                  currentCategory.id === category.id
+                                    ? { ...currentCategory, menu_items: [...currentCategory.menu_items, item] }
+                                    : currentCategory,
+                                ),
+                              )
+                            }
+                          />
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="cursor-pointer text-destructive hover:text-destructive"
+                                  onClick={() => deleteCategory(category.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              }
                             />
-                          }
-                        />
-                        <TooltipContent>{item.available ? 'Disponible' : 'No disponible'}</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive h-7 w-7 p-0 cursor-pointer"
-                              onClick={() => deleteItem(item.id, category.id)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          }
-                        />
-                        <TooltipContent>Eliminar plato</TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        )}
-        </SortableCategory>
-      ))}
-      </div>
-      </SortableContext>
+                            <TooltipContent>Eliminar categoria</TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </div>
+
+                      {category.description && (
+                        <p className="text-sm text-muted-foreground">{category.description}</p>
+                      )}
+                    </CardHeader>
+
+                    <CardContent>
+                      {category.menu_items.length === 0 ? (
+                        <div className="py-8 text-center">
+                          <p className="mb-1 font-serif text-base text-foreground">Sin {itemPlural} todavia</p>
+                          <p className="mb-3 text-sm text-muted-foreground">
+                            Anade el primer {itemSingular} a esta categoria
+                          </p>
+                          <ItemFormDialog
+                            mode="add"
+                            categoryId={category.id}
+                            restaurantId={restaurant.id}
+                            venueType={restaurant.venue_type}
+                            allergens={allergens}
+                            dietaryTags={dietaryTags}
+                            onSave={(item) =>
+                              setCategories((previous) =>
+                                previous.map((currentCategory) =>
+                                  currentCategory.id === category.id
+                                    ? { ...currentCategory, menu_items: [...currentCategory.menu_items, item] }
+                                    : currentCategory,
+                                ),
+                              )
+                            }
+                          />
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {category.menu_items.map((item) => (
+                            <div key={item.id} className="flex items-start justify-between rounded-lg bg-muted/50 p-3">
+                              <div className="flex min-w-0 flex-1 items-start gap-3">
+                                <Checkbox
+                                  checked={selectedItems.has(item.id)}
+                                  onCheckedChange={() => toggleItemSelection(item.id)}
+                                  className="mt-1"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="font-medium text-foreground">{item.name}</span>
+                                    <span className="font-semibold tabular-nums text-primary">
+                                      {item.price.toFixed(2)} EUR
+                                    </span>
+                                    {!item.available && (
+                                      <Badge variant="destructive" className="text-xs">
+                                        No disponible
+                                      </Badge>
+                                    )}
+                                  </div>
+
+                                  {item.description && (
+                                    <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+                                  )}
+
+                                  <div className="mt-2 flex flex-wrap gap-1">
+                                    {item.menu_item_allergens.map((menuAllergen) => (
+                                      <Badge key={menuAllergen.allergen_id} variant="outline" className="text-xs">
+                                        <AlertTriangle className="mr-1 h-3 w-3" />
+                                        {menuAllergen.allergens.name}
+                                      </Badge>
+                                    ))}
+                                    {item.menu_item_tags.map((menuTag) => (
+                                      <Badge
+                                        key={menuTag.tag_id}
+                                        className="border-0 bg-secondary text-xs text-secondary-foreground"
+                                      >
+                                        <Leaf className="mr-1 h-3 w-3" />
+                                        {menuTag.dietary_tags.name}
+                                      </Badge>
+                                    ))}
+                                  </div>
+
+                                  {item.ingredients.length > 0 && (
+                                    <p className="mt-1.5 text-xs text-muted-foreground">
+                                      {item.ingredients.map((ingredient) => ingredient.name).join(', ')}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="ml-3 flex shrink-0 items-center gap-2">
+                                <ItemFormDialog
+                                  mode="edit"
+                                  item={item}
+                                  restaurantId={restaurant.id}
+                                  venueType={restaurant.venue_type}
+                                  allergens={allergens}
+                                  dietaryTags={dietaryTags}
+                                  onSave={(updatedItem) =>
+                                    setCategories((previous) =>
+                                      previous.map((currentCategory) =>
+                                        currentCategory.id === category.id
+                                          ? {
+                                              ...currentCategory,
+                                              menu_items: currentCategory.menu_items.map((currentItem) =>
+                                                currentItem.id === updatedItem.id ? updatedItem : currentItem,
+                                              ),
+                                            }
+                                          : currentCategory,
+                                      ),
+                                    )
+                                  }
+                                />
+                                <Tooltip>
+                                  <TooltipTrigger
+                                    render={
+                                      <Switch
+                                        checked={item.available}
+                                        onCheckedChange={(value) =>
+                                          toggleItemAvailable(item.id, value, category.id)
+                                        }
+                                      />
+                                    }
+                                  />
+                                  <TooltipContent>{item.available ? 'Disponible' : 'No disponible'}</TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger
+                                    render={
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 w-7 cursor-pointer p-0 text-destructive hover:text-destructive"
+                                        onClick={() => deleteItem(item.id, category.id)}
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    }
+                                  />
+                                  <TooltipContent>{`Eliminar ${itemSingular}`}</TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </SortableCategory>
+            ))}
+          </div>
+        </SortableContext>
       </DndContext>
     </div>
   )
 }
 
-/* Inline icon for empty state */
 function BookOpenIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 7v14" />
+      <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
     </svg>
   )
 }
 
-// ─── UNIFIED ITEM FORM DIALOG ───
-// Handles both "add" and "edit" modes, eliminating ~400 lines of duplication.
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+function getCategoryExamples(venueType?: Restaurant['venue_type']) {
+  const normalized = normalizeVenueType(venueType)
+
+  if (normalized === 'bar_cafe') return ['Cafes', 'Desayunos', 'Tapas']
+  if (normalized === 'cocktail_bar') return ['Clasicos', 'De autor', 'Sin alcohol']
+
+  return ['Entrantes', 'Principales', 'Postres']
+}
+
+function getDefaultItemName(venueType?: Restaurant['venue_type']) {
+  const normalized = normalizeVenueType(venueType)
+
+  if (normalized === 'bar_cafe') return 'Cafe con leche'
+  if (normalized === 'cocktail_bar') return 'Negroni'
+
+  return 'Ensalada Cesar'
+}
+
+function getIngredientPlaceholder(venueType?: Restaurant['venue_type']) {
+  const normalized = normalizeVenueType(venueType)
+
+  if (normalized === 'bar_cafe') return 'Cafe, leche, hielo, canela...'
+  if (normalized === 'cocktail_bar') return 'Ginebra, vermut, bitter, naranja...'
+
+  return 'Lechuga, pollo, parmesano, salsa...'
+}
+
 function ItemFormDialog({
   mode,
   categoryId,
@@ -553,6 +728,7 @@ function ItemFormDialog({
   allergens,
   dietaryTags,
   restaurantId,
+  venueType,
   onSave,
 }: {
   mode: 'add' | 'edit'
@@ -561,8 +737,12 @@ function ItemFormDialog({
   allergens: Allergen[]
   dietaryTags: DietaryTag[]
   restaurantId: string
+  venueType?: Restaurant['venue_type']
   onSave: (item: MenuItemFull) => void
 }) {
+  const venueConfig = getVenueConfig(venueType)
+  const itemSingular = venueConfig.itemSingular
+  const itemSingularTitle = capitalize(itemSingular)
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [imageUrl, setImageUrl] = useState<string | null>(item?.image_url ?? null)
@@ -574,48 +754,54 @@ function ItemFormDialog({
         name: item.name,
         description: item.description ?? '',
         price: item.price.toString(),
-        ingredients: item.ingredients.map((i) => i.name).join(', '),
+        ingredients: item.ingredients.map((ingredient) => ingredient.name).join(', '),
       }
     : emptyForm
 
   const [form, setForm] = useState(itemForm)
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>(
-    item?.menu_item_allergens.map((ma) => ma.allergen_id) ?? []
+    item?.menu_item_allergens.map((menuAllergen) => menuAllergen.allergen_id) ?? [],
   )
   const [selectedTags, setSelectedTags] = useState<string[]>(
-    item?.menu_item_tags.map((mt) => mt.tag_id) ?? []
+    item?.menu_item_tags.map((menuTag) => menuTag.tag_id) ?? [],
   )
 
-  function handleOpenChange(v: boolean) {
-    if (v && item) {
+  function handleOpenChange(value: boolean) {
+    if (value && item) {
       setForm({
         name: item.name,
         description: item.description ?? '',
         price: item.price.toString(),
-        ingredients: item.ingredients.map((i) => i.name).join(', '),
+        ingredients: item.ingredients.map((ingredient) => ingredient.name).join(', '),
       })
-      setSelectedAllergens(item.menu_item_allergens.map((ma) => ma.allergen_id))
-      setSelectedTags(item.menu_item_tags.map((mt) => mt.tag_id))
+      setSelectedAllergens(item.menu_item_allergens.map((menuAllergen) => menuAllergen.allergen_id))
+      setSelectedTags(item.menu_item_tags.map((menuTag) => menuTag.tag_id))
       setImageUrl(item.image_url ?? null)
     }
-    if (v && !item) {
+
+    if (value && !item) {
       setForm(emptyForm)
       setSelectedAllergens([])
       setSelectedTags([])
       setImageUrl(null)
     }
-    setOpen(v)
+
+    setOpen(value)
   }
 
   async function handleImageUpload(file: File) {
     setUploadingImage(true)
+
     try {
       const body = new FormData()
       body.append('file', file)
       body.append('restaurantId', restaurantId)
-      const res = await fetch('/api/upload', { method: 'POST', body })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+
+      const response = await fetch('/api/upload', { method: 'POST', body })
+      const data = await response.json()
+
+      if (!response.ok) throw new Error(data.error)
+
       setImageUrl(data.url)
     } catch {
       toast.error('Error subiendo imagen')
@@ -625,17 +811,21 @@ function ItemFormDialog({
   }
 
   function toggleAllergen(id: string) {
-    setSelectedAllergens((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+    setSelectedAllergens((previous) =>
+      previous.includes(id) ? previous.filter((value) => value !== id) : [...previous, id],
+    )
   }
 
   function toggleTag(id: string) {
-    setSelectedTags((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+    setSelectedTags((previous) =>
+      previous.includes(id) ? previous.filter((value) => value !== id) : [...previous, id],
+    )
   }
 
   function buildFullItem(baseItem: { id: string; available: boolean }): MenuItemFull {
     const ingredientNames = form.ingredients
       .split(',')
-      .map((i) => i.trim())
+      .map((ingredient) => ingredient.trim())
       .filter(Boolean)
 
     return {
@@ -644,19 +834,19 @@ function ItemFormDialog({
       description: form.description || undefined,
       price: parseFloat(form.price),
       image_url: imageUrl ?? undefined,
-      ingredients: ingredientNames.map((name, i) => ({ id: `temp-${i}`, name })),
+      ingredients: ingredientNames.map((name, index) => ({ id: `temp-${index}`, name })),
       menu_item_allergens: selectedAllergens
-        .map((aid) => {
-          const found = allergens.find((a) => a.id === aid)
-          return found ? { allergen_id: aid, allergens: found } : null
+        .map((allergenId) => {
+          const found = allergens.find((allergen) => allergen.id === allergenId)
+          return found ? { allergen_id: allergenId, allergens: found } : null
         })
-        .filter((x): x is NonNullable<typeof x> => x !== null),
+        .filter((value): value is NonNullable<typeof value> => value !== null),
       menu_item_tags: selectedTags
-        .map((tid) => {
-          const found = dietaryTags.find((t) => t.id === tid)
-          return found ? { tag_id: tid, dietary_tags: found } : null
+        .map((tagId) => {
+          const found = dietaryTags.find((tag) => tag.id === tagId)
+          return found ? { tag_id: tagId, dietary_tags: found } : null
         })
-        .filter((x): x is NonNullable<typeof x> => x !== null),
+        .filter((value): value is NonNullable<typeof value> => value !== null),
     }
   }
 
@@ -678,28 +868,36 @@ function ItemFormDialog({
       .single()
 
     if (error || !newItem) {
-      toast.error('Error al añadir plato')
+      toast.error(`Error al anadir ${itemSingular}`)
       setLoading(false)
       return
     }
 
-    const ingredientNames = form.ingredients.split(',').map((i) => i.trim()).filter(Boolean)
+    const ingredientNames = form.ingredients
+      .split(',')
+      .map((ingredient) => ingredient.trim())
+      .filter(Boolean)
 
-    // Insert relations in parallel
     await Promise.all([
       ingredientNames.length > 0
-        ? supabase.from('ingredients').insert(ingredientNames.map((name) => ({ menu_item_id: newItem.id, name })))
+        ? supabase
+            .from('ingredients')
+            .insert(ingredientNames.map((name) => ({ menu_item_id: newItem.id, name })))
         : Promise.resolve(),
       selectedAllergens.length > 0
-        ? supabase.from('menu_item_allergens').insert(selectedAllergens.map((allergen_id) => ({ menu_item_id: newItem.id, allergen_id })))
+        ? supabase.from('menu_item_allergens').insert(
+            selectedAllergens.map((allergen_id) => ({ menu_item_id: newItem.id, allergen_id })),
+          )
         : Promise.resolve(),
       selectedTags.length > 0
-        ? supabase.from('menu_item_tags').insert(selectedTags.map((tag_id) => ({ menu_item_id: newItem.id, tag_id })))
+        ? supabase
+            .from('menu_item_tags')
+            .insert(selectedTags.map((tag_id) => ({ menu_item_id: newItem.id, tag_id })))
         : Promise.resolve(),
     ])
 
     onSave(buildFullItem(newItem))
-    toast.success('Plato añadido ✓')
+    toast.success(`${itemSingularTitle} anadido`)
     setForm(emptyForm)
     setSelectedAllergens([])
     setSelectedTags([])
@@ -712,7 +910,6 @@ function ItemFormDialog({
     if (!form.name.trim() || !form.price || !item) return
     setLoading(true)
 
-    // Update the item itself
     const { error } = await supabase
       .from('menu_items')
       .update({
@@ -729,86 +926,65 @@ function ItemFormDialog({
       return
     }
 
-    // Replace relations: delete all then re-insert.
-    // Wrapped in error handling — if insert fails after delete, warn user.
-    const ingredientNames = form.ingredients.split(',').map((i) => i.trim()).filter(Boolean)
+    const ingredientNames = form.ingredients
+      .split(',')
+      .map((ingredient) => ingredient.trim())
+      .filter(Boolean)
 
-    const [delIng, delAll, delTag] = await Promise.all([
+    const [deleteIngredients, deleteAllergens, deleteTags] = await Promise.all([
       supabase.from('ingredients').delete().eq('menu_item_id', item.id),
       supabase.from('menu_item_allergens').delete().eq('menu_item_id', item.id),
       supabase.from('menu_item_tags').delete().eq('menu_item_id', item.id),
     ])
 
-    const deleteErrors = [delIng.error, delAll.error, delTag.error].filter(Boolean)
-    if (deleteErrors.length > 0) {
-      toast.error('Error al actualizar relaciones del plato')
+    if ([deleteIngredients.error, deleteAllergens.error, deleteTags.error].filter(Boolean).length > 0) {
+      toast.error(`Error al actualizar datos del ${itemSingular}`)
       setLoading(false)
       return
     }
 
     const insertResults = await Promise.all([
       ingredientNames.length > 0
-        ? supabase.from('ingredients').insert(ingredientNames.map((name) => ({ menu_item_id: item.id, name })))
+        ? supabase
+            .from('ingredients')
+            .insert(ingredientNames.map((name) => ({ menu_item_id: item.id, name })))
         : Promise.resolve({ error: null }),
       selectedAllergens.length > 0
-        ? supabase.from('menu_item_allergens').insert(selectedAllergens.map((allergen_id) => ({ menu_item_id: item.id, allergen_id })))
+        ? supabase.from('menu_item_allergens').insert(
+            selectedAllergens.map((allergen_id) => ({ menu_item_id: item.id, allergen_id })),
+          )
         : Promise.resolve({ error: null }),
       selectedTags.length > 0
-        ? supabase.from('menu_item_tags').insert(selectedTags.map((tag_id) => ({ menu_item_id: item.id, tag_id })))
+        ? supabase
+            .from('menu_item_tags')
+            .insert(selectedTags.map((tag_id) => ({ menu_item_id: item.id, tag_id })))
         : Promise.resolve({ error: null }),
     ])
 
-    const insertErrors = insertResults.filter((r) => r.error)
-    if (insertErrors.length > 0) {
-      toast.error('Error al guardar relaciones. Algunos datos pueden haberse perdido. Recarga la página.')
+    if (insertResults.some((result) => result.error)) {
+      toast.error('Error al guardar relaciones. Algunos datos pueden haberse perdido. Recarga la pagina.')
     }
 
     onSave(buildFullItem(item))
-    toast.success('Plato actualizado ✓')
+    toast.success(`${itemSingularTitle} actualizado`)
     setOpen(false)
     setLoading(false)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     if (mode === 'add') await handleAdd()
     else await handleEdit()
   }
 
-  const addTrigger =
-    mode === 'add' ? (
-      <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => handleOpenChange(true)}>
-        <Plus className="w-3.5 h-3.5 mr-1" />
-        Plato
-      </Button>
-    ) : null
-
-  const editTrigger =
-    mode === 'edit' ? (
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 cursor-pointer"
-              onClick={() => handleOpenChange(true)}
-            >
-              <Pencil className="w-3.5 h-3.5" />
-            </Button>
-          }
-        />
-        <TooltipContent>Editar plato</TooltipContent>
-      </Tooltip>
-    ) : null
-
   const dialogContent = (
-    <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+    <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
       <DialogHeader>
         <DialogTitle className="font-serif text-xl">
-          {mode === 'add' ? 'Añadir plato' : 'Editar plato'}
+          {mode === 'add' ? `Anadir ${itemSingular}` : `Editar ${itemSingular}`}
         </DialogTitle>
       </DialogHeader>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label>Imagen</Label>
@@ -816,72 +992,80 @@ function ItemFormDialog({
             {imageUrl ? (
               <div className="relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imageUrl} alt="Plato" className="w-20 h-20 rounded-lg object-cover border border-border" />
+                <img
+                  src={imageUrl}
+                  alt={itemSingularTitle}
+                  className="h-20 w-20 rounded-lg border border-border object-cover"
+                />
                 <button
                   type="button"
-                  className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center cursor-pointer"
+                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white"
                   onClick={() => setImageUrl(null)}
                 >
-                  <X className="w-3 h-3" />
+                  <X className="h-3 w-3" />
                 </button>
               </div>
             ) : (
-              <label className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+              <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 transition-colors hover:border-primary/50">
                 {uploadingImage ? (
-                  <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 ) : (
-                  <ImagePlus className="w-6 h-6 text-muted-foreground" />
+                  <ImagePlus className="h-6 w-6 text-muted-foreground" />
                 )}
                 <input
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0]
-                    if (f) handleImageUpload(f)
-                    e.target.value = ''
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    if (file) handleImageUpload(file)
+                    event.target.value = ''
                   }}
                 />
               </label>
             )}
           </div>
         </div>
+
         <div className="space-y-2">
           <Label>Nombre *</Label>
           <Input
-            placeholder="Ej: Ensalada César"
+            placeholder={`Ej: ${getDefaultItemName(venueType)}`}
             value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            onChange={(event) => setForm({ ...form, name: event.target.value })}
             required
           />
         </div>
+
         <div className="space-y-2">
-          <Label>Descripción</Label>
+          <Label>Descripcion</Label>
           <Textarea
-            placeholder="Breve descripción del plato..."
+            placeholder={`Breve descripcion del ${itemSingular}...`}
             value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            onChange={(event) => setForm({ ...form, description: event.target.value })}
             rows={2}
           />
         </div>
+
         <div className="space-y-2">
-          <Label>Precio (€) *</Label>
+          <Label>Precio (EUR) *</Label>
           <Input
             type="number"
             step="0.01"
             min="0"
             placeholder="12.50"
             value={form.price}
-            onChange={(e) => setForm({ ...form, price: e.target.value })}
+            onChange={(event) => setForm({ ...form, price: event.target.value })}
             required
           />
         </div>
+
         <div className="space-y-2">
-          <Label>Ingredientes (separados por comas)</Label>
+          <Label>Ingredientes o componentes</Label>
           <Input
-            placeholder="Lechuga, pollo, parmesano, crutones, salsa César"
+            placeholder={getIngredientPlaceholder(venueType)}
             value={form.ingredients}
-            onChange={(e) => setForm({ ...form, ingredients: e.target.value })}
+            onChange={(event) => setForm({ ...form, ingredients: event.target.value })}
           />
         </div>
 
@@ -890,15 +1074,18 @@ function ItemFormDialog({
         <div className="space-y-2">
           <Label>Alergenos</Label>
           <div className="grid grid-cols-2 gap-2">
-            {allergens.map((a) => (
-              <div key={a.id} className="flex items-center gap-2">
+            {allergens.map((allergen) => (
+              <div key={allergen.id} className="flex items-center gap-2">
                 <Checkbox
-                  id={`${mode}-allergen-${item?.id ?? 'new'}-${a.id}`}
-                  checked={selectedAllergens.includes(a.id)}
-                  onCheckedChange={() => toggleAllergen(a.id)}
+                  id={`${mode}-allergen-${item?.id ?? 'new'}-${allergen.id}`}
+                  checked={selectedAllergens.includes(allergen.id)}
+                  onCheckedChange={() => toggleAllergen(allergen.id)}
                 />
-                <label htmlFor={`${mode}-allergen-${item?.id ?? 'new'}-${a.id}`} className="text-sm cursor-pointer">
-                  {a.icon} {a.name}
+                <label
+                  htmlFor={`${mode}-allergen-${item?.id ?? 'new'}-${allergen.id}`}
+                  className="cursor-pointer text-sm"
+                >
+                  {allergen.icon} {allergen.name}
                 </label>
               </div>
             ))}
@@ -908,17 +1095,20 @@ function ItemFormDialog({
         <Separator />
 
         <div className="space-y-2">
-          <Label>Etiquetas dietéticas</Label>
+          <Label>Etiquetas dieteticas</Label>
           <div className="grid grid-cols-2 gap-2">
-            {dietaryTags.map((t) => (
-              <div key={t.id} className="flex items-center gap-2">
+            {dietaryTags.map((tag) => (
+              <div key={tag.id} className="flex items-center gap-2">
                 <Checkbox
-                  id={`${mode}-tag-${item?.id ?? 'new'}-${t.id}`}
-                  checked={selectedTags.includes(t.id)}
-                  onCheckedChange={() => toggleTag(t.id)}
+                  id={`${mode}-tag-${item?.id ?? 'new'}-${tag.id}`}
+                  checked={selectedTags.includes(tag.id)}
+                  onCheckedChange={() => toggleTag(tag.id)}
                 />
-                <label htmlFor={`${mode}-tag-${item?.id ?? 'new'}-${t.id}`} className="text-sm cursor-pointer">
-                  {t.icon} {t.name}
+                <label
+                  htmlFor={`${mode}-tag-${item?.id ?? 'new'}-${tag.id}`}
+                  className="cursor-pointer text-sm"
+                >
+                  {tag.icon} {tag.name}
                 </label>
               </div>
             ))}
@@ -927,7 +1117,7 @@ function ItemFormDialog({
 
         <div className="flex gap-2 pt-2">
           <Button type="submit" disabled={loading} className="flex-1 cursor-pointer">
-            {loading ? 'Guardando...' : mode === 'add' ? 'Añadir plato' : 'Guardar cambios'}
+            {loading ? 'Guardando...' : mode === 'add' ? `Anadir ${itemSingular}` : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" onClick={() => setOpen(false)} className="cursor-pointer">
             Cancelar
@@ -940,7 +1130,21 @@ function ItemFormDialog({
   if (mode === 'edit') {
     return (
       <>
-        {editTrigger}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 cursor-pointer p-0"
+                onClick={() => handleOpenChange(true)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            }
+          />
+          <TooltipContent>{`Editar ${itemSingular}`}</TooltipContent>
+        </Tooltip>
         <Dialog open={open} onOpenChange={handleOpenChange}>
           {dialogContent}
         </Dialog>
@@ -950,7 +1154,10 @@ function ItemFormDialog({
 
   return (
     <>
-      {addTrigger}
+      <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => handleOpenChange(true)}>
+        <Plus className="mr-1 h-3.5 w-3.5" />
+        {itemSingularTitle}
+      </Button>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         {dialogContent}
       </Dialog>
@@ -958,8 +1165,17 @@ function ItemFormDialog({
   )
 }
 
-function SortableCategory({ categoryId, children }: { categoryId: string; children: (dragHandleProps: Record<string, unknown>) => React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: categoryId })
+function SortableCategory({
+  categoryId,
+  children,
+}: {
+  categoryId: string
+  children: (dragHandleProps: Record<string, unknown>) => ReactNode
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: categoryId,
+  })
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,

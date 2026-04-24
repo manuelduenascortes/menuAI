@@ -1,421 +1,487 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import Link from "next/link";
+import { useState } from 'react'
+import Link from 'next/link'
 import {
-  UtensilsCrossed,
-  QrCode,
-  MessageCircle,
-  Settings,
   ArrowRight,
-  Sparkles,
   CheckCircle2,
+  GlassWater,
   Menu,
-  X
-} from "lucide-react";
-import BrandLogo from "@/components/BrandLogo";
+  MessageCircle,
+  QrCode,
+  Settings,
+  Sparkles,
+  Store,
+  X,
+} from 'lucide-react'
+import BrandLogo from '@/components/BrandLogo'
 import {
   Accordion,
+  AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import ThemeToggle from "@/components/ThemeToggle";
+} from '@/components/ui/accordion'
+import ThemeToggle from '@/components/ThemeToggle'
+
+const faqs = [
+  {
+    q: 'Cuanto dura la prueba gratuita?',
+    a: 'La prueba gratuita dura 14 dias y activa todas las funciones. Puedes probar panel, QR y asistente sin tarjeta.',
+  },
+  {
+    q: 'Sirve solo para restaurantes?',
+    a: 'No. MenuAI esta pensado para restaurantes, bares, cafeterias, coctelerias y locales mixtos. El asistente adapta sus recomendaciones al tipo de local.',
+  },
+  {
+    q: 'Mis clientes necesitan instalar algo?',
+    a: 'No. Solo escanean el QR y acceden desde el navegador del movil.',
+  },
+  {
+    q: 'Puedo usar un QR general en vez de QR por mesa?',
+    a: 'Si. Puedes trabajar con un QR general, con QR por mesa o con ambos a la vez.',
+  },
+  {
+    q: 'Como funciona el asistente IA?',
+    a: 'Lee tu carta y recomienda segun el contexto: platos y restricciones en restaurantes, cafes o tapas en bares, o copas y cocteles segun sabores e intensidad.',
+  },
+  {
+    q: 'Puedo cambiar la carta cuando quiera?',
+    a: 'Si. Puedes editar categorias, productos, precios, disponibilidad, imagenes y alergenos en cualquier momento.',
+  },
+]
 
 export default function HomePage() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* ─── NAV ─── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-[6vw] h-16 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur-md">
+      <nav className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-background/80 px-[6vw] backdrop-blur-md">
         <BrandLogo />
-        
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6">
-          <a href="#como-funciona" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Cómo funciona</a>
-          <a href="#planes" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Planes</a>
-          <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Preguntas frecuentes</a>
+
+        <div className="hidden items-center gap-6 md:flex">
+          <a href="#como-funciona" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+            Como funciona
+          </a>
+          <a href="#planes" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+            Planes
+          </a>
+          <a href="#faq" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+            Preguntas frecuentes
+          </a>
         </div>
 
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden items-center gap-4 md:flex">
           <ThemeToggle />
           <Link
             href="/admin/login"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer group flex items-center gap-1"
+            className="group flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            Iniciar sesión <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            Iniciar sesion
+            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
 
-        {/* Mobile Menu Toggle */}
         <div className="flex items-center gap-4 md:hidden">
           <ThemeToggle />
           <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="text-foreground p-1"
-            aria-label={isMobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+            type="button"
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+            className="p-1 text-foreground"
+            aria-label={isMobileMenuOpen ? 'Cerrar menu' : 'Abrir menu'}
             aria-expanded={isMobileMenuOpen}
           >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
       </nav>
 
-      {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-40 bg-background pt-16 md:hidden">
-          <div className="flex flex-col p-6 gap-6">
-            <a 
-              href="#como-funciona" 
-              className="text-lg font-medium text-foreground py-2 border-b border-border/50"
+          <div className="flex flex-col gap-6 p-6">
+            <a
+              href="#como-funciona"
+              className="border-b border-border/50 py-2 text-lg font-medium text-foreground"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Cómo funciona
+              Como funciona
             </a>
-            <a 
-              href="#planes" 
-              className="text-lg font-medium text-foreground py-2 border-b border-border/50"
+            <a
+              href="#planes"
+              className="border-b border-border/50 py-2 text-lg font-medium text-foreground"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Planes
             </a>
-            <a 
-              href="#faq" 
-              className="text-lg font-medium text-foreground py-2 border-b border-border/50"
+            <a
+              href="#faq"
+              className="border-b border-border/50 py-2 text-lg font-medium text-foreground"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Preguntas frecuentes
             </a>
-            <Link 
-              href="/admin/login" 
-              className="text-lg font-medium text-primary py-2 flex items-center gap-2"
+            <Link
+              href="/admin/login"
+              className="flex items-center gap-2 py-2 text-lg font-medium text-primary"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Iniciar sesión <ArrowRight className="w-5 h-5" />
+              Iniciar sesion
+              <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
         </div>
       )}
 
-      {/* ─── HERO ─── */}
       <main id="main-content">
-      <section className="px-[6vw] pt-32 pb-20 border-b border-border">
-        {/* Badge */}
-        <div className="animate-fade-up inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-card mb-10 text-sm text-muted-foreground">
-          <BrandLogo showText={false} iconClassName="w-3.5 h-3.5" />
-          Carta digital con IA
-        </div>
-
-        {/* Full-width headline */}
-        <div className="flex justify-between items-center mb-12 gap-8 w-full">
-          <h1 className="animate-fade-up delay-1 font-serif text-[clamp(2.5rem,8vw,7.5rem)] leading-[0.92] tracking-tight">
-            Tu carta, <br className="md:hidden" /><span className="text-primary">más</span> inteligente
-          </h1>
-          <div className="hidden md:flex flex-1 justify-center animate-fade-up delay-1">
-            <UtensilsCrossed strokeWidth={1} className="w-32 h-32 md:w-48 md:h-48 text-primary" />
+        <section className="border-b border-border px-[6vw] pb-20 pt-32">
+          <div className="mb-10 inline-flex animate-fade-up items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-sm text-muted-foreground">
+            <BrandLogo showText={false} iconClassName="h-3.5 w-3.5" />
+            Carta digital para hosteleria con IA
           </div>
-        </div>
 
-        {/* Bottom row: description | stats | CTA */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center md:items-start border-t border-border pt-16">
-          {/* Description */}
-          <div className="animate-fade-up delay-2 md:col-span-1">
-            <p className="text-base text-muted-foreground leading-relaxed">
-              Tus clientes escanean el QR, descubren tu carta y un asistente IA
-              les recomienda según sus gustos, alergias y preferencias.
-              Sin instalar apps.
+          <div className="mb-12 flex w-full items-center justify-between gap-8">
+            <h1 className="animate-fade-up delay-1 font-serif text-[clamp(2.5rem,8vw,7.5rem)] leading-[0.92] tracking-tight">
+              Tu local,
+              <br className="md:hidden" /> mas facil de vender
+              <br />
+              con <span className="text-primary">QR + IA</span>
+            </h1>
+            <div className="hidden flex-1 animate-fade-up delay-1 justify-center md:flex">
+              <div className="flex items-center gap-5 text-primary">
+                <Store className="h-20 w-20 md:h-28 md:w-28" strokeWidth={1.2} />
+                <GlassWater className="h-16 w-16 md:h-24 md:w-24" strokeWidth={1.2} />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 items-center gap-8 border-t border-border pt-16 md:grid-cols-3 md:items-start">
+            <div className="animate-fade-up delay-2 md:col-span-1">
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Digitaliza la carta de tu restaurante, bar, cafeteria o cocteleria.
+                Tus clientes escanean, descubren la oferta y reciben recomendaciones
+                utiles sin instalar ninguna app.
+              </p>
+            </div>
+
+            <div className="animate-fade-up delay-3 grid grid-cols-3 gap-4 md:col-span-1">
+              <div>
+                <p className="font-serif text-3xl text-foreground">&lt; 5 min</p>
+                <p className="mt-1 text-xs leading-snug text-muted-foreground">Tu carta lista</p>
+              </div>
+              <div>
+                <p className="font-serif text-3xl text-foreground">3 modos</p>
+                <p className="mt-1 text-xs leading-snug text-muted-foreground">QR general, mesa o ambos</p>
+              </div>
+              <div>
+                <p className="font-serif text-3xl text-foreground">0 apps</p>
+                <p className="mt-1 text-xs leading-snug text-muted-foreground">Todo desde navegador</p>
+              </div>
+            </div>
+
+            <div className="animate-fade-up delay-4 flex w-full items-center md:col-span-1 md:justify-end">
+              <Link
+                href="/admin/login?trial=1"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-foreground px-8 py-4 text-base font-medium text-background transition-all hover:opacity-80 active:scale-[0.98] sm:w-auto"
+              >
+                Prueba gratis
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section id="como-funciona" className="scroll-mt-16 px-[6vw] py-24">
+          <div className="mb-14 grid grid-cols-1 items-center gap-x-[6vw] gap-y-4 md:grid-cols-2">
+            <div>
+              <p className="mb-3 text-xs font-medium uppercase tracking-widest text-primary">
+                Como funciona
+              </p>
+              <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight">
+                Una carta que se adapta a tu tipo de local
+              </h2>
+            </div>
+            <div>
+              <p className="text-lg leading-relaxed text-muted-foreground">
+                MenuAI mantiene tu estructura de categorias y productos, pero adapta
+                el acceso y las recomendaciones al contexto real del cliente:
+                comida, cafe, tapas, bebidas o copas.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+            <div className="md:col-span-7">
+              <div className="h-full rounded-2xl border border-border bg-card p-8 transition-colors hover:border-primary/25">
+                <QrCode className="mb-6 h-7 w-7 text-primary" />
+                <h3 className="mb-3 font-serif text-2xl">QR general o QR por mesa</h3>
+                <p className="leading-relaxed text-muted-foreground">
+                  Usa un unico QR para todo el local, codigos por mesa o ambos a la vez.
+                  Encaja igual de bien en un restaurante, una cafeteria de paso o un bar de copas.
+                </p>
+              </div>
+            </div>
+            <div className="md:col-span-5">
+              <div className="h-full rounded-2xl border border-border bg-card p-8 transition-colors hover:border-primary/25">
+                <MessageCircle className="mb-6 h-7 w-7 text-primary" />
+                <h3 className="mb-3 font-serif text-2xl">Recomendador IA contextual</h3>
+                <p className="leading-relaxed text-muted-foreground">
+                  Sugiere platos, tapas, cafes o cocteles segun gustos, restricciones,
+                  intensidad, momento del dia y tipo de consumo.
+                </p>
+              </div>
+            </div>
+            <div className="md:col-span-5">
+              <div className="h-full rounded-2xl border border-border bg-card p-8 transition-colors hover:border-primary/25">
+                <Settings className="mb-6 h-7 w-7 text-primary" />
+                <h3 className="mb-3 font-serif text-2xl">Panel simple</h3>
+                <p className="leading-relaxed text-muted-foreground">
+                  Gestiona categorias, productos, ingredientes, disponibilidad,
+                  imagenes, alergenos y acceso desde un unico panel.
+                </p>
+              </div>
+            </div>
+            <div className="md:col-span-7">
+              <div className="h-full rounded-2xl border border-border bg-card p-8 transition-colors hover:border-primary/25">
+                <Sparkles className="mb-6 h-7 w-7 text-primary" />
+                <h3 className="mb-3 font-serif text-2xl">Importacion inteligente</h3>
+                <p className="leading-relaxed text-muted-foreground">
+                  Sube una foto, un PDF o pega texto. La IA detecta categorias,
+                  productos, precios e ingredientes para que no tengas que cargar
+                  la carta a mano.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="planes" className="scroll-mt-16 border-y border-border bg-card/50 px-[6vw] py-24">
+          <div className="mx-auto max-w-5xl">
+            <p className="mb-3 text-center text-xs font-medium uppercase tracking-widest text-primary">
+              Planes
             </p>
-          </div>
+            <h2 className="mb-16 text-center font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight">
+              Precios simples para cualquier local
+            </h2>
 
-          {/* Stats */}
-          <div className="animate-fade-up delay-3 grid grid-cols-3 gap-4 md:col-span-1">
-            <div>
-              <p className="font-serif text-3xl text-foreground">&lt; 5 min</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-snug">Tu carta digital lista</p>
-            </div>
-            <div>
-              <p className="font-serif text-3xl text-foreground">14</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-snug">Alérgenos EU cubiertos</p>
-            </div>
-            <div>
-              <p className="font-serif text-3xl text-foreground">0 apps</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-snug">Tus clientes no instalan nada</p>
+            <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-3 lg:gap-8">
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-background p-8 shadow-sm transition-shadow hover:shadow-md">
+                <h3 className="mb-2 font-serif text-2xl">Mensual</h3>
+                <div className="mb-4">
+                  <span className="font-serif text-4xl font-bold tracking-tight">19,99 EUR</span>
+                  <span className="text-muted-foreground">/mes</span>
+                </div>
+                <p className="mb-2 text-sm text-muted-foreground">Facturacion mes a mes</p>
+                <div className="mb-4 inline-flex invisible items-center rounded-full px-2.5 py-0.5 text-xs font-medium" aria-hidden="true">
+                  Espaciador
+                </div>
+                <Link
+                  href="/admin/login?trial=1"
+                  className="mb-8 flex w-full shrink-0 justify-center rounded-full bg-secondary px-4 py-3 font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
+                >
+                  Empezar prueba gratis
+                </Link>
+                <ul className="mb-6 flex-1 space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    Carta digital ilimitada
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    QR general y opcion por mesa
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    Asistente IA para clientes
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    Importacion inteligente
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    Panel de administracion
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    Soporte por email
+                  </li>
+                </ul>
+                <p className="mt-auto text-center text-xs text-muted-foreground">
+                  Prueba gratuita de 14 dias. Sin tarjeta.
+                </p>
+              </div>
+
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-background p-8 shadow-sm transition-shadow hover:shadow-md">
+                <h3 className="mb-2 font-serif text-2xl">Semestral</h3>
+                <div className="mb-4">
+                  <span className="font-serif text-4xl font-bold tracking-tight">14,99 EUR</span>
+                  <span className="text-muted-foreground">/mes</span>
+                </div>
+                <p className="mb-2 text-sm text-muted-foreground">89,94 EUR cada 6 meses</p>
+                <div className="mb-4 inline-flex items-center rounded-full bg-green-100/50 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                  Ahorra 25%
+                </div>
+                <Link
+                  href="/admin/login?trial=1"
+                  className="mb-8 flex w-full shrink-0 justify-center rounded-full bg-secondary px-4 py-3 font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
+                >
+                  Empezar prueba gratis
+                </Link>
+                <ul className="mb-6 flex-1 space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    Todo lo del plan mensual
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    Soporte prioritario
+                  </li>
+                </ul>
+                <p className="mt-auto text-center text-xs text-muted-foreground">
+                  Prueba gratuita de 14 dias. Sin tarjeta.
+                </p>
+              </div>
+
+              <div className="relative z-10 flex h-full flex-col rounded-2xl border-2 border-primary bg-background p-8 shadow-lg md:scale-105">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-4 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground">
+                  Mas popular
+                </div>
+                <h3 className="mb-2 font-serif text-2xl">Anual</h3>
+                <div className="mb-4">
+                  <span className="font-serif text-4xl font-bold tracking-tight">9,99 EUR</span>
+                  <span className="text-muted-foreground">/mes</span>
+                </div>
+                <p className="mb-2 text-sm text-muted-foreground">119,88 EUR al ano</p>
+                <div className="mb-4 inline-flex items-center rounded-full bg-green-100/50 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                  Ahorra 50%
+                </div>
+                <Link
+                  href="/admin/login?trial=1"
+                  className="mb-8 flex w-full shrink-0 justify-center rounded-full bg-foreground px-4 py-3 font-medium text-background transition-colors hover:bg-foreground/90"
+                >
+                  Empezar prueba gratis
+                </Link>
+                <ul className="mb-6 flex-1 space-y-3 text-sm text-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span className="font-medium">Todo lo del plan mensual</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span className="font-medium">Soporte prioritario</span>
+                  </li>
+                </ul>
+                <p className="mt-auto text-center text-xs text-muted-foreground">
+                  Prueba gratuita de 14 dias. Sin tarjeta.
+                </p>
+              </div>
             </div>
           </div>
+        </section>
 
-          {/* CTAs */}
-          <div className="animate-fade-up delay-4 flex items-center md:justify-end w-full md:col-span-1">
+        <section id="faq" className="scroll-mt-16 px-[6vw] py-24">
+          <div className="mx-auto max-w-3xl">
+            <p className="mb-3 text-center text-xs font-medium uppercase tracking-widest text-primary">
+              FAQ
+            </p>
+            <h2 className="mb-12 text-center font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight">
+              Preguntas frecuentes
+            </h2>
+            <Accordion multiple={false} className="w-full">
+              {faqs.map((faq, index) => (
+                <AccordionItem key={faq.q} value={`faq-${index}`}>
+                  <AccordionTrigger className="text-left text-lg font-medium transition-colors hover:text-primary">
+                    {faq.q}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-base leading-relaxed text-muted-foreground">{faq.a}</p>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+
+        <section className="border-t border-border bg-gradient-to-br from-primary/5 via-secondary/30 to-primary/10 px-[6vw] py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="mb-4 font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight">
+              Listo para digitalizar tu local?
+            </h2>
+            <p className="mb-10 text-lg text-muted-foreground">
+              En pocos minutos puedes tener carta digital, QR y recomendaciones IA
+              para tu restaurante, bar, cafeteria o cocteleria.
+            </p>
             <Link
               href="/admin/login?trial=1"
-              className="group inline-flex w-full sm:w-auto justify-center items-center gap-2 bg-foreground text-background px-8 py-4 rounded-full text-base font-medium transition-all hover:opacity-80 active:scale-[0.98] cursor-pointer"
+              className="group inline-flex items-center gap-2 rounded-full bg-foreground px-10 py-4 text-base font-medium text-background shadow-lg transition-all hover:opacity-80 active:scale-[0.98]"
             >
               Prueba gratis
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
-        </div>
-      </section>
-
-      {/* ─── FEATURES ─── */}
-      <section
-        id="como-funciona"
-        className="px-[6vw] py-24 scroll-mt-16"
-      >
-        {/* Section header */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-[6vw] gap-y-4 items-center mb-14">
-          <div>
-            <p className="text-xs font-medium text-primary tracking-widest uppercase mb-3">
-              Cómo funciona
-            </p>
-            <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight">
-              Todo lo que necesitas, nada más
-            </h2>
-          </div>
-          <div>
-            <p className="text-muted-foreground text-lg leading-relaxed">
-              MenuAI digitaliza tu carta, genera QR por mesa y añade un
-              asistente inteligente que conoce cada plato y cada alérgeno.
-            </p>
-          </div>
-        </div>
-
-        {/* Feature cards */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          <div className="md:col-span-7">
-            <div className="h-full p-8 rounded-2xl border border-border bg-card hover:border-primary/25 transition-colors">
-              <QrCode className="w-7 h-7 text-primary mb-6" />
-              <h3 className="font-serif text-2xl mb-3">QR por mesa</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Cada mesa tiene su código QR único. El cliente escanea con
-                su móvil y ve tu carta al instante. Genera e imprime los QR
-                directamente desde el panel de gestión.
-              </p>
-            </div>
-          </div>
-          <div className="md:col-span-5">
-            <div className="h-full p-8 rounded-2xl border border-border bg-card hover:border-primary/25 transition-colors">
-              <MessageCircle className="w-7 h-7 text-primary mb-6" />
-              <h3 className="font-serif text-2xl mb-3">Chatbot IA</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Pregunta por alergias y preferencias, y recomienda platos
-                personalizados en tiempo real.
-              </p>
-            </div>
-          </div>
-          <div className="md:col-span-5">
-            <div className="h-full p-8 rounded-2xl border border-border bg-card hover:border-primary/25 transition-colors">
-              <Settings className="w-7 h-7 text-primary mb-6" />
-              <h3 className="font-serif text-2xl mb-3">Panel admin</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Gestiona categorías, platos, ingredientes, alérgenos y mesas
-                desde un único lugar.
-              </p>
-            </div>
-          </div>
-          <div className="md:col-span-7">
-            <div className="h-full p-8 rounded-2xl border border-border bg-card hover:border-primary/25 transition-colors">
-              <Sparkles className="w-7 h-7 text-primary mb-6" />
-              <h3 className="font-serif text-2xl mb-3">Importación inteligente</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Sube una foto de tu carta en papel o pega el texto. La IA
-                extrae platos, precios e ingredientes automáticamente.
-                De carta en papel a digital en minutos.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── PLANES ─── */}
-      <section id="planes" className="px-[6vw] py-24 bg-card/50 border-y border-border scroll-mt-16">
-        <div className="max-w-5xl mx-auto">
-          <p className="text-xs font-medium text-primary tracking-widest uppercase mb-3 text-center">
-            Planes
-          </p>
-          <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight text-center mb-16">
-            Precios simples y transparentes
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
-            {/* Mensual */}
-            <div className="flex flex-col h-full p-8 rounded-2xl border border-border bg-background shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="font-serif text-2xl mb-2">Mensual</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-serif font-bold tracking-tight">19,99 €</span>
-                <span className="text-muted-foreground">/mes</span>
-              </div>
-              <p className="text-sm text-muted-foreground mb-2">Facturación mes a mes</p>
-              <div className="inline-flex items-center px-2.5 py-0.5 invisible text-xs font-medium rounded-full mb-4" aria-hidden="true">Ahorra spacer</div>
-              <Link href="/admin/login?trial=1" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
-                Empezar prueba gratis
-              </Link>
-              <ul className="flex-1 space-y-3 text-sm text-muted-foreground mb-6">
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Carta digital ilimitada</li>
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> QR por mesa</li>
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Chatbot IA para clientes</li>
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Importación inteligente</li>
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Panel de administración</li>
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Soporte por email</li>
-              </ul>
-              <p className="text-xs text-center text-muted-foreground mt-auto">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
-            </div>
-
-            {/* Semestral */}
-            <div className="flex flex-col h-full p-8 rounded-2xl border border-border bg-background shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="font-serif text-2xl mb-2">Semestral</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-serif font-bold tracking-tight">14,99 €</span>
-                <span className="text-muted-foreground">/mes</span>
-              </div>
-              <p className="text-sm text-muted-foreground mb-2">89,94 € cada 6 meses</p>
-              <div className="inline-flex items-center px-2.5 py-0.5 bg-green-100/50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full mb-4">Ahorra 25%</div>
-              <Link href="/admin/login?trial=1" className="flex justify-center w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
-                Empezar prueba gratis
-              </Link>
-              <ul className="flex-1 space-y-3 text-sm text-muted-foreground mb-6">
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Todo lo del plan Mensual</li>
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Soporte prioritario</li>
-              </ul>
-              <p className="text-xs text-center text-muted-foreground mt-auto">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
-            </div>
-
-            {/* Anual */}
-            <div className="flex flex-col h-full p-8 rounded-2xl border-2 border-primary bg-background relative shadow-lg scale-100 md:scale-105 z-10">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                Más popular
-              </div>
-              <h3 className="font-serif text-2xl mb-2">Anual</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-serif font-bold tracking-tight">9,99 €</span>
-                <span className="text-muted-foreground">/mes</span>
-              </div>
-              <p className="text-sm text-muted-foreground mb-2">119,88 € al año</p>
-              <div className="inline-flex items-center px-2.5 py-0.5 bg-green-100/50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full mb-4">Ahorra 50%</div>
-              <Link href="/admin/login?trial=1" className="flex justify-center w-full bg-foreground text-background hover:bg-foreground/90 px-4 py-3 rounded-full mb-8 font-medium transition-colors shrink-0">
-                Empezar prueba gratis
-              </Link>
-              <ul className="flex-1 space-y-3 text-sm text-foreground mb-6">
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> <span className="font-medium">Todo lo del plan Mensual</span></li>
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> <span className="font-medium">Soporte prioritario</span></li>
-              </ul>
-              <p className="text-xs text-center text-muted-foreground mt-auto">Prueba gratuita de 14 días. Sin tarjeta de crédito.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── FAQ ─── */}
-      <section id="faq" className="px-[6vw] py-24 scroll-mt-16">
-        <div className="max-w-3xl mx-auto">
-          <p className="text-xs font-medium text-primary tracking-widest uppercase mb-3 text-center">
-            FAQ
-          </p>
-          <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight text-center mb-12">
-            Preguntas frecuentes
-          </h2>
-          <Accordion multiple={false} className="w-full">
-            {[
-              {
-                q: "¿Cuánto dura la prueba gratuita?",
-                a: "La prueba gratuita dura 14 días. Durante ese tiempo tienes acceso completo a todas las funcionalidades. No se requiere tarjeta de crédito para empezar.",
-              },
-              {
-                q: "¿Mis clientes necesitan instalar alguna app?",
-                a: "No. Tus clientes simplemente escanean el código QR con la cámara de su móvil y acceden a tu carta digital al instante desde el navegador.",
-              },
-              {
-                q: "¿Cómo funcionan las recomendaciones del chatbot?",
-                a: "Nuestro asistente IA conoce cada plato de tu carta, sus ingredientes y alérgenos. Pregunta al cliente sus preferencias o restricciones y le recomienda platos personalizados en tiempo real.",
-              },
-              {
-                q: "¿Puedo cambiar mi carta en cualquier momento?",
-                a: "Sí. Puedes añadir, editar o eliminar categorías y platos desde el panel de administración sin límite. Los cambios se reflejan al instante en la carta pública.",
-              },
-              {
-                q: "¿Puedo cancelar mi suscripción?",
-                a: "Sí, puedes cancelar en cualquier momento. Si cancelas, mantendrás el acceso hasta el final de tu período de facturación.",
-              },
-              {
-                q: "¿Funciona en cualquier dispositivo?",
-                a: "Sí. La carta digital es una web responsive que se adapta a cualquier smartphone, tablet u ordenador. Compatible con iOS y Android.",
-              },
-            ].map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`}>
-                <AccordionTrigger className="text-lg font-medium text-left hover:text-primary transition-colors">
-                  {faq.q}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <p className="text-muted-foreground leading-relaxed text-base">{faq.a}</p>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </section>
-
-      {/* ─── CTA FINAL ─── */}
-      <section className="px-[6vw] py-24 bg-gradient-to-br from-primary/5 via-secondary/30 to-primary/10 border-t border-border">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight tracking-tight mb-4">
-            ¿Listo para digitalizar tu carta?
-          </h2>
-          <p className="text-lg text-muted-foreground mb-10">
-            En menos de 5 minutos tu restaurante tendrá carta digital con IA
-          </p>
-          <Link
-            href="/admin/login?trial=1"
-            className="group inline-flex items-center gap-2 bg-foreground text-background px-10 py-4 rounded-full text-base font-medium transition-all hover:opacity-80 active:scale-[0.98] cursor-pointer shadow-lg"
-          >
-            Prueba gratis
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
-        </div>
-      </section>
-
+        </section>
       </main>
 
-      {/* ─── FOOTER ─── */}
-      <footer className="px-[6vw] py-16 border-t border-border bg-card/30">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-          {/* Brand */}
+      <footer className="border-t border-border bg-card/30 px-[6vw] py-16">
+        <div className="mb-16 grid grid-cols-1 gap-12 md:grid-cols-4">
           <div className="md:col-span-2">
-            <BrandLogo iconClassName="w-6 h-6" textClassName="text-2xl text-foreground" className="mb-4" />
-            <p className="text-base text-muted-foreground leading-relaxed max-w-sm mb-6">
-              Carta digital inteligente para hostelería. Revoluciona la experiencia de tus clientes con nuestro recomendador IA integrado.
+            <BrandLogo iconClassName="h-6 w-6" textClassName="text-2xl text-foreground" className="mb-4" />
+            <p className="mb-6 max-w-sm text-base leading-relaxed text-muted-foreground">
+              Carta digital inteligente para hosteleria. Mejora la experiencia de tus clientes
+              con QR, gestion simple y recomendaciones IA adaptadas a cada local.
             </p>
-            <a href="mailto:hola@menuai.es" className="inline-flex items-center text-sm font-medium text-foreground hover:text-primary transition-colors">
+            <a href="mailto:hola@menuai.es" className="inline-flex items-center text-sm font-medium text-foreground transition-colors hover:text-primary">
               hola@menuai.es
             </a>
           </div>
 
-          {/* Links */}
           <div>
-            <p className="font-serif text-lg text-foreground mb-6">Producto</p>
+            <p className="mb-6 font-serif text-lg text-foreground">Producto</p>
             <ul className="space-y-4 text-sm font-medium text-muted-foreground">
-              <li><a href="#como-funciona" className="hover:text-foreground transition-colors">Cómo funciona</a></li>
-              <li><a href="#planes" className="hover:text-foreground transition-colors">Planes</a></li>
-              <li><a href="#faq" className="hover:text-foreground transition-colors">Preguntas frecuentes</a></li>
-              <li><Link href="/admin/login" className="hover:text-foreground transition-colors">Iniciar sesión</Link></li>
+              <li>
+                <a href="#como-funciona" className="transition-colors hover:text-foreground">
+                  Como funciona
+                </a>
+              </li>
+              <li>
+                <a href="#planes" className="transition-colors hover:text-foreground">
+                  Planes
+                </a>
+              </li>
+              <li>
+                <a href="#faq" className="transition-colors hover:text-foreground">
+                  Preguntas frecuentes
+                </a>
+              </li>
+              <li>
+                <Link href="/admin/login" className="transition-colors hover:text-foreground">
+                  Iniciar sesion
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Legal */}
           <div>
-            <p className="font-serif text-lg text-foreground mb-6">Legal</p>
+            <p className="mb-6 font-serif text-lg text-foreground">Legal</p>
             <ul className="space-y-4 text-sm font-medium text-muted-foreground">
-              <li><Link href="/privacidad" className="hover:text-foreground transition-colors">Política de Privacidad</Link></li>
-              <li><Link href="/terminos" className="hover:text-foreground transition-colors">Términos y Condiciones</Link></li>
+              <li>
+                <Link href="/privacidad" className="transition-colors hover:text-foreground">
+                  Politica de Privacidad
+                </Link>
+              </li>
+              <li>
+                <Link href="/terminos" className="transition-colors hover:text-foreground">
+                  Terminos y Condiciones
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-border pt-8 text-sm text-muted-foreground md:flex-row">
           <p>© {new Date().getFullYear()} MenuAI. Todos los derechos reservados.</p>
-          <p>Hecho con ❤️ en Málaga.</p>
+          <p>Hecho en Malaga.</p>
         </div>
       </footer>
     </div>
-  );
+  )
 }
-

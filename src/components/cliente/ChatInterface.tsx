@@ -4,24 +4,28 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, X, MessageCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import rehypeSanitize from 'rehype-sanitize'
-import type { ChatMessage } from '@/lib/types'
-
-const GREETING = '¡Hola! 👋 Soy el asistente de este restaurante. Estoy aquí para ayudarte a elegir el plato perfecto.\n\n¿Tienes alguna **alergia**, intolerancia o restricción alimentaria? (Por ejemplo: gluten, lactosa, frutos secos, eres vegetariano/vegano, etc.)\n\nO si lo prefieres, cuéntame qué te apetece comer y te hago sugerencias 😊'
+import type { ChatMessage, VenueType } from '@/lib/types'
+import { getVenueConfig } from '@/lib/venue-config'
 
 interface Props {
   restaurantSlug: string
   restaurantName: string
+  venueType?: VenueType | null
   onClose: () => void
 }
 
-export default function ChatInterface({ restaurantSlug, restaurantName, onClose }: Props) {
+export default function ChatInterface({ restaurantSlug, restaurantName, venueType, onClose }: Props) {
+  const venueConfig = getVenueConfig(venueType)
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'assistant', content: GREETING },
+    { role: 'assistant', content: venueConfig.chatGreeting },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [liveMessage, setLiveMessage] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -31,22 +35,20 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
     inputRef.current?.focus()
   }, [])
 
-  // Prevent background menu from showing through when chat is open
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
+    return () => {
+      document.body.style.overflow = prev
+    }
   }, [])
-
-  const abortRef = useRef<AbortController | null>(null)
-  const dialogRef = useRef<HTMLDivElement>(null)
-  const [liveMessage, setLiveMessage] = useState('')
 
   useEffect(() => {
-    return () => { abortRef.current?.abort() }
+    return () => {
+      abortRef.current?.abort()
+    }
   }, [])
 
-  // Focus trap
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       onClose()
@@ -86,8 +88,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
     setLoading(true)
 
     try {
-      // Skip the hardcoded greeting message — system prompt handles greeting behavior
-      const apiMessages = newMessages.filter((_, i) => i > 0)
+      const apiMessages = newMessages.filter((_, index) => index > 0)
 
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -117,12 +118,13 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
           { role: 'assistant', content: assistantContent },
         ])
       }
+
       setLiveMessage(assistantContent)
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return
       setMessages(prev => [
         ...prev.slice(0, -1),
-        { role: 'assistant', content: 'Lo siento, ha habido un error. Inténtalo de nuevo.' },
+        { role: 'assistant', content: 'Lo siento, ha habido un error. Intentalo de nuevo.' },
       ])
     } finally {
       setLoading(false)
@@ -140,7 +142,6 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
       className="fixed inset-x-0 top-0 z-50 flex flex-col bg-background animate-fade-in"
       style={{ height: '100dvh' }}
     >
-      {/* ─── HEADER ─── */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
@@ -160,7 +161,6 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
         </button>
       </div>
 
-      {/* ─── MESSAGES ─── */}
       <div
         className="flex-1 overflow-y-auto px-5 py-5 space-y-4"
         onTouchStart={() => inputRef.current?.blur()}
@@ -185,7 +185,6 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
           </div>
         ))}
 
-        {/* Typing indicator */}
         {loading && messages[messages.length - 1]?.role === 'user' && (
           <div className="flex justify-start" role="status">
             <div className="bg-secondary rounded-2xl rounded-bl-md px-4 py-3.5">
@@ -194,7 +193,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
                 <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-              <span className="sr-only">El asistente está escribiendo</span>
+              <span className="sr-only">El asistente esta escribiendo</span>
             </div>
           </div>
         )}
@@ -202,7 +201,6 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
         <div aria-live="polite" className="sr-only">{liveMessage}</div>
       </div>
 
-      {/* ─── INPUT ─── */}
       <div className="p-4 border-t border-border bg-background">
         <form onSubmit={sendMessage} className="flex gap-2">
           <input
@@ -225,10 +223,9 @@ export default function ChatInterface({ restaurantSlug, restaurantName, onClose 
           </button>
         </form>
         <p className="text-[11px] text-muted-foreground text-center mt-2 opacity-70">
-          La IA puede cometer errores. Consulta al personal para alergias graves.
+          La IA puede cometer errores. Consulta al personal si tienes dudas importantes sobre ingredientes o alergenos.
         </p>
       </div>
     </div>
   )
 }
-

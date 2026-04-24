@@ -7,6 +7,7 @@ import MenuImport from '@/components/admin/MenuImport'
 import { Button } from '@/components/ui/button'
 import { Sparkles, X } from 'lucide-react'
 import type { Restaurant, Allergen, DietaryTag } from '@/lib/types'
+import { getVenueConfig } from '@/lib/venue-config'
 
 interface CategoryWithItems {
   id: string
@@ -39,6 +40,7 @@ export default function CartaPageClient({
   dietaryTags: DietaryTag[]
 }) {
   const router = useRouter()
+  const venueConfig = getVenueConfig(restaurant.venue_type)
   const [showImport, setShowImport] = useState(false)
 
   return (
@@ -58,7 +60,7 @@ export default function CartaPageClient({
           ) : (
             <>
               <Sparkles className="w-4 h-4 mr-1.5" />
-              Importar carta con IA
+              {`Importar ${venueConfig.itemPlural} con IA`}
             </>
           )}
         </Button>
@@ -69,6 +71,7 @@ export default function CartaPageClient({
         <MenuImport
           restaurantId={restaurant.id}
           allergens={allergens}
+          venueType={restaurant.venue_type}
           onComplete={() => {
             setShowImport(false)
             router.refresh()
