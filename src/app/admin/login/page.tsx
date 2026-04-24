@@ -80,7 +80,7 @@ function LoginForm() {
     : mode === 'login'
       ? 'Bienvenido de nuevo'
       : searchParams.get('trial') === '1'
-        ? 'Prueba gratuita de 14 dias'
+        ? 'Prueba gratuita de 14 días'
         : 'Crea tu cuenta'
 
   const subheading = mode === 'reset'

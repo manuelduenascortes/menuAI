@@ -164,7 +164,7 @@ export default function CartaManager({
     setConfirmDialog({
       open: true,
       title: 'Borrar seleccion?',
-      description: `Se eliminaran ${selectedCategories.size} categorias y ${selectedItems.size} ${itemPlural}. Esta accion no se puede deshacer.`,
+      description: `Se eliminaran ${selectedCategories.size} categorías y ${selectedItems.size} ${itemPlural}. Esta acción no se puede deshacer.`,
       onConfirm: async () => {
         let errorOccurred = false
 
@@ -258,9 +258,9 @@ export default function CartaManager({
       setCategories([...categories, { ...data, menu_items: [] }])
       setNewCategory({ name: '', emoji: '', description: '' })
       setAddingCategory(false)
-      toast.success('Categoria anadida')
+      toast.success('Categoría añadida')
     } else {
-      toast.error('Error al añadir categoria')
+      toast.error('Error al añadir categoría')
     }
 
     setLoadingCategory(false)
@@ -269,18 +269,18 @@ export default function CartaManager({
   function deleteCategory(categoryId: string) {
     setConfirmDialog({
       open: true,
-      title: 'Eliminar esta categoria?',
-      description: `Se eliminaran también todos los ${itemPlural} de esta categoria. Esta accion no se puede deshacer.`,
+      title: 'Eliminar esta categoría?',
+      description: `Se eliminaran también todos los ${itemPlural} de esta categoría. Esta acción no se puede deshacer.`,
       onConfirm: async () => {
         const { error } = await supabase.from('categories').delete().eq('id', categoryId)
 
         if (error) {
-          toast.error('Error al eliminar categoria')
+          toast.error('Error al eliminar categoría')
           return
         }
 
         setCategories((previous) => previous.filter((category) => category.id !== categoryId))
-        toast.success('Categoria eliminada')
+        toast.success('Categoría eliminada')
       },
     })
   }
@@ -312,7 +312,7 @@ export default function CartaManager({
     setConfirmDialog({
       open: true,
       title: `Eliminar este ${itemSingular}?`,
-      description: `El ${itemSingular} se eliminara permanentemente. Esta accion no se puede deshacer.`,
+      description: `El ${itemSingular} se eliminara permanentemente. Esta acción no se puede deshacer.`,
       onConfirm: async () => {
         const { error } = await supabase.from('menu_items').delete().eq('id', itemId)
 
@@ -341,7 +341,7 @@ export default function CartaManager({
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-3">
           <p className="mr-2 text-sm text-muted-foreground">
-            {categories.length} categorias · {categories.reduce((acc, category) => acc + category.menu_items.length, 0)} {itemPlural}
+            {categories.length} categorías · {categories.reduce((acc, category) => acc + category.menu_items.length, 0)} {itemPlural}
           </p>
           <Button
             variant="outline"
@@ -368,7 +368,7 @@ export default function CartaManager({
 
         <Button onClick={() => setAddingCategory((current) => !current)} className="cursor-pointer">
           <Plus className="mr-1.5 h-4 w-4" />
-          Añadir categoria
+          Añadir categoría
         </Button>
       </div>
 
@@ -383,7 +383,7 @@ export default function CartaManager({
                 className="w-24"
               />
               <Input
-                placeholder="Nombre de la categoria *"
+                placeholder="Nombre de la categoría *"
                 value={newCategory.name}
                 onChange={(event) => setNewCategory({ ...newCategory, name: event.target.value })}
                 className="flex-1"
@@ -400,7 +400,7 @@ export default function CartaManager({
                 disabled={loadingCategory || !newCategory.name.trim()}
                 className="cursor-pointer"
               >
-                {loadingCategory ? 'Guardando...' : 'Guardar categoria'}
+                {loadingCategory ? 'Guardando...' : 'Guardar categoría'}
               </Button>
               <Button variant="outline" onClick={() => setAddingCategory(false)} className="cursor-pointer">
                 Cancelar
@@ -415,13 +415,13 @@ export default function CartaManager({
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
             <BookOpenIcon className="h-8 w-8 text-primary" />
           </div>
-          <p className="mb-2 font-serif text-xl text-foreground">Tu carta esta vacia</p>
+          <p className="mb-2 font-serif text-xl text-foreground">Tu carta está vacía</p>
           <p className="mx-auto mb-6 max-w-xs text-sm text-muted-foreground">
-            Empieza creando tu primera categoria. Por ejemplo: {categoryExamples.join(', ')}.
+            Empieza creando tu primera categoría. Por ejemplo: {categoryExamples.join(', ')}.
           </p>
           <Button onClick={() => setAddingCategory(true)} className="cursor-pointer">
             <Plus className="mr-1.5 h-4 w-4" />
-            Añadir primera categoria
+            Añadir primera categoría
           </Button>
         </div>
       )}
@@ -514,7 +514,7 @@ export default function CartaManager({
                                 </Button>
                               }
                             />
-                            <TooltipContent>Eliminar categoria</TooltipContent>
+                            <TooltipContent>Eliminar categoría</TooltipContent>
                           </Tooltip>
                         </div>
                       </div>
@@ -527,9 +527,9 @@ export default function CartaManager({
                     <CardContent>
                       {category.menu_items.length === 0 ? (
                         <div className="py-8 text-center">
-                          <p className="mb-1 font-serif text-base text-foreground">Sin {itemPlural} todavia</p>
+                          <p className="mb-1 font-serif text-base text-foreground">Sin {itemPlural} todavía</p>
                           <p className="mb-3 text-sm text-muted-foreground">
-                            Anade el primer {itemSingular} a esta categoria
+                            Añade el primer {itemSingular} a esta categoría
                           </p>
                           <ItemFormDialog
                             mode="add"
@@ -897,7 +897,7 @@ function ItemFormDialog({
     ])
 
     onSave(buildFullItem(newItem))
-    toast.success(`${itemSingularTitle} anadido`)
+    toast.success(`${itemSingularTitle} añadido`)
     setForm(emptyForm)
     setSelectedAllergens([])
     setSelectedTags([])
@@ -962,7 +962,7 @@ function ItemFormDialog({
     ])
 
     if (insertResults.some((result) => result.error)) {
-      toast.error('Error al guardar relaciones. Algunos datos pueden haberse perdido. Recarga la pagina.')
+      toast.error('Error al guardar relaciones. Algunos datos pueden haberse perdido. Recarga la página.')
     }
 
     onSave(buildFullItem(item))

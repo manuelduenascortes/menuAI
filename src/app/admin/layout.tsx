@@ -53,7 +53,7 @@ export default async function AdminLayout({
         {showTrialWarning && (
           <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
             Tu prueba gratuita expira en{' '}
-            {trialDaysLeft === 0 ? 'menos de 24 horas' : `${trialDaysLeft} dia${trialDaysLeft === 1 ? '' : 's'}`}
+            {trialDaysLeft === 0 ? 'menos de 24 horas' : `${trialDaysLeft} día${trialDaysLeft === 1 ? '' : 's'}`}
             .{' '}
             <Link
               href="/trial-expired"

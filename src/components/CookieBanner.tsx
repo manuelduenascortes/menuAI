@@ -47,7 +47,7 @@ export default function CookieBanner() {
         <p className="text-sm text-muted-foreground">
           Usamos cookies tecnicas necesarias para el inicio de sesión y el funcionamiento del servicio.{' '}
           <Link href="/cookies" className="text-foreground underline underline-offset-2 hover:text-primary">
-            Ver politica de cookies
+            Ver política de cookies
           </Link>
           .
         </p>

@@ -22,7 +22,7 @@ const VENUE_CONFIGS: Record<VenueType, VenueConfig> = {
     businessLabel: 'restaurante',
     itemSingular: 'plato',
     itemPlural: 'platos',
-    descriptionPlaceholder: 'Cocina mediterranea, menu del dia, brasas, producto local...',
+    descriptionPlaceholder: 'Cocina mediterranea, menu del día, brasas, producto local...',
     publicDescription: 'Consulta la carta y recibe recomendaciones segun gustos y restricciones.',
     publicHint: 'Usa el asistente para encontrar platos segun gustos, alergias o momento de la comida.',
     chatGreeting:
@@ -38,12 +38,12 @@ const VENUE_CONFIGS: Record<VenueType, VenueConfig> = {
     itemSingular: 'producto',
     itemPlural: 'productos',
     descriptionPlaceholder: 'Cafes, desayunos, meriendas, tapas, refrescos, bolleria...',
-    publicDescription: 'Descubre la oferta del local y pide recomendaciones segun el momento del dia.',
+    publicDescription: 'Descubre la oferta del local y pide recomendaciones segun el momento del día.',
     publicHint: 'El asistente puede ayudarte a elegir algo caliente o frio, dulce o salado, suave o intenso.',
     chatGreeting:
       'Hola! Soy el asistente de este local. Puedo ayudarte a encontrar algo para desayunar, merendar, tomar un cafe o pedir una tapa o bebida.',
     chatFocus:
-      'Prioriza momento del dia, caliente o frio, dulce o salado, suave o intenso, con o sin cafeina o alcohol si aplica.',
+      'Prioriza momento del día, caliente o frio, dulce o salado, suave o intenso, con o sin cafeina o alcohol si aplica.',
     chatComplementHint:
       'Cuando aporte valor, sugiere combinaciones naturales como cafe y dulce, tapa y bebida o alternativas sin alcohol si existen.',
   },
@@ -52,7 +52,7 @@ const VENUE_CONFIGS: Record<VenueType, VenueConfig> = {
     businessLabel: 'cocteleria o bar de copas',
     itemSingular: 'consumicion',
     itemPlural: 'consumiciones',
-    descriptionPlaceholder: 'Cocteles de autor, clasicos, combinados premium, sin alcohol...',
+    descriptionPlaceholder: 'Cocteles de autor, clásicos, combinados premium, sin alcohol...',
     publicDescription: 'Explora la carta de bebidas y recibe sugerencias segun sabor, intensidad o tipo de copa.',
     publicHint: 'El asistente puede recomendar algo refrescante, intenso, clasico, afrutado o sin alcohol.',
     chatGreeting:
@@ -140,5 +140,5 @@ export function getAccessChecklistStep(menuAccessMode?: MenuAccessMode | null): 
 }
 
 export function getAccessManagementTitle(menuAccessMode?: MenuAccessMode | null): string {
-  return supportsTableQr(menuAccessMode) ? 'Acceso y codigos QR' : 'Acceso a la carta'
+  return supportsTableQr(menuAccessMode) ? 'Acceso y códigos QR' : 'Acceso a la carta'
 }

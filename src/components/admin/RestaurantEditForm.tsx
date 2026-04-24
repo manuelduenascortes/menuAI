@@ -95,7 +95,7 @@ export default function RestaurantEditForm({
         <Label htmlFor="edit-name">Nombre del local *</Label>
         <Input
           id="edit-name"
-          placeholder="Ej: Bar La Malaguena"
+          placeholder="Ej: Bar La Malagueña"
           value={form.name}
           onChange={e => setForm({ ...form, name: e.target.value })}
           required

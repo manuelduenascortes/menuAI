@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft, Store } from 'lucide-react'
 
 export const metadata = {
-  title: 'Terminos y Condiciones - MenuAI',
+  title: 'Términos y Condiciones - MenuAI',
 }
 
 export default function TerminosPage() {
@@ -23,16 +23,16 @@ export default function TerminosPage() {
       </nav>
 
       <main className="mx-auto max-w-3xl px-[6vw] py-16">
-        <h1 className="mb-2 font-serif text-4xl">Terminos y Condiciones</h1>
+        <h1 className="mb-2 font-serif text-4xl">Términos y Condiciones</h1>
         <p className="mb-12 text-sm text-muted-foreground">Última actualizacion: 13 de abril de 2026</p>
 
         <div className="prose prose-neutral max-w-none space-y-8 leading-relaxed text-muted-foreground dark:prose-invert">
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">1. Objeto</h2>
             <p>
-              Estos terminos regulan el uso de la plataforma MenuAI (menuai.es), un servicio de
+              Estos términos regulan el uso de la plataforma MenuAI (menuai.es), un servicio de
               carta digital con asistente IA para establecimientos de hosteleria. Al registrarte
-              aceptas estos terminos en su totalidad.
+              aceptas estos términos en su totalidad.
             </p>
           </section>
 
@@ -41,7 +41,7 @@ export default function TerminosPage() {
             <p>MenuAI proporciona:</p>
             <ul className="list-disc space-y-2 pl-5">
               <li>Creacion y gestion de carta digital para restaurantes, bares, cafeterias y coctelerias.</li>
-              <li>Generacion de codigos QR generales, por mesa o ambos.</li>
+              <li>Generacion de códigos QR generales, por mesa o ambos.</li>
               <li>
                 Asistente IA que recomienda productos a los clientes segun sus preferencias, restricciones
                 y contexto de consumo.
@@ -61,7 +61,7 @@ export default function TerminosPage() {
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">4. Prueba gratuita y suscripcion</h2>
             <ul className="list-disc space-y-2 pl-5">
-              <li>La prueba gratuita dura 14 dias y no requiere tarjeta de credito.</li>
+              <li>La prueba gratuita dura 14 días y no requiere tarjeta de credito.</li>
               <li>Al finalizar la prueba, deberas seleccionar un plan de pago para continuar usando el servicio.</li>
               <li>Los pagos se procesan a traves de Stripe. Los precios incluyen IVA cuando aplique.</li>
               <li>Puedes cancelar tu suscripcion en cualquier momento. El acceso se mantiene hasta el final del periodo facturado.</li>
@@ -82,8 +82,8 @@ export default function TerminosPage() {
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">6. Propiedad intelectual</h2>
             <p>
-              El codigo, diseno, marca y contenido de MenuAI son propiedad de sus creadores.
-              El contenido que subas (productos, descripciones, imagenes) sigue siendo tuyo.
+              El código, diseño, marca y contenido de MenuAI son propiedad de sus creadores.
+              El contenido que subas (productos, descripciones, imágenes) sigue siendo tuyo.
               Nos otorgas una licencia limitada para mostrarlo dentro del servicio.
             </p>
           </section>
@@ -110,8 +110,8 @@ export default function TerminosPage() {
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">9. Modificaciones</h2>
             <p>
-              Podemos actualizar estos terminos. Te notificaremos por email los cambios significativos
-              con al menos 30 dias de antelacion. El uso continuado del servicio tras la notificacion
+              Podemos actualizar estos términos. Te notificaremos por email los cambios significativos
+              con al menos 30 días de antelación. El uso continuado del servicio tras la notificación
               implica aceptacion.
             </p>
           </section>
@@ -119,15 +119,15 @@ export default function TerminosPage() {
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">10. Legislacion aplicable</h2>
             <p>
-              Estos terminos se rigen por la legislacion espanola. Para cualquier controversia seran
-              competentes los juzgados y tribunales de Malaga, Espana.
+              Estos términos se rigen por la legislación española. Para cualquier controversia seran
+              competentes los juzgados y tribunales de Malaga, España.
             </p>
           </section>
 
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">Contacto</h2>
             <p>
-              Para cualquier consulta sobre estos terminos, escribenos a{' '}
+              Para cualquier consulta sobre estos términos, escribenos a{' '}
               <a href="mailto:hola@menuai.es" className="text-primary hover:underline">
                 hola@menuai.es
               </a>

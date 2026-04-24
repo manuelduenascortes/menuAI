@@ -273,7 +273,7 @@ export default function MenuImport({
       canvas.height = viewport.height
       const context = canvas.getContext('2d')
 
-      if (!context) throw new Error('No se pudo preparar la pagina del PDF.')
+      if (!context) throw new Error('No se pudo preparar la página del PDF.')
 
       await page.render({ canvas, canvasContext: context, viewport }).promise
       const base64 = canvas.toDataURL('image/jpeg', 0.85)
@@ -437,7 +437,7 @@ export default function MenuImport({
 
       if (failedCategories > 0 || failedItems > 0) {
         toast.warning(
-          `Importacion parcial: ${failedCategories} categorias y ${failedItems} ${itemPlural} no se pudieron guardar.`,
+          `Importacion parcial: ${failedCategories} categorías y ${failedItems} ${itemPlural} no se pudieron guardar.`,
         )
       } else {
         toast.success('Carta importada correctamente')
@@ -460,7 +460,7 @@ export default function MenuImport({
             Importar carta del local con IA
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Sube una foto, un PDF o pega texto. La IA extraera categorias, {itemPlural}, precios e ingredientes.
+            Sube una foto, un PDF o pega texto. La IA extraera categorías, {itemPlural}, precios e ingredientes.
           </p>
         </CardHeader>
 
@@ -600,7 +600,7 @@ export default function MenuImport({
               <div className="mx-auto mt-6 max-w-xs space-y-2">
                 <Progress value={Math.round((pdfProgress.current / pdfProgress.total) * 100)} className="h-2" />
                 <p className="text-sm text-muted-foreground">
-                  Pagina {pdfProgress.current} de {pdfProgress.total}
+                  Página {pdfProgress.current} de {pdfProgress.total}
                   {pdfProgress.itemsFound > 0 && <> · {pdfProgress.itemsFound} {itemPlural} encontrados</>}
                 </p>
               </div>
@@ -609,7 +609,7 @@ export default function MenuImport({
             <>
               <p className="text-lg font-medium text-foreground">Analizando la carta...</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                La IA esta detectando categorias, {itemPlural}, ingredientes y alérgenos.
+                La IA esta detectando categorías, {itemPlural}, ingredientes y alérgenos.
               </p>
             </>
           )}
@@ -629,10 +629,10 @@ export default function MenuImport({
               <div>
                 <p className="flex items-center gap-2 font-medium text-foreground">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Se encontraron {extracted.categories.length} categorias y {totalItems} {itemPlural}
+                  Se encontraron {extracted.categories.length} categorías y {totalItems} {itemPlural}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Revisa y edita el resultado antes de guardar. Puedes ajustar nombres, alérgenos, imagenes y precios.
+                  Revisa y edita el resultado antes de guardar. Puedes ajustar nombres, alérgenos, imágenes y precios.
                 </p>
               </div>
               <div className="flex gap-2">
@@ -671,7 +671,7 @@ export default function MenuImport({
                     value={category.name}
                     onChange={(event) => updateCategory(catIdx, { name: event.target.value })}
                     className="flex-1 font-serif font-semibold"
-                    placeholder="Nombre de categoria"
+                    placeholder="Nombre de categoría"
                   />
                   <Badge variant="secondary" className="shrink-0 text-xs font-normal">
                     {category.items.length} {itemPlural}
@@ -934,7 +934,7 @@ export default function MenuImport({
           <div className="mx-auto max-w-md space-y-3">
             <Progress value={percent} className="h-2" />
             <p className="text-center text-sm text-muted-foreground">
-              Guardando categoria {saveProgress.catIdx} de {saveProgress.totalCats}
+              Guardando categoría {saveProgress.catIdx} de {saveProgress.totalCats}
               {saveProgress.totalItems > 0 && (
                 <>
                   {' '}

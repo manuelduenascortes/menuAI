@@ -205,7 +205,7 @@ function DashboardContent({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">Gestionar carta</p>
-              <p className="text-xs text-muted-foreground">Categorias, {venueConfig.itemPlural} e información clave</p>
+              <p className="text-xs text-muted-foreground">Categorías, {venueConfig.itemPlural} e información clave</p>
             </div>
           </Link>
 

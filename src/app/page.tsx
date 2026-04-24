@@ -20,7 +20,7 @@ import { toggleSingleAccordionItem } from '@/lib/single-accordion-state.mjs'
 const faqs = [
   {
     q: 'Cuanto dura la prueba gratuita?',
-    a: 'La prueba gratuita dura 14 dias y activa todas las funciones. Puedes probar panel, QR y asistente sin tarjeta.',
+    a: 'La prueba gratuita dura 14 días y activa todas las funciones. Puedes probar panel, QR y asistente sin tarjeta.',
   },
   {
     q: 'Sirve solo para restaurantes?',
@@ -40,7 +40,7 @@ const faqs = [
   },
   {
     q: 'Puedo cambiar la carta cuando quiera?',
-    a: 'Si. Puedes editar categorias, productos, precios, disponibilidad, imagenes y alérgenos en cualquier momento.',
+    a: 'Si. Puedes editar categorías, productos, precios, disponibilidad, imágenes y alérgenos en cualquier momento.',
   },
 ]
 
@@ -192,7 +192,7 @@ export default function HomePage() {
             </div>
             <div>
               <p className="text-lg leading-relaxed text-muted-foreground">
-                MenuAI mantiene tu estructura de categorias y productos, pero adapta
+                MenuAI mantiene tu estructura de categorías y productos, pero adapta
                 el acceso y las recomendaciones al contexto real del cliente:
                 comida, cafe, tapas, bebidas o copas.
               </p>
@@ -205,7 +205,7 @@ export default function HomePage() {
                 <QrCode className="mb-6 h-7 w-7 text-primary" />
                 <h3 className="mb-3 font-serif text-2xl">QR general o QR por mesa</h3>
                 <p className="leading-relaxed text-muted-foreground">
-                  Usa un único QR para todo el local, codigos por mesa o ambos a la vez.
+                  Usa un único QR para todo el local, códigos por mesa o ambos a la vez.
                   Encaja igual de bien en un restaurante, una cafeteria de paso o un bar de copas.
                 </p>
               </div>
@@ -216,7 +216,7 @@ export default function HomePage() {
                 <h3 className="mb-3 font-serif text-2xl">Recomendador IA contextual</h3>
                 <p className="leading-relaxed text-muted-foreground">
                   Sugiere platos, tapas, cafes o cocteles segun gustos, restricciones,
-                  intensidad, momento del dia y tipo de consumo.
+                  intensidad, momento del día y tipo de consumo.
                 </p>
               </div>
             </div>
@@ -225,8 +225,8 @@ export default function HomePage() {
                 <Settings className="mb-6 h-7 w-7 text-primary" />
                 <h3 className="mb-3 font-serif text-2xl">Panel simple</h3>
                 <p className="leading-relaxed text-muted-foreground">
-                  Gestiona categorias, productos, ingredientes, disponibilidad,
-                  imagenes, alérgenos y acceso desde un único panel.
+                  Gestiona categorías, productos, ingredientes, disponibilidad,
+                  imágenes, alérgenos y acceso desde un único panel.
                 </p>
               </div>
             </div>
@@ -235,7 +235,7 @@ export default function HomePage() {
                 <Sparkles className="mb-6 h-7 w-7 text-primary" />
                 <h3 className="mb-3 font-serif text-2xl">Importacion inteligente</h3>
                 <p className="leading-relaxed text-muted-foreground">
-                  Sube una foto, un PDF o pega texto. La IA detecta categorias,
+                  Sube una foto, un PDF o pega texto. La IA detecta categorías,
                   productos, precios e ingredientes para que no tengas que cargar
                   la carta a mano.
                 </p>
@@ -297,7 +297,7 @@ export default function HomePage() {
                   </li>
                 </ul>
                 <p className="mt-auto text-center text-xs text-muted-foreground">
-                  Prueba gratuita de 14 dias. Sin tarjeta.
+                  Prueba gratuita de 14 días. Sin tarjeta.
                 </p>
               </div>
 
@@ -328,7 +328,7 @@ export default function HomePage() {
                   </li>
                 </ul>
                 <p className="mt-auto text-center text-xs text-muted-foreground">
-                  Prueba gratuita de 14 dias. Sin tarjeta.
+                  Prueba gratuita de 14 días. Sin tarjeta.
                 </p>
               </div>
 
@@ -362,7 +362,7 @@ export default function HomePage() {
                   </li>
                 </ul>
                 <p className="mt-auto text-center text-xs text-muted-foreground">
-                  Prueba gratuita de 14 dias. Sin tarjeta.
+                  Prueba gratuita de 14 días. Sin tarjeta.
                 </p>
               </div>
             </div>
@@ -482,17 +482,17 @@ export default function HomePage() {
               </li>
               <li>
                 <Link href="/privacidad" className="transition-colors hover:text-foreground">
-                  Politica de Privacidad
+                  Política de Privacidad
                 </Link>
               </li>
               <li>
                 <Link href="/cookies" className="transition-colors hover:text-foreground">
-                  Politica de Cookies
+                  Política de Cookies
                 </Link>
               </li>
               <li>
-                <Link href="/terminos" className="transition-colors hover:text-foreground">
-                  Terminos y Condiciones
+                <Link href="/términos" className="transition-colors hover:text-foreground">
+                  Términos y Condiciones
                 </Link>
               </li>
               <li>

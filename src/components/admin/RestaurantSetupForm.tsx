@@ -87,7 +87,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
         <Label htmlFor="setup-name">Nombre del local *</Label>
         <Input
           id="setup-name"
-          placeholder="Ej: Bar La Malaguena"
+          placeholder="Ej: Bar La Malagueña"
           value={form.name}
           onChange={e => setForm({ ...form, name: e.target.value })}
           required

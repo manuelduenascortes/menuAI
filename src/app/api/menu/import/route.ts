@@ -12,22 +12,22 @@ const EXTRACTION_PROMPT = `Eres un experto en digitalizacion de cartas y ofertas
 Extrae TODOS los productos visibles o descritos en la carta proporcionada y devuelvelos en JSON.
 
 Reglas:
-- Agrupa los productos por categorias reales de la carta (entrantes, cafes, cocteles, vinos, postres, tapas, refrescos, etc.)
-- Asigna un emoji representativo a cada categoria
+- Agrupa los productos por categorías reales de la carta (entrantes, cafes, cocteles, vinos, postres, tapas, refrescos, etc.)
+- Asigna un emoji representativo a cada categoría
 - Si no se ve el precio, usa 0
 - Extrae ingredientes si se mencionan
 - Detecta alérgenos cuando puedan deducirse de ingredientes, simbolos o iconos visibles
 - Los 14 alérgenos oficiales de la UE son: Gluten, Crustaceos, Huevo, Pescado, Cacahuetes, Soja, Lacteos, Frutos de cascara, Apio, Mostaza, Sesamo, Dioxido de azufre, Altramuces, Moluscos
 - Usa EXACTAMENTE esos nombres en el campo "allergens"
 - Si no puedes determinar alérgenos, devuelve un array vacio
-- No inventes productos ni categorias
+- No inventes productos ni categorías
 - Responde SOLO con JSON valido, sin markdown ni texto adicional
 
 Formato exacto:
 {
   "categories": [
     {
-      "name": "Nombre categoria",
+      "name": "Nombre categoría",
       "emoji": "🍸",
       "items": [
         {

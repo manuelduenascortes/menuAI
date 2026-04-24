@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft, Store } from 'lucide-react'
 
 export const metadata = {
-  title: 'Politica de Privacidad - MenuAI',
+  title: 'Política de Privacidad - MenuAI',
 }
 
 export default function PrivacidadPage() {
@@ -23,7 +23,7 @@ export default function PrivacidadPage() {
       </nav>
 
       <main className="mx-auto max-w-3xl px-[6vw] py-16">
-        <h1 className="mb-2 font-serif text-4xl">Politica de Privacidad</h1>
+        <h1 className="mb-2 font-serif text-4xl">Política de Privacidad</h1>
         <p className="mb-12 text-sm text-muted-foreground">Última actualizacion: 13 de abril de 2026</p>
 
         <div className="prose prose-neutral max-w-none space-y-8 leading-relaxed text-muted-foreground dark:prose-invert">
@@ -31,7 +31,7 @@ export default function PrivacidadPage() {
             <h2 className="mb-3 font-serif text-xl text-foreground">1. Responsable del tratamiento</h2>
             <p>
               El responsable del tratamiento de los datos personales recogidos a traves de menuai.es
-              es MenuAI (&quot;nosotros&quot;), con domicilio en Malaga, Espana. Puedes contactarnos en{' '}
+              es MenuAI (&quot;nosotros&quot;), con domicilio en Malaga, España. Puedes contactarnos en{' '}
               <a href="mailto:hola@menuai.es" className="text-primary hover:underline">
                 hola@menuai.es
               </a>
@@ -47,7 +47,7 @@ export default function PrivacidadPage() {
                 de administrador.
               </li>
               <li>
-                <strong className="text-foreground">Datos del local:</strong> nombre, slug, categorias, productos,
+                <strong className="text-foreground">Datos del local:</strong> nombre, slug, categorías, productos,
                 ingredientes, alérgenos, configuración de acceso y mesas que el administrador introduce.
               </li>
               <li>
@@ -56,7 +56,7 @@ export default function PrivacidadPage() {
               </li>
               <li>
                 <strong className="text-foreground">Datos de pago:</strong> procesados directamente por Stripe. No
-                almacenamos numeros de tarjeta.
+                almacenamos números de tarjeta.
               </li>
             </ul>
           </section>
@@ -85,7 +85,7 @@ export default function PrivacidadPage() {
             <p>Compartimos datos con los siguientes proveedores, todos con garantias adecuadas:</p>
             <ul className="list-disc space-y-2 pl-5">
               <li>
-                <strong className="text-foreground">Supabase</strong> - alojamiento de base de datos y autenticacion.
+                <strong className="text-foreground">Supabase</strong> - alojamiento de base de datos y autenticación.
               </li>
               <li>
                 <strong className="text-foreground">Stripe</strong> - procesamiento de pagos.
@@ -103,8 +103,8 @@ export default function PrivacidadPage() {
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">6. Conservacion de datos</h2>
             <p>
-              Los datos de la cuenta se conservan mientras la suscripcion este activa. Tras la cancelacion,
-              los datos se eliminan en un plazo maximo de 90 dias, salvo obligacion legal de conservacion.
+              Los datos de la cuenta se conservan mientras la suscripcion este activa. Tras la cancelación,
+              los datos se eliminan en un plazo maximo de 90 días, salvo obligación legal de conservación.
             </p>
           </section>
 
@@ -125,9 +125,9 @@ export default function PrivacidadPage() {
             <h2 className="mb-3 font-serif text-xl text-foreground">8. Cookies</h2>
             <p>
               Utilizamos cookies tecnicas estrictamente necesarias para el funcionamiento del servicio
-              (autenticacion y sesión). No utilizamos cookies de seguimiento ni publicidad.{' '}
+              (autenticación y sesión). No utilizamos cookies de seguimiento ni publicidad.{' '}
               <Link href="/cookies" className="text-primary hover:underline">
-                Politica de Cookies
+                Política de Cookies
               </Link>
               .
             </p>

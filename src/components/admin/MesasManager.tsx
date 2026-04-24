@@ -383,7 +383,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
             <CardContent className="pt-5">
               <div className="flex flex-wrap items-end gap-3">
                 <div className="space-y-1.5">
-                  <Label>Numero de mesa</Label>
+                  <Label>Número de mesa</Label>
                   <Input
                     type="number"
                     min="1"
@@ -480,7 +480,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
               </div>
               <p className="mb-2 font-serif text-xl text-foreground">No hay mesas configuradas</p>
               <p className="mx-auto mb-6 max-w-xs text-sm text-muted-foreground">
-                Crea mesas para generar codigos QR unicos para cada zona del local.
+                Crea mesas para generar códigos QR unicos para cada zona del local.
               </p>
               <Button onClick={() => setMultiDialog(true)} className="cursor-pointer">
                 <Plus className="mr-1.5 h-4 w-4" />
@@ -638,7 +638,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar esta mesa?</AlertDialogTitle>
             <AlertDialogDescription>
-              Se eliminara la mesa y su codigo QR. Esta accion no se puede deshacer.
+              Se eliminara la mesa y su código QR. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -658,8 +658,8 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar {selectionCount} {selectionCount === 1 ? 'mesa' : 'mesas'}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Se eliminaran {selectionCount === 1 ? 'la mesa seleccionada' : `las ${selectionCount} mesas seleccionadas`} y sus codigos QR.
-              Esta accion no se puede deshacer.
+              Se eliminaran {selectionCount === 1 ? 'la mesa seleccionada' : `las ${selectionCount} mesas seleccionadas`} y sus códigos QR.
+              Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

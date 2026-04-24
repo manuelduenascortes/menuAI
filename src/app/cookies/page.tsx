@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft, Store } from 'lucide-react'
 
 export const metadata = {
-  title: 'Politica de Cookies - MenuAI',
+  title: 'Política de Cookies - MenuAI',
 }
 
 export default function CookiesPage() {
@@ -23,7 +23,7 @@ export default function CookiesPage() {
       </nav>
 
       <main className="mx-auto max-w-3xl px-[6vw] py-16">
-        <h1 className="mb-2 font-serif text-4xl">Politica de Cookies</h1>
+        <h1 className="mb-2 font-serif text-4xl">Política de Cookies</h1>
         <p className="mb-12 text-sm text-muted-foreground">Última actualizacion: 24 de abril de 2026</p>
 
         <div className="prose prose-neutral max-w-none space-y-8 leading-relaxed text-muted-foreground dark:prose-invert">
@@ -38,7 +38,7 @@ export default function CookiesPage() {
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">Cookies que utilizamos</h2>
             <p>
-              MenuAI unicamente usa <strong className="text-foreground">cookies tecnicas estrictamente necesarias</strong>.
+              MenuAI únicamente usa <strong className="text-foreground">cookies tecnicas estrictamente necesarias</strong>.
               No utilizamos cookies de rastreo, analitica ni publicidad.
             </p>
             <div className="overflow-x-auto">
@@ -56,7 +56,7 @@ export default function CookiesPage() {
                   <tr className="border-b border-border/50">
                     <td className="py-2 pr-4 font-mono text-xs">sb-*-auth-token</td>
                     <td className="py-2 pr-4">Supabase</td>
-                    <td className="py-2 pr-4">Sesión de administrador (autenticacion)</td>
+                    <td className="py-2 pr-4">Sesión de administrador (autenticación)</td>
                     <td className="py-2">Sesión</td>
                   </tr>
                   <tr>
@@ -74,7 +74,7 @@ export default function CookiesPage() {
             <h2 className="mb-3 font-serif text-xl text-foreground">Como gestionar las cookies</h2>
             <p>
               Puedes configurar tu navegador para rechazar o eliminar cookies. Ten en cuenta que si rechazas
-              las cookies tecnicas no podras iniciar sesión como administrador.
+              las cookies tecnicas no podrás iniciar sesión como administrador.
             </p>
           </section>
 

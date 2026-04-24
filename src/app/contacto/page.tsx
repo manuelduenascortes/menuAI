@@ -43,7 +43,7 @@ export default function ContactoPage() {
             <MapPin className="mt-1 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
             <div>
               <p className="font-medium text-foreground">Ubicacion</p>
-              <p className="text-muted-foreground">Malaga, Espana</p>
+              <p className="text-muted-foreground">Malaga, España</p>
             </div>
           </div>
         </div>

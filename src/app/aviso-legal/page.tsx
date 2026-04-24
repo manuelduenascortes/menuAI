@@ -30,7 +30,7 @@ export default function AvisoLegalPage() {
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">1. Datos identificativos del titular</h2>
             <p>
-              En cumplimiento del articulo 10 de la Ley 34/2002 de Servicios de la Sociedad de la Información y Comercio Electronico (LSSICE):
+              En cumplimiento del artículo 10 de la Ley 34/2002 de Servicios de la Sociedad de la Información y Comercio Electronico (LSSICE):
             </p>
             <ul className="list-disc space-y-2 pl-5">
               <li><strong className="text-foreground">Razon social:</strong> [RAZON SOCIAL]</li>
@@ -55,7 +55,7 @@ export default function AvisoLegalPage() {
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">3. Propiedad intelectual e industrial</h2>
             <p>
-              Todos los contenidos del sitio web (textos, graficos, logotipos, imagenes, codigo fuente) son propiedad del titular o de terceros que han autorizado su uso, y estan protegidos por la legislacion espanola e internacional sobre propiedad intelectual e industrial. Queda prohibida su reproduccion total o parcial sin autorizacion expresa.
+              Todos los contenidos del sitio web (textos, graficos, logotipos, imágenes, código fuente) son propiedad del titular o de terceros que han autorizado su uso, y están protegidos por la legislación española e internacional sobre propiedad intelectual e industrial. Queda prohibida su reproduccion total o parcial sin autorizacion expresa.
             </p>
           </section>
 
@@ -69,7 +69,7 @@ export default function AvisoLegalPage() {
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">5. Ley aplicable y jurisdiccion</h2>
             <p>
-              Este Aviso Legal se rige por la legislacion espanola. Para cualquier controversia, las partes se someten a los juzgados y tribunales de Malaga, salvo que la normativa aplicable establezca otro fuero.
+              Este Aviso Legal se rige por la legislación española. Para cualquier controversia, las partes se someten a los juzgados y tribunales de Malaga, salvo que la normativa aplicable establezca otro fuero.
             </p>
           </section>
         </div>

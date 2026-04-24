@@ -131,7 +131,7 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
             </div>
           )}
 
-          <nav aria-label="Categorias de la carta" className="flex gap-1.5 mt-2.5 overflow-x-auto pb-0.5 scrollbar-hide">
+          <nav aria-label="Categorías de la carta" className="flex gap-1.5 mt-2.5 overflow-x-auto pb-0.5 scrollbar-hide">
             {filteredCategories.map(category => (
               <button
                 key={category.id}
@@ -281,7 +281,7 @@ function MenuItemCard({ item }: { item: MenuItem }) {
               {item.menu_item_allergens.length > 3 && (
                 <span className="text-xs text-muted-foreground">
                   +{item.menu_item_allergens.length - 3}
-                  <span className="sr-only"> alérgenos mas</span>
+                  <span className="sr-only"> alérgenos más</span>
                 </span>
               )}
             </div>
