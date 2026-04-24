@@ -3,17 +3,21 @@ import type { NextConfig } from "next";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 const supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : ''
 
+const isDev = process.env.NODE_ENV === 'development'
+
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob:${supabaseHostname ? ` https://${supabaseHostname}` : ''}`,
   "font-src 'self'",
   `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl} wss://${supabaseHostname}` : ''}`,
   "frame-src 'none'",
+  "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  "upgrade-insecure-requests",
 ].join('; ')
 
 const nextConfig: NextConfig = {
