@@ -396,11 +396,16 @@ export default function HomePage() {
                         <span className="ml-4 text-muted-foreground">{isOpen ? '−' : '+'}</span>
                       </button>
                     </h3>
-                    {isOpen && (
-                      <div id={`${faqId}-panel`} className="pb-4">
+                    <div
+                      id={`${faqId}-panel`}
+                      className={`grid transition-all duration-300 ease-in-out ${
+                        isOpen ? 'grid-rows-[1fr] pb-4 opacity-100' : 'grid-rows-[0fr] opacity-0'
+                      }`}
+                    >
+                      <div className="overflow-hidden">
                         <p className="text-base leading-relaxed text-muted-foreground">{faq.a}</p>
                       </div>
-                    )}
+                    </div>
                   </div>
                 )
               })}

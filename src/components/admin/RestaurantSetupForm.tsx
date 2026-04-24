@@ -38,7 +38,6 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
     description: string
     address: string
     phone: string
-    establishment_type: string
   }>({
     name: '',
     venue_type: DEFAULT_VENUE_TYPE,
@@ -46,7 +45,6 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
     description: '',
     address: '',
     phone: '',
-    establishment_type: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -67,7 +65,6 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
       description: form.description || null,
       address: form.address || null,
       phone: form.phone || null,
-      establishment_type: form.establishment_type || null,
     })
 
     if (insertError) {
@@ -172,24 +169,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
           onChange={e => setForm({ ...form, phone: e.target.value })}
         />
       </div>
-      <div className="space-y-2">
-        <Label>Tipo de establecimiento</Label>
-        <Select
-          value={form.establishment_type || undefined}
-          onValueChange={value =>
-            setForm(current => ({ ...current, establishment_type: value ?? '' }))
-          }
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Seleccionar tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            {ESTABLISHMENT_TYPES.map(type => (
-              <SelectItem key={type} value={type}>{type}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+
 
       {error && <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>}
 

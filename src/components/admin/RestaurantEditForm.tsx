@@ -47,7 +47,6 @@ export default function RestaurantEditForm({
     description: string
     address: string
     phone: string
-    establishment_type: string
   }>({
     name: restaurant.name,
     venue_type: normalizeVenueType(restaurant.venue_type),
@@ -55,7 +54,6 @@ export default function RestaurantEditForm({
     description: restaurant.description ?? '',
     address: restaurant.address ?? '',
     phone: restaurant.phone ?? '',
-    establishment_type: restaurant.establishment_type ?? '',
   })
   const [loading, setLoading] = useState(false)
 
@@ -72,7 +70,6 @@ export default function RestaurantEditForm({
         description: form.description || null,
         address: form.address || null,
         phone: form.phone || null,
-        establishment_type: form.establishment_type || null,
       })
       .eq('id', restaurant.id)
 
@@ -175,24 +172,7 @@ export default function RestaurantEditForm({
           onChange={e => setForm({ ...form, phone: e.target.value })}
         />
       </div>
-      <div className="space-y-2">
-        <Label>Tipo de establecimiento</Label>
-        <Select
-          value={form.establishment_type || undefined}
-          onValueChange={value =>
-            setForm(current => ({ ...current, establishment_type: value ?? '' }))
-          }
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Seleccionar tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            {ESTABLISHMENT_TYPES.map(type => (
-              <SelectItem key={type} value={type}>{type}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+
 
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={loading} className="flex-1 cursor-pointer">
