@@ -13,6 +13,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Download, Trash2, Plus, QrCode, Copy, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import QRCodeLib from 'qrcode'
@@ -30,9 +31,12 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; tableId: string }>({ open: false, tableId: '' })
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false)
   const [multiDialog, setMultiDialog] = useState(false)
   const [multiCount, setMultiCount] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [selectedTableIds, setSelectedTableIds] = useState<Set<string>>(new Set())
+
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL ??
     (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')
@@ -40,6 +44,40 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
   function getTableUrl(tableId: string) {
     return `${baseUrl}/${restaurant.slug}/mesa/${tableId}`
   }
+
+  // --- Selection helpers ---
+
+  function toggleTableSelection(tableId: string) {
+    setSelectedTableIds(prev => {
+      const next = new Set(prev)
+      if (next.has(tableId)) {
+        next.delete(tableId)
+      } else {
+        next.add(tableId)
+      }
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    setSelectedTableIds(prev => {
+      const allSelected = tables.every(t => prev.has(t.id))
+      if (allSelected) {
+        return new Set()
+      }
+      return new Set(tables.map(t => t.id))
+    })
+  }
+
+  function clearSelection() {
+    setSelectedTableIds(new Set())
+  }
+
+  function getSelectedTables(): Table[] {
+    return tables.filter(t => selectedTableIds.has(t.id))
+  }
+
+  // --- QR generation ---
 
   async function generateQR(tableId: string): Promise<string> {
     const url = getTableUrl(tableId)
@@ -69,12 +107,12 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
         // Wait, tengo que cambiar también QRCodeLib param, pero en este replace block voy a dibujarlo escalado o cambiar la variable de arriba. Mejor cambiaré todo el block.
         // Solo para no errar, dibujarlo escalado a 400x400 funciona pero se difumina ligeramente.
         ctx.drawImage(img, 0, 0, 400, 400)
-        
+
         // Área central matemáticamente segura: máximo 25% del lateral. 25% de 400 = 100.
         const centerSize = 100
         const cx = 400/2 - centerSize/2
         const cy = 400/2 - centerSize/2
-        
+
         ctx.fillStyle = '#ffffff'
         const radius = 10
         ctx.beginPath()
@@ -145,7 +183,13 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
   async function confirmDeleteTable() {
     const { error } = await supabase.from('tables').delete().eq('id', deleteConfirm.tableId)
     if (error) { toast.error('Error al eliminar mesa'); return }
-    setTables(prev => prev.filter(t => t.id !== deleteConfirm.tableId))
+    const deletedId = deleteConfirm.tableId
+    setTables(prev => prev.filter(t => t.id !== deletedId))
+    setSelectedTableIds(prev => {
+      const next = new Set(prev)
+      next.delete(deletedId)
+      return next
+    })
     toast.success('Mesa eliminada')
     setDeleteConfirm({ open: false, tableId: '' })
   }
@@ -156,6 +200,29 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
     link.href = table.qr_code_url
     link.download = `qr-mesa-${table.number}-${restaurant.slug}.png`
     link.click()
+  }
+
+  async function downloadSelectedQrs() {
+    const selected = getSelectedTables().filter(t => t.qr_code_url)
+    if (selected.length === 0) return
+    for (const table of selected) {
+      downloadQR(table)
+      // Small delay to avoid browser blocking multiple rapid downloads
+      await new Promise(r => setTimeout(r, 150))
+    }
+    toast.success(`${selected.length} QR${selected.length > 1 ? 's' : ''} descargados`)
+  }
+
+  async function confirmDeleteSelectedTables() {
+    const selectedIds = Array.from(selectedTableIds)
+    if (selectedIds.length === 0) return
+    const { error } = await supabase.from('tables').delete().in('id', selectedIds)
+    if (error) { toast.error('Error al eliminar las mesas seleccionadas'); return }
+    setTables(prev => prev.filter(t => !selectedTableIds.has(t.id)))
+    const count = selectedIds.length
+    clearSelection()
+    setBulkDeleteConfirm(false)
+    toast.success(`${count} mesa${count > 1 ? 's' : ''} eliminada${count > 1 ? 's' : ''} ✓`)
   }
 
   async function copyTableUrl(tableId: string) {
@@ -203,6 +270,9 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
     }
   }
 
+  const selectionCount = selectedTableIds.size
+  const allSelected = tables.length > 0 && tables.every(t => selectedTableIds.has(t.id))
+
   return (
     <div className="space-y-6">
       {/* Add table form */}
@@ -241,13 +311,63 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
         </CardContent>
       </Card>
 
-      {/* Info */}
-      <div className="flex items-center justify-between">
+      {/* Info + selection toolbar */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm text-muted-foreground">{tables.length} mesas configuradas</p>
         <p className="text-xs text-muted-foreground">
           URL: <span className="font-mono">{baseUrl}/{restaurant.slug}/mesa/[id]</span>
         </p>
       </div>
+
+      {/* Bulk action toolbar — shown only when there are tables */}
+      {tables.length > 0 && (
+        <div className="flex items-center gap-3 flex-wrap rounded-lg border border-border bg-muted/40 px-4 py-2.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="cursor-pointer text-sm font-normal"
+            onClick={toggleSelectAll}
+          >
+            {allSelected ? 'Deseleccionar todo' : 'Seleccionar todo'}
+          </Button>
+
+          {selectionCount > 0 && (
+            <>
+              <span className="text-sm text-muted-foreground">
+                {selectionCount} {selectionCount === 1 ? 'mesa seleccionada' : 'mesas seleccionadas'}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="cursor-pointer text-sm font-normal"
+                onClick={clearSelection}
+              >
+                Limpiar selección
+              </Button>
+              <div className="ml-auto flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={downloadSelectedQrs}
+                >
+                  <Download className="w-3.5 h-3.5 mr-1.5" />
+                  Descargar seleccionados
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/60"
+                  onClick={() => setBulkDeleteConfirm(true)}
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  Borrar seleccionados
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Table grid */}
       {tables.length === 0 ? (
@@ -266,91 +386,105 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {tables.map(table => (
-            <Card key={table.id} className="overflow-hidden">
-              <div className="bg-secondary p-4 text-center border-b border-border">
-                <div className="font-serif text-xl text-foreground">Mesa {table.number}</div>
-                {table.label && <Badge variant="secondary" className="mt-1.5 text-xs">{table.label}</Badge>}
-              </div>
-              <CardContent className="p-4 space-y-3">
-                {table.qr_code_url ? (
-                  <div className="flex justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={table.qr_code_url}
-                      alt={`QR Mesa ${table.number}`}
-                      className="w-32 h-32 rounded-lg"
+          {tables.map(table => {
+            const isSelected = selectedTableIds.has(table.id)
+            return (
+              <Card key={table.id} className={`overflow-hidden transition-colors ${isSelected ? 'ring-2 ring-primary ring-offset-1' : ''}`}>
+                <div className="bg-secondary p-4 text-center border-b border-border relative">
+                  {/* Checkbox in top-left of card header */}
+                  <div
+                    className="absolute top-3 left-3"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleTableSelection(table.id)}
+                      aria-label={`Seleccionar mesa ${table.number}`}
                     />
                   </div>
-                ) : (
-                  <div className="w-32 h-32 bg-muted rounded-lg mx-auto flex items-center justify-center text-muted-foreground text-sm">
-                    Sin QR
+                  <div className="font-serif text-xl text-foreground">Mesa {table.number}</div>
+                  {table.label && <Badge variant="secondary" className="mt-1.5 text-xs">{table.label}</Badge>}
+                </div>
+                <CardContent className="p-4 space-y-3">
+                  {table.qr_code_url ? (
+                    <div className="flex justify-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={table.qr_code_url}
+                        alt={`QR Mesa ${table.number}`}
+                        className="w-32 h-32 rounded-lg"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-32 h-32 bg-muted rounded-lg mx-auto flex items-center justify-center text-muted-foreground text-sm">
+                      Sin QR
+                    </div>
+                  )}
+                  <div className="flex items-center justify-center gap-1">
+                    <p className="text-[10px] text-muted-foreground text-center font-mono break-all leading-relaxed">
+                      {getTableUrl(table.id)}
+                    </p>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 shrink-0 cursor-pointer"
+                            onClick={() => copyTableUrl(table.id)}
+                          >
+                            {copiedId === table.id
+                              ? <Check className="w-3 h-3 text-green-600" />
+                              : <Copy className="w-3 h-3 text-muted-foreground" />
+                            }
+                          </Button>
+                        }
+                      />
+                      <TooltipContent>Copiar enlace</TooltipContent>
+                    </Tooltip>
                   </div>
-                )}
-                <div className="flex items-center justify-center gap-1">
-                  <p className="text-[10px] text-muted-foreground text-center font-mono break-all leading-relaxed">
-                    {getTableUrl(table.id)}
-                  </p>
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 shrink-0 cursor-pointer"
-                          onClick={() => copyTableUrl(table.id)}
-                        >
-                          {copiedId === table.id
-                            ? <Check className="w-3 h-3 text-green-600" />
-                            : <Copy className="w-3 h-3 text-muted-foreground" />
-                          }
-                        </Button>
-                      }
-                    />
-                    <TooltipContent>Copiar enlace</TooltipContent>
-                  </Tooltip>
-                </div>
-                <div className="flex gap-2">
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 cursor-pointer"
-                          onClick={() => downloadQR(table)}
-                          disabled={!table.qr_code_url}
-                        >
-                          <Download className="w-3.5 h-3.5 mr-1.5" />
-                          Descargar
-                        </Button>
-                      }
-                    />
-                    <TooltipContent>Descargar QR</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive cursor-pointer"
-                          onClick={() => deleteTable(table.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      }
-                    />
-                    <TooltipContent>Eliminar mesa</TooltipContent>
-                  </Tooltip>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex gap-2">
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 cursor-pointer"
+                            onClick={() => downloadQR(table)}
+                            disabled={!table.qr_code_url}
+                          >
+                            <Download className="w-3.5 h-3.5 mr-1.5" />
+                            Descargar
+                          </Button>
+                        }
+                      />
+                      <TooltipContent>Descargar QR</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive cursor-pointer"
+                            onClick={() => deleteTable(table.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        }
+                      />
+                      <TooltipContent>Eliminar mesa</TooltipContent>
+                    </Tooltip>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
 
-      {/* Delete confirm dialog */}
+      {/* Delete single confirm dialog */}
       <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, tableId: '' })}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -366,6 +500,27 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
               onClick={confirmDeleteTable}
             >
               Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk delete confirm dialog */}
+      <AlertDialog open={bulkDeleteConfirm} onOpenChange={(open) => !open && setBulkDeleteConfirm(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar {selectionCount} {selectionCount === 1 ? 'mesa' : 'mesas'}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminarán {selectionCount === 1 ? 'la mesa seleccionada' : `las ${selectionCount} mesas seleccionadas`} y sus códigos QR. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="cursor-pointer">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90 cursor-pointer"
+              onClick={confirmDeleteSelectedTables}
+            >
+              Eliminar {selectionCount === 1 ? 'mesa' : `${selectionCount} mesas`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
