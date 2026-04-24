@@ -5,13 +5,12 @@ import Link from 'next/link'
 import {
   ArrowRight,
   CheckCircle2,
-  GlassWater,
   Menu,
   MessageCircle,
   QrCode,
   Settings,
   Sparkles,
-  Store,
+  UtensilsCrossed,
   X,
 } from 'lucide-react'
 import BrandLogo from '@/components/BrandLogo'
@@ -140,16 +139,12 @@ export default function HomePage() {
 
           <div className="mb-12 flex w-full items-center justify-between gap-8">
             <h1 className="animate-fade-up delay-1 font-serif text-[clamp(2.5rem,8vw,7.5rem)] leading-[0.92] tracking-tight">
-              Tu local,
-              <br className="md:hidden" /> mas facil de vender
+              La carta que
               <br />
-              con <span className="text-primary">QR + IA</span>
+              <span className="text-primary">recomienda y vende</span>
             </h1>
             <div className="hidden flex-1 animate-fade-up delay-1 justify-center md:flex">
-              <div className="flex items-center gap-5 text-primary">
-                <Store className="h-20 w-20 md:h-28 md:w-28" strokeWidth={1.2} />
-                <GlassWater className="h-16 w-16 md:h-24 md:w-24" strokeWidth={1.2} />
-              </div>
+              <UtensilsCrossed className="h-32 w-32 text-primary md:h-48 md:w-48" strokeWidth={1} />
             </div>
           </div>
 
@@ -350,7 +345,7 @@ export default function HomePage() {
                   <span className="font-serif text-4xl font-bold tracking-tight">9,99 EUR</span>
                   <span className="text-muted-foreground">/mes</span>
                 </div>
-                <p className="mb-2 text-sm text-muted-foreground">119,88 EUR al ano</p>
+                <p className="mb-2 text-sm text-muted-foreground">119,88 EUR al año</p>
                 <div className="mb-4 inline-flex items-center rounded-full bg-green-100/50 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                   Ahorra 50%
                 </div>

@@ -29,7 +29,7 @@ const plans = [
     name: 'Anual',
     price: '9,99 EUR',
     period: '/mes',
-    detail: '119,88 EUR al ano',
+    detail: '119,88 EUR al año',
     priceEnv: 'annual',
     featured: true,
     badge: 'Ahorra 50%',

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ESTABLISHMENT_TYPES } from '@/lib/constants'
-import type { MenuAccessMode, Restaurant, VenueType } from '@/lib/types'
+import type { MenuAccessMode, VenueType } from '@/lib/types'
 import {
   getVenueConfig,
   MENU_ACCESS_OPTIONS,
@@ -21,12 +21,24 @@ import {
   VENUE_OPTIONS,
 } from '@/lib/venue-config'
 
-type EditableRestaurant = Pick<
-  Restaurant,
-  'id' | 'name' | 'venue_type' | 'menu_access_mode' | 'description' | 'address' | 'phone' | 'establishment_type'
->
+export type EditableRestaurant = {
+  id: string
+  name: string
+  venue_type?: VenueType | null
+  menu_access_mode?: MenuAccessMode | null
+  description?: string | null
+  address?: string | null
+  phone?: string | null
+  establishment_type?: string | null
+}
 
-export default function RestaurantEditForm({ restaurant }: { restaurant: EditableRestaurant }) {
+export default function RestaurantEditForm({
+  restaurant,
+  onSuccess,
+}: {
+  restaurant: EditableRestaurant
+  onSuccess?: () => void
+}) {
   const router = useRouter()
   const [form, setForm] = useState<{
     name: string
@@ -71,8 +83,11 @@ export default function RestaurantEditForm({ restaurant }: { restaurant: Editabl
     }
 
     toast.success('Datos actualizados')
-    router.push('/admin/dashboard')
+    onSuccess?.()
     router.refresh()
+    if (!onSuccess) {
+      router.push('/admin/dashboard')
+    }
   }
 
   const venueConfig = getVenueConfig(form.venue_type)
@@ -183,11 +198,17 @@ export default function RestaurantEditForm({ restaurant }: { restaurant: Editabl
         <Button type="submit" disabled={loading} className="flex-1 cursor-pointer">
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar cambios'}
         </Button>
-        <Link href="/admin/dashboard">
-          <Button type="button" variant="outline" className="cursor-pointer">
+        {onSuccess ? (
+          <Button type="button" variant="outline" className="cursor-pointer" onClick={onSuccess}>
             Cancelar
           </Button>
-        </Link>
+        ) : (
+          <Link href="/admin/dashboard">
+            <Button type="button" variant="outline" className="cursor-pointer">
+              Cancelar
+            </Button>
+          </Link>
+        )}
       </div>
     </form>
   )

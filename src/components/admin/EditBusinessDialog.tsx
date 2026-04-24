@@ -1,0 +1,43 @@
+'use client'
+
+import { useState } from 'react'
+import { Pencil } from 'lucide-react'
+import RestaurantEditForm, { type EditableRestaurant } from '@/components/admin/RestaurantEditForm'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+
+export default function EditBusinessDialog({ restaurant }: { restaurant: EditableRestaurant }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="relative z-10 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
+        title="Editar datos del negocio"
+        aria-label="Editar datos del negocio"
+      >
+        <Pencil className="h-3.5 w-3.5" />
+        Editar
+      </button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl">Editar datos del local</DialogTitle>
+            <DialogDescription>
+              Actualiza la informacion visible de tu negocio sin salir del dashboard.
+            </DialogDescription>
+          </DialogHeader>
+          <RestaurantEditForm restaurant={restaurant} onSuccess={() => setOpen(false)} />
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}

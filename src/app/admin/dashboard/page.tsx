@@ -1,11 +1,12 @@
 import { createServerSupabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import RestaurantSetupForm from '@/components/admin/RestaurantSetupForm'
 import OnboardingChecklist from '@/components/admin/OnboardingChecklist'
-import { BookOpen, QrCode, CheckCircle2, ExternalLink, MapPin, Phone, Store, Pencil, CreditCard } from 'lucide-react'
+import { BookOpen, QrCode, CheckCircle2, ExternalLink, MapPin, Phone, Store, CreditCard } from 'lucide-react'
 import SubscriptionCard from '@/components/admin/SubscriptionCard'
+import EditBusinessDialog from '@/components/admin/EditBusinessDialog'
 import { getAccessManagementTitle, getAccessModeLabel, getVenueConfig, supportsTableQr } from '@/lib/venue-config'
 
 export default async function DashboardPage() {
@@ -81,6 +82,7 @@ function DashboardContent({
     description?: string | null
     address?: string | null
     phone?: string | null
+    establishment_type?: string | null
     subscription_status?: string | null
     trial_ends_at?: string | null
     stripe_customer_id?: string | null
@@ -159,15 +161,13 @@ function DashboardContent({
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="md:col-span-3 transition-all hover:border-primary/30 hover:shadow-md">
           <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <CardTitle className="font-serif text-xl flex items-center gap-2">
-                <Store className="w-5 h-5 text-primary" />
-                {restaurant.name}
-              </CardTitle>
-              <Link href="/admin/ajustes" className="p-2 -mt-2 -mr-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-all duration-200" title="Editar datos del negocio">
-                <Pencil className="w-4 h-4" />
-              </Link>
-            </div>
+            <CardTitle className="font-serif text-xl flex items-center gap-2">
+              <Store className="w-5 h-5 text-primary" />
+              {restaurant.name}
+            </CardTitle>
+            <CardAction>
+              <EditBusinessDialog restaurant={restaurant} />
+            </CardAction>
             {restaurant.description && (
               <CardDescription className="mt-1">{restaurant.description}</CardDescription>
             )}
