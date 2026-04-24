@@ -3,6 +3,7 @@ import { DM_Serif_Display, Outfit, Geist_Mono } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import ThemeProvider from '@/components/ThemeProvider'
+import CookieBanner from '@/components/CookieBanner'
 import './globals.css'
 
 const dmSerif = DM_Serif_Display({
@@ -72,6 +73,7 @@ export default function RootLayout({
             {children}
           </TooltipProvider>
           <Toaster richColors position="bottom-right" />
+          <CookieBanner />
         </ThemeProvider>
       </body>
     </html>

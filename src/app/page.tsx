@@ -459,13 +459,28 @@ export default function HomePage() {
             <p className="mb-6 font-serif text-lg text-foreground">Legal</p>
             <ul className="space-y-4 text-sm font-medium text-muted-foreground">
               <li>
+                <Link href="/aviso-legal" className="transition-colors hover:text-foreground">
+                  Aviso Legal
+                </Link>
+              </li>
+              <li>
                 <Link href="/privacidad" className="transition-colors hover:text-foreground">
                   Politica de Privacidad
                 </Link>
               </li>
               <li>
+                <Link href="/cookies" className="transition-colors hover:text-foreground">
+                  Politica de Cookies
+                </Link>
+              </li>
+              <li>
                 <Link href="/terminos" className="transition-colors hover:text-foreground">
                   Terminos y Condiciones
+                </Link>
+              </li>
+              <li>
+                <Link href="/contacto" className="transition-colors hover:text-foreground">
+                  Contacto
                 </Link>
               </li>
             </ul>
