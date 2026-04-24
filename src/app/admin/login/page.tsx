@@ -48,7 +48,7 @@ function LoginForm() {
           redirectTo: `${window.location.origin}/api/auth/callback/recovery`,
         })
         if (resetError) throw resetError
-        setSuccess('Te hemos enviado un email para restablecer tu contrasena.')
+        setSuccess('Te hemos enviado un email para restablecer tu contraseña.')
       } else if (mode === 'login') {
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
         if (loginError) throw loginError
@@ -76,7 +76,7 @@ function LoginForm() {
   }
 
   const heading = mode === 'reset'
-    ? 'Recuperar contrasena'
+    ? 'Recuperar contraseña'
     : mode === 'login'
       ? 'Bienvenido de nuevo'
       : searchParams.get('trial') === '1'
@@ -86,9 +86,9 @@ function LoginForm() {
   const subheading = mode === 'reset'
     ? 'Introduce tu email y te enviaremos un enlace.'
     : mode === 'login'
-      ? 'Accede a tu panel de gestion.'
+      ? 'Accede a tu panel de gestión.'
       : searchParams.get('trial') === '1'
-        ? 'Crea tu cuenta para empezar. Sin tarjeta de credito.'
+        ? 'Crea tu cuenta para empezar. Sin tarjeta de crédito.'
         : 'Comienza tu prueba y digitaliza la carta de tu local.'
 
   return (
@@ -110,7 +110,7 @@ function LoginForm() {
           </div>
           <h1 className="font-serif text-3xl md:text-5xl text-foreground mb-4">MenuAI</h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-sm">
-            Carta digital con IA para restaurantes, bares, cafeterias y coctelerias.
+            Carta digital con IA para restaurantes, bares, cafeterías y coctelerías.
           </p>
         </div>
 
@@ -146,14 +146,14 @@ function LoginForm() {
             {mode !== 'reset' && (
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="login-password" className="text-sm font-medium">Contrasena</Label>
+                  <Label htmlFor="login-password" className="text-sm font-medium">Contraseña</Label>
                   {mode === 'login' && (
                     <button
                       type="button"
                       className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                       onClick={() => { setMode('reset'); setError(''); setSuccess('') }}
                     >
-                      Olvidaste tu contrasena?
+                      ¿Olvidaste tu contraseña?
                     </button>
                   )}
                 </div>
@@ -211,13 +211,13 @@ function LoginForm() {
                 </button>
               ) : (
                 <>
-                  {mode === 'login' ? 'No tienes cuenta?' : 'Ya tienes cuenta?'}{' '}
+                  {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
                   <button
                     type="button"
                     className="text-primary font-medium hover:underline underline-offset-4 cursor-pointer transition-all"
                     onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setSuccess('') }}
                   >
-                    {mode === 'login' ? 'Registrate aquí' : 'Inicia sesión'}
+                    {mode === 'login' ? 'Regístrate aquí' : 'Inicia sesión'}
                   </button>
                 </>
               )}
