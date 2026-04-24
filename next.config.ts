@@ -3,6 +3,19 @@ import type { NextConfig } from "next";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 const supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : ''
 
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob:${supabaseHostname ? ` https://${supabaseHostname}` : ''}`,
+  "font-src 'self'",
+  `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl} wss://${supabaseHostname}` : ''}`,
+  "frame-src 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ')
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: supabaseHostname
@@ -22,6 +35,15 @@ const nextConfig: NextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
+          { key: 'Content-Security-Policy', value: csp },
+        ],
+      },
+      {
+        source: '/api/(.*)',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: 'https://menuai.es' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
       },
     ]
