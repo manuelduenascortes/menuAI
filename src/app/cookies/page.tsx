@@ -24,13 +24,13 @@ export default function CookiesPage() {
 
       <main className="mx-auto max-w-3xl px-[6vw] py-16">
         <h1 className="mb-2 font-serif text-4xl">Política de Cookies</h1>
-        <p className="mb-12 text-sm text-muted-foreground">Última actualizacion: 24 de abril de 2026</p>
+        <p className="mb-12 text-sm text-muted-foreground">Última actualización: 24 de abril de 2026</p>
 
         <div className="prose prose-neutral max-w-none space-y-8 leading-relaxed text-muted-foreground dark:prose-invert">
           <section>
-            <h2 className="mb-3 font-serif text-xl text-foreground">Que son las cookies</h2>
+            <h2 className="mb-3 font-serif text-xl text-foreground">Qué son las cookies</h2>
             <p>
-              Las cookies son pequenos ficheros de texto que un sitio web almacena en el navegador del usuario.
+              Las cookies son pequeños ficheros de texto que un sitio web almacena en el navegador del usuario.
               Permiten que el sitio recuerde información sobre la visita para facilitar su uso.
             </p>
           </section>
@@ -38,8 +38,8 @@ export default function CookiesPage() {
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">Cookies que utilizamos</h2>
             <p>
-              MenuAI únicamente usa <strong className="text-foreground">cookies tecnicas estrictamente necesarias</strong>.
-              No utilizamos cookies de rastreo, analitica ni publicidad.
+              MenuAI únicamente usa <strong className="text-foreground">cookies técnicas estrictamente necesarias</strong>.
+              No utilizamos cookies de rastreo, analítica ni publicidad.
             </p>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-sm">
@@ -49,7 +49,7 @@ export default function CookiesPage() {
                     <th scope="col" className="py-2 pr-4 text-left text-foreground">Nombre</th>
                     <th scope="col" className="py-2 pr-4 text-left text-foreground">Proveedor</th>
                     <th scope="col" className="py-2 pr-4 text-left text-foreground">Finalidad</th>
-                    <th scope="col" className="py-2 text-left text-foreground">Duracion</th>
+                    <th scope="col" className="py-2 text-left text-foreground">Duración</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -71,17 +71,17 @@ export default function CookiesPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 font-serif text-xl text-foreground">Como gestionar las cookies</h2>
+            <h2 className="mb-3 font-serif text-xl text-foreground">Cómo gestionar las cookies</h2>
             <p>
               Puedes configurar tu navegador para rechazar o eliminar cookies. Ten en cuenta que si rechazas
-              las cookies tecnicas no podrás iniciar sesión como administrador.
+              las cookies técnicas no podrás iniciar sesión como administrador.
             </p>
           </section>
 
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">Más información</h2>
             <p>
-              Para cualquier duda escribenos a{' '}
+              Para cualquier duda, escríbenos a{' '}
               <a href="mailto:hola@menuai.es" className="text-primary hover:underline">
                 hola@menuai.es
               </a>

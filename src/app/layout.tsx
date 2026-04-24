@@ -25,21 +25,21 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'MenuAI - Carta digital inteligente para hosteleria',
+  title: 'MenuAI - Carta digital inteligente para hostelería',
   description:
-    'Digitaliza la carta de tu local y ofrece un asistente IA que ayuda a tus clientes a elegir comida, cafe, copas o cualquier consumicion.',
-  keywords: ['carta digital', 'menu qr', 'hosteleria', 'bar', 'cafeteria', 'restaurante', 'cocteleria', 'ia'],
+    'Digitaliza la carta de tu local y ofrece un asistente de IA que ayuda a tus clientes a elegir comida, café, copas o cualquier consumición.',
+  keywords: ['carta digital', 'menú QR', 'hostelería', 'bar', 'cafetería', 'restaurante', 'coctelería', 'IA'],
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://menuai.es'),
   openGraph: {
     title: 'MenuAI - Carta digital inteligente',
-    description: 'Carta digital con IA para restaurantes, bares, cafeterias y coctelerias.',
+    description: 'Carta digital con IA para restaurantes, bares, cafeterías y coctelerías.',
     type: 'website',
     siteName: 'MenuAI',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'MenuAI - Carta digital inteligente',
-    description: 'Carta digital con IA para todo tipo de locales de hosteleria',
+    description: 'Carta digital con IA para todo tipo de locales de hostelería',
   },
 }
 

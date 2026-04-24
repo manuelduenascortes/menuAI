@@ -636,9 +636,9 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
       <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, tableId: '' })}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar esta mesa?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar esta mesa?</AlertDialogTitle>
             <AlertDialogDescription>
-              Se eliminara la mesa y su código QR. Esta acción no se puede deshacer.
+              Se eliminará la mesa y su código QR. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -656,9 +656,9 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
       <AlertDialog open={bulkDeleteConfirm} onOpenChange={(open) => !open && setBulkDeleteConfirm(false)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar {selectionCount} {selectionCount === 1 ? 'mesa' : 'mesas'}?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar {selectionCount} {selectionCount === 1 ? 'mesa' : 'mesas'}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Se eliminaran {selectionCount === 1 ? 'la mesa seleccionada' : `las ${selectionCount} mesas seleccionadas`} y sus códigos QR.
+              Se eliminarán {selectionCount === 1 ? 'la mesa seleccionada' : `las ${selectionCount} mesas seleccionadas`} y sus códigos QR.
               Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>

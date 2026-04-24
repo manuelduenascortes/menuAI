@@ -248,10 +248,10 @@ export default function MenuImport({
     } catch (error: unknown) {
       const pdfError = error as { name?: string }
       if (pdfError.name === 'PasswordException') {
-        throw new Error('Este PDF esta protegido. Desbloquealo antes de subirlo.')
+        throw new Error('Este PDF está protegido. Desbloquéalo antes de subirlo.')
       }
       if (pdfError.name === 'InvalidPDFException') {
-        throw new Error('El archivo no es un PDF valido.')
+        throw new Error('El archivo no es un PDF válido.')
       }
 
       throw new Error('No se pudo leer el PDF. Prueba otra vez o usa Foto o Texto.')
@@ -437,7 +437,7 @@ export default function MenuImport({
 
       if (failedCategories > 0 || failedItems > 0) {
         toast.warning(
-          `Importacion parcial: ${failedCategories} categorías y ${failedItems} ${itemPlural} no se pudieron guardar.`,
+          `Importación parcial: ${failedCategories} categorías y ${failedItems} ${itemPlural} no se pudieron guardar.`,
         )
       } else {
         toast.success('Carta importada correctamente')
@@ -609,7 +609,7 @@ export default function MenuImport({
             <>
               <p className="text-lg font-medium text-foreground">Analizando la carta...</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                La IA esta detectando categorías, {itemPlural}, ingredientes y alérgenos.
+                La IA está detectando categorías, {itemPlural}, ingredientes y alérgenos.
               </p>
             </>
           )}

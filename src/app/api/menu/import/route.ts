@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
       const jsonStr = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
       parsed = JSON.parse(jsonStr)
     } catch {
-      return NextResponse.json({ error: 'La IA no devolvio JSON valido', raw }, { status: 422 })
+      return NextResponse.json({ error: 'La IA no devolvió JSON válido', raw }, { status: 422 })
     }
 
     return NextResponse.json(parsed)

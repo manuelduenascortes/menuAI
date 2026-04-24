@@ -24,7 +24,7 @@ export default function ContactoPage() {
 
       <main className="mx-auto max-w-3xl px-[6vw] py-16">
         <h1 className="mb-2 font-serif text-4xl">Contacto</h1>
-        <p className="mb-12 text-muted-foreground">Tienes alguna pregunta? Escribenos.</p>
+        <p className="mb-12 text-muted-foreground">¿Tienes alguna pregunta? Escríbenos.</p>
 
         <div className="space-y-6">
           <div className="flex items-start gap-4">
@@ -42,8 +42,8 @@ export default function ContactoPage() {
           <div className="flex items-start gap-4">
             <MapPin className="mt-1 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
             <div>
-              <p className="font-medium text-foreground">Ubicacion</p>
-              <p className="text-muted-foreground">Malaga, España</p>
+              <p className="font-medium text-foreground">Ubicación</p>
+              <p className="text-muted-foreground">Málaga, España</p>
             </div>
           </div>
         </div>

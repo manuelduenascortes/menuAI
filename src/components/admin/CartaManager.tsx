@@ -163,8 +163,8 @@ export default function CartaManager({
 
     setConfirmDialog({
       open: true,
-      title: 'Borrar seleccion?',
-      description: `Se eliminaran ${selectedCategories.size} categorías y ${selectedItems.size} ${itemPlural}. Esta acción no se puede deshacer.`,
+      title: '¿Borrar selección?',
+      description: `Se eliminarán ${selectedCategories.size} categorías y ${selectedItems.size} ${itemPlural}. Esta acción no se puede deshacer.`,
       onConfirm: async () => {
         let errorOccurred = false
 
@@ -269,8 +269,8 @@ export default function CartaManager({
   function deleteCategory(categoryId: string) {
     setConfirmDialog({
       open: true,
-      title: 'Eliminar esta categoría?',
-      description: `Se eliminaran también todos los ${itemPlural} de esta categoría. Esta acción no se puede deshacer.`,
+      title: '¿Eliminar esta categoría?',
+      description: `Se eliminarán también todos los ${itemPlural} de esta categoría. Esta acción no se puede deshacer.`,
       onConfirm: async () => {
         const { error } = await supabase.from('categories').delete().eq('id', categoryId)
 

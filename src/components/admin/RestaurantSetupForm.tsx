@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { ESTABLISHMENT_TYPES } from '@/lib/constants'
 import {
   DEFAULT_MENU_ACCESS_MODE,
   DEFAULT_VENUE_TYPE,
@@ -160,7 +159,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
         <Label htmlFor="setup-address">Dirección</Label>
         <Input
           id="setup-address"
-          placeholder="Calle Mayor 1, Malaga"
+          placeholder="Calle Mayor 1, Málaga"
           value={form.address}
           onChange={e => setForm({ ...form, address: e.target.value })}
         />

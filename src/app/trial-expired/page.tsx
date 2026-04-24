@@ -11,7 +11,7 @@ const plans = [
     name: 'Mensual',
     price: '19,99 EUR',
     period: '/mes',
-    detail: 'Facturacion mes a mes',
+    detail: 'Facturación mes a mes',
     priceEnv: 'monthly',
     featured: false,
     badge: null,
@@ -146,7 +146,7 @@ export default function TrialExpiredPage() {
               <ul className="flex-1 space-y-2 text-sm text-muted-foreground mt-6">
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Carta digital ilimitada</li>
                 <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> QR y asistente IA</li>
-                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Panel de administracion</li>
+                <li className="flex gap-2 items-start"><CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Panel de administración</li>
               </ul>
             </div>
           ))}
@@ -162,7 +162,7 @@ export default function TrialExpiredPage() {
             Cerrar sesión
           </Button>
           <p className="text-sm text-muted-foreground">
-            Tienes dudas? Escribenos a{' '}
+            ¿Tienes dudas? Escríbenos a{' '}
             <a href="mailto:hola@menuai.es" className="text-primary hover:underline">
               hola@menuai.es
             </a>

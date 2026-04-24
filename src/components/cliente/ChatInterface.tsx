@@ -124,7 +124,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, venueTyp
       if (err instanceof DOMException && err.name === 'AbortError') return
       setMessages(prev => [
         ...prev.slice(0, -1),
-        { role: 'assistant', content: 'Lo siento, ha habido un error. Intentalo de nuevo.' },
+        { role: 'assistant', content: 'Lo siento, ha habido un error. Inténtalo de nuevo.' },
       ])
     } finally {
       setLoading(false)
@@ -193,7 +193,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, venueTyp
                 <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-              <span className="sr-only">El asistente esta escribiendo</span>
+              <span className="sr-only">El asistente está escribiendo</span>
             </div>
           </div>
         )}

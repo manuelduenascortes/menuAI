@@ -11,7 +11,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { ESTABLISHMENT_TYPES } from '@/lib/constants'
 import type { MenuAccessMode, VenueType } from '@/lib/types'
 import {
   getVenueConfig,
@@ -163,7 +162,7 @@ export default function RestaurantEditForm({
         <Label htmlFor="edit-address">Dirección</Label>
         <Input
           id="edit-address"
-          placeholder="Calle Mayor 1, Malaga"
+          placeholder="Calle Mayor 1, Málaga"
           value={form.address}
           onChange={e => setForm({ ...form, address: e.target.value })}
         />

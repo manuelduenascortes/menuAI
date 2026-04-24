@@ -77,7 +77,7 @@ export default function OnboardingChecklist({ hasRestaurant, hasItems, hasTables
         </div>
         {allDone && (
           <p className="text-xs text-primary text-center font-medium">
-            Todo listo. Tu local ya esta configurado.
+            Todo listo. Tu local ya está configurado.
           </p>
         )}
       </CardContent>

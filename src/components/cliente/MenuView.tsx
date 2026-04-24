@@ -113,7 +113,7 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
           </p>
 
           {availableFilterTags.length > 0 && (
-            <div role="group" aria-label="Filtros rapidos" className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div role="group" aria-label="Filtros rápidos" className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {availableFilterTags.map(tag => (
                 <button
                   key={tag}
@@ -198,7 +198,7 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
           aria-label="Abrir asistente IA"
         >
           <MessageCircle className="w-5 h-5" />
-          <span className="font-medium text-sm">Te ayudo a elegir?</span>
+          <span className="font-medium text-sm">¿Te ayudo a elegir?</span>
         </button>
       </div>
 
