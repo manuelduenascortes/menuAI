@@ -40,7 +40,7 @@ const faqs = [
   },
   {
     q: 'Puedo cambiar la carta cuando quiera?',
-    a: 'Si. Puedes editar categorias, productos, precios, disponibilidad, imagenes y alergenos en cualquier momento.',
+    a: 'Si. Puedes editar categorias, productos, precios, disponibilidad, imagenes y alérgenos en cualquier momento.',
   },
 ]
 
@@ -71,7 +71,7 @@ export default function HomePage() {
             href="/admin/login"
             className="group flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            Iniciar sesion
+            Iniciar sesión
             <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
@@ -119,7 +119,7 @@ export default function HomePage() {
               className="flex items-center gap-2 py-2 text-lg font-medium text-primary"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Iniciar sesion
+              Iniciar sesión
               <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
@@ -205,7 +205,7 @@ export default function HomePage() {
                 <QrCode className="mb-6 h-7 w-7 text-primary" />
                 <h3 className="mb-3 font-serif text-2xl">QR general o QR por mesa</h3>
                 <p className="leading-relaxed text-muted-foreground">
-                  Usa un unico QR para todo el local, codigos por mesa o ambos a la vez.
+                  Usa un único QR para todo el local, codigos por mesa o ambos a la vez.
                   Encaja igual de bien en un restaurante, una cafeteria de paso o un bar de copas.
                 </p>
               </div>
@@ -226,7 +226,7 @@ export default function HomePage() {
                 <h3 className="mb-3 font-serif text-2xl">Panel simple</h3>
                 <p className="leading-relaxed text-muted-foreground">
                   Gestiona categorias, productos, ingredientes, disponibilidad,
-                  imagenes, alergenos y acceso desde un unico panel.
+                  imagenes, alérgenos y acceso desde un único panel.
                 </p>
               </div>
             </div>
@@ -277,7 +277,7 @@ export default function HomePage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    QR general y opcion por mesa
+                    QR general y opción por mesa
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -334,7 +334,7 @@ export default function HomePage() {
 
               <div className="relative z-10 flex h-full flex-col rounded-2xl border-2 border-primary bg-background p-8 shadow-lg md:scale-105">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-4 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground">
-                  Mas popular
+                  Más popular
                 </div>
                 <h3 className="mb-2 font-serif text-2xl">Anual</h3>
                 <div className="mb-4">
@@ -466,7 +466,7 @@ export default function HomePage() {
               </li>
               <li>
                 <Link href="/admin/login" className="transition-colors hover:text-foreground">
-                  Iniciar sesion
+                  Iniciar sesión
                 </Link>
               </li>
             </ul>

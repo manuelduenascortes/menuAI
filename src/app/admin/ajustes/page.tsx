@@ -40,7 +40,7 @@ export default async function AjustesPage() {
               Datos del negocio
             </CardTitle>
             <CardDescription>
-              URL publica: <span className="font-mono">/{restaurant.slug}</span>
+              URL pública: <span className="font-mono">/{restaurant.slug}</span>
             </CardDescription>
           </CardHeader>
           <CardContent>

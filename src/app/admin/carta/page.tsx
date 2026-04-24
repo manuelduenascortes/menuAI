@@ -52,7 +52,7 @@ export default async function CartaPage() {
       <div className="mb-8">
         <h1 className="font-serif text-3xl text-foreground">Gestion de carta</h1>
         <p className="mt-1 text-muted-foreground">
-          {`Anade y edita categorias, ${venueConfig.itemPlural}, ingredientes, imagenes y alergenos.`}
+          {`Anade y edita categorias, ${venueConfig.itemPlural}, ingredientes, imagenes y alérgenos.`}
         </p>
       </div>
 

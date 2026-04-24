@@ -16,10 +16,10 @@ Reglas:
 - Asigna un emoji representativo a cada categoria
 - Si no se ve el precio, usa 0
 - Extrae ingredientes si se mencionan
-- Detecta alergenos cuando puedan deducirse de ingredientes, simbolos o iconos visibles
-- Los 14 alergenos oficiales de la UE son: Gluten, Crustaceos, Huevo, Pescado, Cacahuetes, Soja, Lacteos, Frutos de cascara, Apio, Mostaza, Sesamo, Dioxido de azufre, Altramuces, Moluscos
+- Detecta alérgenos cuando puedan deducirse de ingredientes, simbolos o iconos visibles
+- Los 14 alérgenos oficiales de la UE son: Gluten, Crustaceos, Huevo, Pescado, Cacahuetes, Soja, Lacteos, Frutos de cascara, Apio, Mostaza, Sesamo, Dioxido de azufre, Altramuces, Moluscos
 - Usa EXACTAMENTE esos nombres en el campo "allergens"
-- Si no puedes determinar alergenos, devuelve un array vacio
+- Si no puedes determinar alérgenos, devuelve un array vacio
 - No inventes productos ni categorias
 - Responde SOLO con JSON valido, sin markdown ni texto adicional
 
@@ -32,7 +32,7 @@ Formato exacto:
       "items": [
         {
           "name": "Nombre del producto",
-          "description": "Descripcion breve o null",
+          "description": "Descripción breve o null",
           "price": 12.5,
           "ingredients": ["ingrediente1", "ingrediente2"],
           "allergens": ["Gluten", "Lacteos"]

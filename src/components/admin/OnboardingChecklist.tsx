@@ -26,7 +26,7 @@ export default function OnboardingChecklist({ hasRestaurant, hasItems, hasTables
 
   const steps = [
     { label: 'Crear local', done: hasRestaurant, icon: Store, href: '/admin/dashboard' },
-    { label: 'Anadir carta', done: hasItems, icon: BookOpen, href: '/admin/carta' },
+    { label: 'Añadir carta', done: hasItems, icon: BookOpen, href: '/admin/carta' },
     { label: getAccessChecklistStep(normalizedAccessMode), done: accessDone, icon: QrCode, href: '/admin/mesas' },
   ]
 

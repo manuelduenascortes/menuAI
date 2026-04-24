@@ -281,7 +281,7 @@ function MenuItemCard({ item }: { item: MenuItem }) {
               {item.menu_item_allergens.length > 3 && (
                 <span className="text-xs text-muted-foreground">
                   +{item.menu_item_allergens.length - 3}
-                  <span className="sr-only"> alergenos mas</span>
+                  <span className="sr-only"> alérgenos mas</span>
                 </span>
               )}
             </div>
@@ -305,7 +305,7 @@ function MenuItemCard({ item }: { item: MenuItem }) {
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />
-                Alergenos
+                Alérgenos
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {item.menu_item_allergens.map(entry => (

@@ -196,7 +196,7 @@ function LoginForm() {
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                mode === 'reset' ? 'Enviar enlace' : mode === 'login' ? 'Iniciar sesion' : 'Crear cuenta'
+                mode === 'reset' ? 'Enviar enlace' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'
               )}
             </Button>
 
@@ -207,7 +207,7 @@ function LoginForm() {
                   className="text-primary font-medium hover:underline underline-offset-4 cursor-pointer transition-all"
                   onClick={() => { setMode('login'); setError(''); setSuccess('') }}
                 >
-                  Volver a iniciar sesion
+                  Volver a iniciar sesión
                 </button>
               ) : (
                 <>
@@ -217,7 +217,7 @@ function LoginForm() {
                     className="text-primary font-medium hover:underline underline-offset-4 cursor-pointer transition-all"
                     onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setSuccess('') }}
                   >
-                    {mode === 'login' ? 'Registrate aqui' : 'Inicia sesion'}
+                    {mode === 'login' ? 'Registrate aquí' : 'Inicia sesión'}
                   </button>
                 </>
               )}

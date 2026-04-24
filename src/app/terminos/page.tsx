@@ -24,7 +24,7 @@ export default function TerminosPage() {
 
       <main className="mx-auto max-w-3xl px-[6vw] py-16">
         <h1 className="mb-2 font-serif text-4xl">Terminos y Condiciones</h1>
-        <p className="mb-12 text-sm text-muted-foreground">Ultima actualizacion: 13 de abril de 2026</p>
+        <p className="mb-12 text-sm text-muted-foreground">Última actualizacion: 13 de abril de 2026</p>
 
         <div className="prose prose-neutral max-w-none space-y-8 leading-relaxed text-muted-foreground dark:prose-invert">
           <section>
@@ -37,7 +37,7 @@ export default function TerminosPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 font-serif text-xl text-foreground">2. Descripcion del servicio</h2>
+            <h2 className="mb-3 font-serif text-xl text-foreground">2. Descripción del servicio</h2>
             <p>MenuAI proporciona:</p>
             <ul className="list-disc space-y-2 pl-5">
               <li>Creacion y gestion de carta digital para restaurantes, bares, cafeterias y coctelerias.</li>
@@ -72,7 +72,7 @@ export default function TerminosPage() {
             <h2 className="mb-3 font-serif text-xl text-foreground">5. Uso aceptable</h2>
             <p>Te comprometes a:</p>
             <ul className="list-disc space-y-2 pl-5">
-              <li>Proporcionar informacion veraz sobre tu local y su carta.</li>
+              <li>Proporcionar información veraz sobre tu local y su carta.</li>
               <li>No usar el servicio para fines ilegales o fraudulentos.</li>
               <li>No intentar acceder a cuentas o datos de otros usuarios.</li>
               <li>No realizar ingenieria inversa ni interferir con el funcionamiento del servicio.</li>
@@ -91,10 +91,10 @@ export default function TerminosPage() {
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">7. Asistente IA</h2>
             <p>
-              El asistente IA genera recomendaciones basadas en la informacion de tu carta.
+              El asistente IA genera recomendaciones basadas en la información de tu carta.
               Las respuestas son orientativas y no sustituyen el asesoramiento profesional
               sobre alergias alimentarias. El titular del local es responsable de la exactitud
-              de la informacion de alergenos e ingredientes introducida en la plataforma.
+              de la información de alérgenos e ingredientes introducida en la plataforma.
             </p>
           </section>
 

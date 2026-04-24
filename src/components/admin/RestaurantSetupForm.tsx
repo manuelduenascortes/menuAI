@@ -102,18 +102,21 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="setup-venue-type">Tipo de local *</Label>
-          <select
-            id="setup-venue-type"
+          <Select
             value={form.venue_type}
-            onChange={e => setForm({ ...form, venue_type: e.target.value as VenueType })}
-            className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+            onValueChange={value => setForm({ ...form, venue_type: value as VenueType })}
           >
-            {VENUE_OPTIONS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger id="setup-venue-type" className="w-full bg-transparent">
+              <SelectValue placeholder="Seleccionar tipo de local" />
+            </SelectTrigger>
+            <SelectContent>
+              {VENUE_OPTIONS.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <p className="text-xs text-muted-foreground">
             {VENUE_OPTIONS.find(option => option.value === form.venue_type)?.description}
           </p>
@@ -121,18 +124,21 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
 
         <div className="space-y-2">
           <Label htmlFor="setup-access-mode">Acceso a la carta *</Label>
-          <select
-            id="setup-access-mode"
+          <Select
             value={form.menu_access_mode}
-            onChange={e => setForm({ ...form, menu_access_mode: e.target.value as MenuAccessMode })}
-            className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+            onValueChange={value => setForm({ ...form, menu_access_mode: value as MenuAccessMode })}
           >
-            {MENU_ACCESS_OPTIONS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger id="setup-access-mode" className="w-full bg-transparent">
+              <SelectValue placeholder="Seleccionar acceso a la carta" />
+            </SelectTrigger>
+            <SelectContent>
+              {MENU_ACCESS_OPTIONS.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <p className="text-xs text-muted-foreground">
             {MENU_ACCESS_OPTIONS.find(option => option.value === form.menu_access_mode)?.description}
           </p>
@@ -140,7 +146,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="setup-description">Descripcion</Label>
+        <Label htmlFor="setup-description">Descripción</Label>
         <Textarea
           id="setup-description"
           placeholder={venueConfig.descriptionPlaceholder}
@@ -151,7 +157,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="setup-address">Direccion</Label>
+        <Label htmlFor="setup-address">Dirección</Label>
         <Input
           id="setup-address"
           placeholder="Calle Mayor 1, Malaga"
@@ -161,7 +167,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="setup-phone">Telefono</Label>
+        <Label htmlFor="setup-phone">Teléfono</Label>
         <Input
           id="setup-phone"
           placeholder="952 123 456"

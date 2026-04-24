@@ -86,7 +86,7 @@ export const MENU_ACCESS_OPTIONS: { value: MenuAccessMode; label: string; descri
   {
     value: 'general_qr',
     label: 'QR general del local',
-    description: 'Un unico QR abre la carta completa del local.',
+    description: 'Un único QR abre la carta completa del local.',
   },
   {
     value: 'table_qr',

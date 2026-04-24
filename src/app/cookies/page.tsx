@@ -24,14 +24,14 @@ export default function CookiesPage() {
 
       <main className="mx-auto max-w-3xl px-[6vw] py-16">
         <h1 className="mb-2 font-serif text-4xl">Politica de Cookies</h1>
-        <p className="mb-12 text-sm text-muted-foreground">Ultima actualizacion: 24 de abril de 2026</p>
+        <p className="mb-12 text-sm text-muted-foreground">Última actualizacion: 24 de abril de 2026</p>
 
         <div className="prose prose-neutral max-w-none space-y-8 leading-relaxed text-muted-foreground dark:prose-invert">
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">Que son las cookies</h2>
             <p>
               Las cookies son pequenos ficheros de texto que un sitio web almacena en el navegador del usuario.
-              Permiten que el sitio recuerde informacion sobre la visita para facilitar su uso.
+              Permiten que el sitio recuerde información sobre la visita para facilitar su uso.
             </p>
           </section>
 
@@ -56,8 +56,8 @@ export default function CookiesPage() {
                   <tr className="border-b border-border/50">
                     <td className="py-2 pr-4 font-mono text-xs">sb-*-auth-token</td>
                     <td className="py-2 pr-4">Supabase</td>
-                    <td className="py-2 pr-4">Sesion de administrador (autenticacion)</td>
-                    <td className="py-2">Sesion</td>
+                    <td className="py-2 pr-4">Sesión de administrador (autenticacion)</td>
+                    <td className="py-2">Sesión</td>
                   </tr>
                   <tr>
                     <td className="py-2 pr-4 font-mono text-xs">cookie_consent</td>
@@ -74,12 +74,12 @@ export default function CookiesPage() {
             <h2 className="mb-3 font-serif text-xl text-foreground">Como gestionar las cookies</h2>
             <p>
               Puedes configurar tu navegador para rechazar o eliminar cookies. Ten en cuenta que si rechazas
-              las cookies tecnicas no podras iniciar sesion como administrador.
+              las cookies tecnicas no podras iniciar sesión como administrador.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 font-serif text-xl text-foreground">Mas informacion</h2>
+            <h2 className="mb-3 font-serif text-xl text-foreground">Más información</h2>
             <p>
               Para cualquier duda escribenos a{' '}
               <a href="mailto:hola@menuai.es" className="text-primary hover:underline">

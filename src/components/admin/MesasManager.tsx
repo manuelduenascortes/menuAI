@@ -311,7 +311,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
       } else if (added > 0) {
         toast.warning(`${added} de ${count} mesas se anadieron. Algunas fallaron.`)
       } else {
-        toast.error('No se pudieron anadir las mesas.')
+        toast.error('No se pudieron añadir las mesas.')
       }
       setLoading(false)
     }
@@ -344,7 +344,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
             </div>
             <div className="space-y-3">
               <div>
-                <p className="text-sm font-medium text-foreground">Acceso directo a la carta publica</p>
+                <p className="text-sm font-medium text-foreground">Acceso directo a la carta pública</p>
                 <p className="mt-1 text-xs text-muted-foreground">{getAccessModeLabel(restaurant.menu_access_mode)}</p>
               </div>
               <p className="break-all font-mono text-xs text-muted-foreground">{generalUrl}</p>
@@ -403,11 +403,11 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                 </div>
                 <Button onClick={addTable} disabled={loading || !newNumber} className="cursor-pointer">
                   <Plus className="mr-1.5 h-4 w-4" />
-                  {loading ? 'Generando...' : 'Anadir mesa'}
+                  {loading ? 'Generando...' : 'Añadir mesa'}
                 </Button>
                 <Button variant="outline" onClick={() => setMultiDialog(true)} disabled={loading} className="cursor-pointer">
                   <Plus className="mr-1.5 h-4 w-4" />
-                  Anadir varias
+                  Añadir varias
                 </Button>
               </div>
               {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
@@ -484,7 +484,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
               </p>
               <Button onClick={() => setMultiDialog(true)} className="cursor-pointer">
                 <Plus className="mr-1.5 h-4 w-4" />
-                Anadir mesas
+                Añadir mesas
               </Button>
             </div>
           ) : (
@@ -626,7 +626,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
           <CardContent className="py-10 text-center">
             <p className="mb-2 font-serif text-xl text-foreground">Este local usa acceso general</p>
             <p className="mx-auto max-w-md text-sm text-muted-foreground">
-              No necesitas crear mesas porque la carta se abre desde un unico QR general del local. Si quieres activar mesas,
+              No necesitas crear mesas porque la carta se abre desde un único QR general del local. Si quieres activar mesas,
               puedes cambiar el modo de acceso desde Ajustes.
             </p>
           </CardContent>
@@ -677,11 +677,11 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
       <Dialog open={multiDialog} onOpenChange={setMultiDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">Anadir varias mesas</DialogTitle>
+            <DialogTitle className="font-serif text-xl">Añadir varias mesas</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <Label>Cuantas mesas quieres anadir?</Label>
-            <p className="text-sm text-muted-foreground">Se anadiran a partir de la ultima mesa existente.</p>
+            <Label>Cuantas mesas quieres añadir?</Label>
+            <p className="text-sm text-muted-foreground">Se anadiran a partir de la última mesa existente.</p>
             <Input
               type="number"
               min="1"
@@ -705,7 +705,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
             </Button>
             <Button onClick={doAddMultipleTables} disabled={!multiCount || parseInt(multiCount) < 1} className="cursor-pointer">
               <Plus className="mr-1.5 h-4 w-4" />
-              Anadir {multiCount && parseInt(multiCount) > 0 ? `${multiCount} mesas` : 'mesas'}
+              Añadir {multiCount && parseInt(multiCount) > 0 ? `${multiCount} mesas` : 'mesas'}
             </Button>
           </DialogFooter>
         </DialogContent>

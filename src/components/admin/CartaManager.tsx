@@ -260,7 +260,7 @@ export default function CartaManager({
       setAddingCategory(false)
       toast.success('Categoria anadida')
     } else {
-      toast.error('Error al anadir categoria')
+      toast.error('Error al añadir categoria')
     }
 
     setLoadingCategory(false)
@@ -270,7 +270,7 @@ export default function CartaManager({
     setConfirmDialog({
       open: true,
       title: 'Eliminar esta categoria?',
-      description: `Se eliminaran tambien todos los ${itemPlural} de esta categoria. Esta accion no se puede deshacer.`,
+      description: `Se eliminaran también todos los ${itemPlural} de esta categoria. Esta accion no se puede deshacer.`,
       onConfirm: async () => {
         const { error } = await supabase.from('categories').delete().eq('id', categoryId)
 
@@ -368,7 +368,7 @@ export default function CartaManager({
 
         <Button onClick={() => setAddingCategory((current) => !current)} className="cursor-pointer">
           <Plus className="mr-1.5 h-4 w-4" />
-          Anadir categoria
+          Añadir categoria
         </Button>
       </div>
 
@@ -390,7 +390,7 @@ export default function CartaManager({
               />
             </div>
             <Input
-              placeholder="Descripcion (opcional)"
+              placeholder="Descripción (opcional)"
               value={newCategory.description}
               onChange={(event) => setNewCategory({ ...newCategory, description: event.target.value })}
             />
@@ -421,7 +421,7 @@ export default function CartaManager({
           </p>
           <Button onClick={() => setAddingCategory(true)} className="cursor-pointer">
             <Plus className="mr-1.5 h-4 w-4" />
-            Anadir primera categoria
+            Añadir primera categoria
           </Button>
         </div>
       )}
@@ -868,7 +868,7 @@ function ItemFormDialog({
       .single()
 
     if (error || !newItem) {
-      toast.error(`Error al anadir ${itemSingular}`)
+      toast.error(`Error al añadir ${itemSingular}`)
       setLoading(false)
       return
     }
@@ -981,7 +981,7 @@ function ItemFormDialog({
     <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
       <DialogHeader>
         <DialogTitle className="font-serif text-xl">
-          {mode === 'add' ? `Anadir ${itemSingular}` : `Editar ${itemSingular}`}
+          {mode === 'add' ? `Añadir ${itemSingular}` : `Editar ${itemSingular}`}
         </DialogTitle>
       </DialogHeader>
 
@@ -1038,9 +1038,9 @@ function ItemFormDialog({
         </div>
 
         <div className="space-y-2">
-          <Label>Descripcion</Label>
+          <Label>Descripción</Label>
           <Textarea
-            placeholder={`Breve descripcion del ${itemSingular}...`}
+            placeholder={`Breve descripción del ${itemSingular}...`}
             value={form.description}
             onChange={(event) => setForm({ ...form, description: event.target.value })}
             rows={2}
@@ -1072,7 +1072,7 @@ function ItemFormDialog({
         <Separator />
 
         <div className="space-y-2">
-          <Label>Alergenos</Label>
+          <Label>Alérgenos</Label>
           <div className="grid grid-cols-2 gap-2">
             {allergens.map((allergen) => (
               <div key={allergen.id} className="flex items-center gap-2">
@@ -1117,7 +1117,7 @@ function ItemFormDialog({
 
         <div className="flex gap-2 pt-2">
           <Button type="submit" disabled={loading} className="flex-1 cursor-pointer">
-            {loading ? 'Guardando...' : mode === 'add' ? `Anadir ${itemSingular}` : 'Guardar cambios'}
+            {loading ? 'Guardando...' : mode === 'add' ? `Añadir ${itemSingular}` : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" onClick={() => setOpen(false)} className="cursor-pointer">
             Cancelar

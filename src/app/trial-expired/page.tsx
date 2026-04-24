@@ -112,7 +112,7 @@ export default function TrialExpiredPage() {
             >
               {plan.featured && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                  Mas popular
+                  Más popular
                 </div>
               )}
               <h3 className="font-serif text-2xl mb-2">{plan.name}</h3>
@@ -159,7 +159,7 @@ export default function TrialExpiredPage() {
             className="text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <LogOut className="w-4 h-4 mr-2" />
-            Cerrar sesion
+            Cerrar sesión
           </Button>
           <p className="text-sm text-muted-foreground">
             Tienes dudas? Escribenos a{' '}

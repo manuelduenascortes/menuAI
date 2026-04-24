@@ -40,7 +40,7 @@ export default async function DashboardPage() {
     <div className="max-w-5xl mx-auto px-5 py-10">
       <div className="mb-10">
         <h1 className="font-serif text-3xl text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Gestiona tu local desde aqui</p>
+        <p className="text-muted-foreground mt-1">Gestiona tu local desde aquí</p>
       </div>
 
       {!restaurant ? (
@@ -190,7 +190,7 @@ function DashboardContent({
               </p>
             )}
             <p className="text-xs text-muted-foreground pt-1">
-              URL publica: <span className="font-mono">/{restaurant.slug}</span>
+              URL pública: <span className="font-mono">/{restaurant.slug}</span>
             </p>
           </CardContent>
         </Card>
@@ -205,7 +205,7 @@ function DashboardContent({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">Gestionar carta</p>
-              <p className="text-xs text-muted-foreground">Categorias, {venueConfig.itemPlural} e informacion clave</p>
+              <p className="text-xs text-muted-foreground">Categorias, {venueConfig.itemPlural} e información clave</p>
             </div>
           </Link>
 
@@ -232,7 +232,7 @@ function DashboardContent({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">Ver como cliente</p>
-              <p className="text-xs text-muted-foreground">Abre la carta publica</p>
+              <p className="text-xs text-muted-foreground">Abre la carta pública</p>
             </div>
           </Link>
         </div>

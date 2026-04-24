@@ -223,7 +223,7 @@ export default function ChatInterface({ restaurantSlug, restaurantName, venueTyp
           </button>
         </form>
         <p className="text-[11px] text-muted-foreground text-center mt-2 opacity-70">
-          La IA puede cometer errores. Consulta al personal si tienes dudas importantes sobre ingredientes o alergenos.
+          La IA puede cometer errores. Consulta al personal si tienes dudas importantes sobre ingredientes o alérgenos.
         </p>
       </div>
     </div>

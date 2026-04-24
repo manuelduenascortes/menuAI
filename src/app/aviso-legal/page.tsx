@@ -24,13 +24,13 @@ export default function AvisoLegalPage() {
 
       <main className="mx-auto max-w-3xl px-[6vw] py-16">
         <h1 className="mb-2 font-serif text-4xl">Aviso Legal</h1>
-        <p className="mb-12 text-sm text-muted-foreground">Ultima actualizacion: 24 de abril de 2026</p>
+        <p className="mb-12 text-sm text-muted-foreground">Última actualizacion: 24 de abril de 2026</p>
 
         <div className="prose prose-neutral max-w-none space-y-8 leading-relaxed text-muted-foreground dark:prose-invert">
           <section>
             <h2 className="mb-3 font-serif text-xl text-foreground">1. Datos identificativos del titular</h2>
             <p>
-              En cumplimiento del articulo 10 de la Ley 34/2002 de Servicios de la Sociedad de la Informacion y Comercio Electronico (LSSICE):
+              En cumplimiento del articulo 10 de la Ley 34/2002 de Servicios de la Sociedad de la Información y Comercio Electronico (LSSICE):
             </p>
             <ul className="list-disc space-y-2 pl-5">
               <li><strong className="text-foreground">Razon social:</strong> [RAZON SOCIAL]</li>

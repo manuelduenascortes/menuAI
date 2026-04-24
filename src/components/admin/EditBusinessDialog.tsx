@@ -32,7 +32,7 @@ export default function EditBusinessDialog({ restaurant }: { restaurant: Editabl
           <DialogHeader>
             <DialogTitle className="font-serif text-xl">Editar datos del local</DialogTitle>
             <DialogDescription>
-              Actualiza la informacion visible de tu negocio sin salir del dashboard.
+              Actualiza la información visible de tu negocio sin salir del dashboard.
             </DialogDescription>
           </DialogHeader>
           <RestaurantEditForm restaurant={restaurant} onSuccess={() => setOpen(false)} />

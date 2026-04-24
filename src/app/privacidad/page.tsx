@@ -24,7 +24,7 @@ export default function PrivacidadPage() {
 
       <main className="mx-auto max-w-3xl px-[6vw] py-16">
         <h1 className="mb-2 font-serif text-4xl">Politica de Privacidad</h1>
-        <p className="mb-12 text-sm text-muted-foreground">Ultima actualizacion: 13 de abril de 2026</p>
+        <p className="mb-12 text-sm text-muted-foreground">Última actualizacion: 13 de abril de 2026</p>
 
         <div className="prose prose-neutral max-w-none space-y-8 leading-relaxed text-muted-foreground dark:prose-invert">
           <section>
@@ -48,7 +48,7 @@ export default function PrivacidadPage() {
               </li>
               <li>
                 <strong className="text-foreground">Datos del local:</strong> nombre, slug, categorias, productos,
-                ingredientes, alergenos, configuracion de acceso y mesas que el administrador introduce.
+                ingredientes, alérgenos, configuración de acceso y mesas que el administrador introduce.
               </li>
               <li>
                 <strong className="text-foreground">Datos de uso:</strong> interacciones con el asistente IA por parte
@@ -116,7 +116,7 @@ export default function PrivacidadPage() {
               <a href="mailto:hola@menuai.es" className="text-primary hover:underline">
                 hola@menuai.es
               </a>
-              . Tambien tienes derecho a presentar una reclamacion ante la Agencia Espanola de Proteccion
+              . También tienes derecho a presentar una reclamacion ante la Agencia Espanola de Proteccion
               de Datos (AEPD).
             </p>
           </section>
@@ -125,7 +125,7 @@ export default function PrivacidadPage() {
             <h2 className="mb-3 font-serif text-xl text-foreground">8. Cookies</h2>
             <p>
               Utilizamos cookies tecnicas estrictamente necesarias para el funcionamiento del servicio
-              (autenticacion y sesion). No utilizamos cookies de seguimiento ni publicidad.{' '}
+              (autenticacion y sesión). No utilizamos cookies de seguimiento ni publicidad.{' '}
               <Link href="/cookies" className="text-primary hover:underline">
                 Politica de Cookies
               </Link>

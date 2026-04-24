@@ -45,7 +45,7 @@ export default function CookieBanner() {
     >
       <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <p className="text-sm text-muted-foreground">
-          Usamos cookies tecnicas necesarias para el inicio de sesion y el funcionamiento del servicio.{' '}
+          Usamos cookies tecnicas necesarias para el inicio de sesión y el funcionamiento del servicio.{' '}
           <Link href="/cookies" className="text-foreground underline underline-offset-2 hover:text-primary">
             Ver politica de cookies
           </Link>

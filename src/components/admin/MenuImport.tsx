@@ -560,7 +560,7 @@ export default function MenuImport({
             </div>
           ) : (
             <div className="space-y-2">
-              <Label>Pega aqui el texto de la carta</Label>
+              <Label>Pega aquí el texto de la carta</Label>
               <Textarea
                 placeholder={getImportTextPlaceholder(normalizedVenueType)}
                 value={textContent}
@@ -609,7 +609,7 @@ export default function MenuImport({
             <>
               <p className="text-lg font-medium text-foreground">Analizando la carta...</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                La IA esta detectando categorias, {itemPlural}, ingredientes y alergenos.
+                La IA esta detectando categorias, {itemPlural}, ingredientes y alérgenos.
               </p>
             </>
           )}
@@ -632,7 +632,7 @@ export default function MenuImport({
                   Se encontraron {extracted.categories.length} categorias y {totalItems} {itemPlural}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Revisa y edita el resultado antes de guardar. Puedes ajustar nombres, alergenos, imagenes y precios.
+                  Revisa y edita el resultado antes de guardar. Puedes ajustar nombres, alérgenos, imagenes y precios.
                 </p>
               </div>
               <div className="flex gap-2">
@@ -790,7 +790,7 @@ export default function MenuImport({
                                 })
                               }
                               className="h-7 text-xs text-muted-foreground"
-                              placeholder={`Descripcion del ${itemSingular} (opcional)`}
+                              placeholder={`Descripción del ${itemSingular} (opcional)`}
                             />
 
                             <Input
@@ -834,7 +834,7 @@ export default function MenuImport({
                                   )
                                 })
                               ) : (
-                                <span className="text-[10px] text-muted-foreground">Sin alergenos detectados</span>
+                                <span className="text-[10px] text-muted-foreground">Sin alérgenos detectados</span>
                               )}
 
                               <button
@@ -850,7 +850,7 @@ export default function MenuImport({
                                 ) : (
                                   <span className="flex items-center gap-0.5">
                                     <ChevronDown className="h-3 w-3" />
-                                    Editar alergenos
+                                    Editar alérgenos
                                   </span>
                                 )}
                               </button>
@@ -869,7 +869,7 @@ export default function MenuImport({
 
                       {isExpanded && (
                         <div className="border-t border-border/50 pt-2">
-                          <Label className="mb-2 block text-xs text-muted-foreground">Alergenos</Label>
+                          <Label className="mb-2 block text-xs text-muted-foreground">Alérgenos</Label>
                           <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
                             {allergens.map((allergen) => (
                               <div key={allergen.id} className="flex items-center gap-1.5">

@@ -117,7 +117,7 @@ export default function AdminNav({ user, restaurant }: AdminNavProps) {
               className="flex items-center gap-2 w-full text-sm text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
-              Cerrar sesion
+              Cerrar sesión
             </button>
           </div>
         </div>
