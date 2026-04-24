@@ -13,7 +13,9 @@ import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { MenuAccessMode, VenueType } from '@/lib/types'
 import {
+  getMenuAccessOption,
   getVenueConfig,
+  getVenueOption,
   MENU_ACCESS_OPTIONS,
   normalizeMenuAccessMode,
   normalizeVenueType,
@@ -87,6 +89,8 @@ export default function RestaurantEditForm({
   }
 
   const venueConfig = getVenueConfig(form.venue_type)
+  const selectedVenueOption = getVenueOption(form.venue_type)
+  const selectedAccessOption = getMenuAccessOption(form.menu_access_mode)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -109,7 +113,9 @@ export default function RestaurantEditForm({
             onValueChange={value => setForm({ ...form, venue_type: value as VenueType })}
           >
             <SelectTrigger id="edit-venue-type" className="w-full bg-transparent">
-              <SelectValue placeholder="Seleccionar tipo de local" />
+              <SelectValue placeholder="Seleccionar tipo de local">
+                {selectedVenueOption.label}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {VENUE_OPTIONS.map(option => (
@@ -120,7 +126,7 @@ export default function RestaurantEditForm({
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            {VENUE_OPTIONS.find(option => option.value === form.venue_type)?.description}
+            {selectedVenueOption.description}
           </p>
         </div>
 
@@ -131,7 +137,9 @@ export default function RestaurantEditForm({
             onValueChange={value => setForm({ ...form, menu_access_mode: value as MenuAccessMode })}
           >
             <SelectTrigger id="edit-access-mode" className="w-full bg-transparent">
-              <SelectValue placeholder="Seleccionar acceso a la carta" />
+              <SelectValue placeholder="Seleccionar acceso a la carta">
+                {selectedAccessOption.label}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {MENU_ACCESS_OPTIONS.map(option => (
@@ -142,7 +150,7 @@ export default function RestaurantEditForm({
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            {MENU_ACCESS_OPTIONS.find(option => option.value === form.menu_access_mode)?.description}
+            {selectedAccessOption.description}
           </p>
         </div>
       </div>

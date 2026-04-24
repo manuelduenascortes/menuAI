@@ -13,7 +13,9 @@ import { toast } from 'sonner'
 import {
   DEFAULT_MENU_ACCESS_MODE,
   DEFAULT_VENUE_TYPE,
+  getMenuAccessOption,
   getVenueConfig,
+  getVenueOption,
   MENU_ACCESS_OPTIONS,
   VENUE_OPTIONS,
 } from '@/lib/venue-config'
@@ -79,6 +81,8 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
   }
 
   const venueConfig = getVenueConfig(form.venue_type)
+  const selectedVenueOption = getVenueOption(form.venue_type)
+  const selectedAccessOption = getMenuAccessOption(form.menu_access_mode)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -106,7 +110,9 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
             onValueChange={value => setForm({ ...form, venue_type: value as VenueType })}
           >
             <SelectTrigger id="setup-venue-type" className="w-full bg-transparent">
-              <SelectValue placeholder="Seleccionar tipo de local" />
+              <SelectValue placeholder="Seleccionar tipo de local">
+                {selectedVenueOption.label}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {VENUE_OPTIONS.map(option => (
@@ -117,7 +123,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            {VENUE_OPTIONS.find(option => option.value === form.venue_type)?.description}
+            {selectedVenueOption.description}
           </p>
         </div>
 
@@ -128,7 +134,9 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
             onValueChange={value => setForm({ ...form, menu_access_mode: value as MenuAccessMode })}
           >
             <SelectTrigger id="setup-access-mode" className="w-full bg-transparent">
-              <SelectValue placeholder="Seleccionar acceso a la carta" />
+              <SelectValue placeholder="Seleccionar acceso a la carta">
+                {selectedAccessOption.label}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {MENU_ACCESS_OPTIONS.map(option => (
@@ -139,7 +147,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            {MENU_ACCESS_OPTIONS.find(option => option.value === form.menu_access_mode)?.description}
+            {selectedAccessOption.description}
           </p>
         </div>
       </div>

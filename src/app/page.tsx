@@ -14,7 +14,6 @@ import {
   X,
 } from 'lucide-react'
 import BrandLogo from '@/components/BrandLogo'
-import ThemeToggle from '@/components/ThemeToggle'
 import { toggleSingleAccordionItem } from '@/lib/single-accordion-state.mjs'
 
 const faqs = [
@@ -66,7 +65,6 @@ export default function HomePage() {
         </div>
 
         <div className="hidden items-center gap-4 md:flex">
-          <ThemeToggle />
           <Link
             href="/admin/login"
             className="group flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -77,7 +75,6 @@ export default function HomePage() {
         </div>
 
         <div className="flex items-center gap-4 md:hidden">
-          <ThemeToggle />
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen((open) => !open)}
