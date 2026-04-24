@@ -36,6 +36,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
   const [multiCount, setMultiCount] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [selectedTableIds, setSelectedTableIds] = useState<Set<string>>(new Set())
+  const [bulkLoading, setBulkLoading] = useState(false)
 
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL ??
@@ -203,22 +204,32 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
   }
 
   async function downloadSelectedQrs() {
+    if (bulkLoading) return
     const selected = getSelectedTables().filter(t => t.qr_code_url)
     if (selected.length === 0) return
+    setBulkLoading(true)
     for (const table of selected) {
       downloadQR(table)
-      // Small delay to avoid browser blocking multiple rapid downloads
       await new Promise(r => setTimeout(r, 150))
     }
+    setBulkLoading(false)
     toast.success(`${selected.length} QR${selected.length > 1 ? 's' : ''} descargados`)
   }
 
   async function confirmDeleteSelectedTables() {
+    if (bulkLoading) return
     const selectedIds = Array.from(selectedTableIds)
     if (selectedIds.length === 0) return
+    setBulkLoading(true)
     const { error } = await supabase.from('tables').delete().in('id', selectedIds)
-    if (error) { toast.error('Error al eliminar las mesas seleccionadas'); return }
-    setTables(prev => prev.filter(t => !selectedTableIds.has(t.id)))
+    setBulkLoading(false)
+    if (error) {
+      setBulkDeleteConfirm(false)
+      toast.error('Error al eliminar las mesas seleccionadas')
+      return
+    }
+    const selectedIdSet = new Set(selectedIds)
+    setTables(prev => prev.filter(t => !selectedIdSet.has(t.id)))
     const count = selectedIds.length
     clearSelection()
     setBulkDeleteConfirm(false)
@@ -350,6 +361,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                   size="sm"
                   className="cursor-pointer"
                   onClick={downloadSelectedQrs}
+                  disabled={bulkLoading}
                 >
                   <Download className="w-3.5 h-3.5 mr-1.5" />
                   Descargar seleccionados
@@ -359,6 +371,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                   size="sm"
                   className="cursor-pointer text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/60"
                   onClick={() => setBulkDeleteConfirm(true)}
+                  disabled={bulkLoading}
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                   Borrar seleccionados
