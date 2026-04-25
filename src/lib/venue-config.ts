@@ -46,7 +46,7 @@ const VENUE_CONFIGS: Record<VenueType, VenueConfig> = {
     publicDescription: 'Consulta la carta y recibe recomendaciones según gustos y restricciones.',
     publicHint: 'Usa el asistente para encontrar platos según gustos, alergias o momento de la comida.',
     chatGreeting:
-      'Hola. Soy el asistente de este local. Puedo ayudarte a elegir platos según tus gustos, restricciones o lo que te apetezca ahora mismo.',
+      '¡Hola! Soy el asistente de este local. Puedo ayudarte a elegir platos según tus gustos, restricciones o lo que te apetezca ahora mismo.',
     chatFocus:
       'Prioriza restricciones alimentarias, gustos, intensidad, tipo de plato y momento de consumo.',
     chatComplementHint:
@@ -63,7 +63,7 @@ const VENUE_CONFIGS: Record<VenueType, VenueConfig> = {
     publicDescription: 'Descubre la oferta del local y pide recomendaciones según el momento del día.',
     publicHint: 'El asistente puede ayudarte a elegir algo caliente o frío, dulce o salado, suave o intenso.',
     chatGreeting:
-      'Hola. Soy el asistente de este local. Puedo ayudarte a encontrar algo para desayunar, merendar, tomar un café o pedir una tapa o bebida.',
+      '¡Hola! Soy el asistente de este local. Puedo ayudarte a encontrar algo para desayunar, merendar, tomar un café o pedir una tapa o bebida.',
     chatFocus:
       'Prioriza momento del día, caliente o frío, dulce o salado, suave o intenso, con o sin cafeína o alcohol si aplica.',
     chatComplementHint:
@@ -80,7 +80,7 @@ const VENUE_CONFIGS: Record<VenueType, VenueConfig> = {
     publicDescription: 'Explora la carta de bebidas y recibe sugerencias según sabor, intensidad o tipo de copa.',
     publicHint: 'El asistente puede recomendar algo refrescante, intenso, clásico, afrutado o sin alcohol.',
     chatGreeting:
-      'Hola. Soy el asistente de este local. Puedo ayudarte a elegir una copa, cóctel o bebida según sabores, intensidad y si prefieres alcohol o no.',
+      '¡Hola! Soy el asistente de este local. Puedo ayudarte a elegir una copa, cóctel o bebida según sabores, intensidad y si prefieres alcohol o no.',
     chatFocus:
       'Prioriza perfil de sabor, intensidad, con o sin alcohol, clásico o de autor, refrescante o seco.',
     chatComplementHint:
@@ -146,6 +146,10 @@ export function getMenuAccessOption(menuAccessMode?: MenuAccessMode | null): Men
 
 export function getVenueConfig(venueType?: VenueType | null): VenueConfig {
   return VENUE_CONFIGS[normalizeVenueType(venueType)]
+}
+
+export function getVenueTypeLabel(venueType?: VenueType | null): string {
+  return getVenueOption(venueType).label
 }
 
 export function getChatLauncherCopy(venueType?: VenueType | null): ChatLauncherCopy {

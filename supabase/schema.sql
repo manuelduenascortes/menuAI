@@ -16,6 +16,8 @@ create table if not exists restaurants (
   menu_access_mode text not null default 'both' check (menu_access_mode in ('general_qr', 'table_qr', 'both')),
   description text,
   logo_url text,
+  primary_color text not null default '#8B5E3C' check (primary_color ~ '^#[0-9A-Fa-f]{6}$'),
+  font_style text not null default 'clasico' check (font_style in ('clasico', 'elegante', 'moderno', 'casual', 'minimalista')),
   address text,
   phone text,
   trial_ends_at timestamptz default (now() + interval '14 days'),
@@ -36,6 +38,8 @@ create table if not exists restaurants (
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS stripe_subscription_id text;
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS subscription_status text;
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS establishment_type text;
+-- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS primary_color text NOT NULL DEFAULT '#8B5E3C';
+-- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS font_style text NOT NULL DEFAULT 'clasico';
 
 -- ============================================
 -- TABLA: tables (mesas)
@@ -392,3 +396,14 @@ create policy "Auth users delete menu-images"
   on storage.objects for delete
   to authenticated
   using (bucket_id = 'menu-images');
+
+-- ============================================
+-- Storage: restaurant-logos bucket
+-- ============================================
+insert into storage.buckets (id, name, public)
+values ('restaurant-logos', 'restaurant-logos', true)
+on conflict (id) do nothing;
+
+create policy "Public read restaurant-logos"
+  on storage.objects for select
+  using (bucket_id = 'restaurant-logos');

@@ -8,6 +8,7 @@ import { BookOpen, QrCode, CheckCircle2, ExternalLink, MapPin, Phone, Store, Cre
 import SubscriptionCard from '@/components/admin/SubscriptionCard'
 import EditBusinessDialog from '@/components/admin/EditBusinessDialog'
 import { getAccessManagementTitle, getAccessModeLabel, getVenueConfig, supportsTableQr } from '@/lib/venue-config'
+import { getRestaurantFontClassMap } from '@/lib/restaurant-fonts'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabase()
@@ -80,6 +81,9 @@ function DashboardContent({
     venue_type?: 'restaurant' | 'bar_cafe' | 'cocktail_bar' | null
     menu_access_mode?: 'general_qr' | 'table_qr' | 'both' | null
     description?: string | null
+    logo_url?: string | null
+    primary_color?: string | null
+    font_style?: 'clasico' | 'elegante' | 'moderno' | 'casual' | 'minimalista' | null
     address?: string | null
     phone?: string | null
     establishment_type?: string | null
@@ -94,6 +98,7 @@ function DashboardContent({
   const accessTitle = getAccessManagementTitle(restaurant.menu_access_mode)
   const accessDescription = getAccessModeLabel(restaurant.menu_access_mode)
   const hasTableQr = supportsTableQr(restaurant.menu_access_mode)
+  const fontClassMap = getRestaurantFontClassMap()
 
   return (
     <div className="space-y-8">
@@ -166,7 +171,7 @@ function DashboardContent({
               {restaurant.name}
             </CardTitle>
             <CardAction>
-              <EditBusinessDialog restaurant={restaurant} />
+              <EditBusinessDialog restaurant={restaurant} fontClassMap={fontClassMap} />
             </CardAction>
             {restaurant.description && (
               <CardDescription className="mt-1">{restaurant.description}</CardDescription>

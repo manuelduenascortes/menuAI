@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Pencil } from 'lucide-react'
 import RestaurantEditForm, { type EditableRestaurant } from '@/components/admin/RestaurantEditForm'
+import type { FontStyle } from '@/lib/types'
+import type { RestaurantFontClasses } from '@/lib/restaurant-fonts'
 import {
   Dialog,
   DialogContent,
@@ -11,7 +13,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
-export default function EditBusinessDialog({ restaurant }: { restaurant: EditableRestaurant }) {
+export default function EditBusinessDialog({
+  restaurant,
+  fontClassMap,
+}: {
+  restaurant: EditableRestaurant
+  fontClassMap: Record<FontStyle, RestaurantFontClasses>
+}) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -35,7 +43,7 @@ export default function EditBusinessDialog({ restaurant }: { restaurant: Editabl
               Actualiza la información visible de tu negocio sin salir del dashboard.
             </DialogDescription>
           </DialogHeader>
-          <RestaurantEditForm restaurant={restaurant} onSuccess={() => setOpen(false)} />
+          <RestaurantEditForm restaurant={restaurant} fontClassMap={fontClassMap} onSuccess={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
     </>
