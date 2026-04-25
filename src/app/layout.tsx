@@ -4,7 +4,6 @@ import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import ThemeProvider from '@/components/ThemeProvider'
 import CookieBanner from '@/components/CookieBanner'
-import GlobalThemeToggle from '@/components/GlobalThemeToggle'
 import './globals.css'
 
 const dmSerif = DM_Serif_Display({
@@ -71,7 +70,6 @@ export default function RootLayout({
             >
               Ir al contenido
             </a>
-            <GlobalThemeToggle />
             {children}
           </TooltipProvider>
           <Toaster richColors position="bottom-right" />

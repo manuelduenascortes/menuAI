@@ -8,6 +8,7 @@ import { UtensilsCrossed, Loader2, ChevronLeft, Eye, EyeOff } from 'lucide-react
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export default function LoginPage() {
   return (
@@ -120,6 +121,9 @@ function LoginForm() {
       </div>
 
       <div id="main-content" className="md:w-1/2 flex items-center justify-center p-6 md:p-12 relative bg-background">
+        <div className="absolute top-4 right-4 z-20">
+          <ThemeToggle />
+        </div>
         <div className="w-full max-w-md animate-fade-up">
           <div className="mb-10 text-center md:text-left">
             <h2 className="font-serif text-3xl text-foreground mb-2">{heading}</h2>

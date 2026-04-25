@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, Leaf, MessageCircle, Search, Sparkles } from 'lucide-react'
 import ChatInterface from './ChatInterface'
+import ThemeToggle from '@/components/ThemeToggle'
 import type { Restaurant } from '@/lib/types'
 import { getChatLauncherCopy, getVenueConfig, normalizeVenueType } from '@/lib/venue-config'
 
@@ -93,20 +94,23 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
                 )}
               </div>
             </div>
-            {restaurant.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={restaurant.logo_url}
-                alt={restaurant.name}
-                className="h-10 w-10 rounded-full border border-border object-cover"
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
-                <span className="font-serif text-sm text-primary">
-                  {restaurant.name.charAt(0)}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              {restaurant.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={restaurant.logo_url}
+                  alt={restaurant.name}
+                  className="h-10 w-10 rounded-full border border-border object-cover"
+                />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
+                  <span className="font-serif text-sm text-primary">
+                    {restaurant.name.charAt(0)}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">

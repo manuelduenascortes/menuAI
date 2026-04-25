@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft, Store } from 'lucide-react'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export const metadata = {
   title: 'Aviso Legal - MenuAI',
@@ -13,13 +14,16 @@ export default function AvisoLegalPage() {
           <Store className="h-5 w-5 text-primary" aria-hidden="true" />
           <span className="font-serif text-xl">MenuAI</span>
         </Link>
-        <Link
-          href="/"
-          className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
-          Volver
-        </Link>
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <Link
+            href="/"
+            className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-3 w-3" aria-hidden="true" />
+            Volver
+          </Link>
+        </div>
       </nav>
 
       <main className="mx-auto max-w-3xl px-[6vw] py-16">
