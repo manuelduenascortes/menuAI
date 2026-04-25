@@ -1,10 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { MessageCircle, AlertTriangle, Leaf, Search } from 'lucide-react'
 import ChatInterface from './ChatInterface'
 import type { Restaurant } from '@/lib/types'
+import type { RestaurantFontClasses } from '@/lib/restaurant-fonts'
+import { getRestaurantTheme } from '@/lib/restaurant-theme'
 import { getVenueConfig, normalizeVenueType } from '@/lib/venue-config'
 
 interface Allergen { id: string; name: string; icon?: string }
@@ -34,11 +36,12 @@ interface Props {
   categories: Category[]
   tableId: string | null
   tableNumber?: number
+  fontClasses: RestaurantFontClasses
 }
 
 const RESTAURANT_FILTER_TAGS = ['Vegetariano', 'Vegano', 'Sin gluten', 'Sin lactosa', 'Halal']
 
-export default function MenuView({ restaurant, categories, tableId: _tableId, tableNumber }: Props) {
+export default function MenuView({ restaurant, categories, tableId: _tableId, tableNumber, fontClasses }: Props) {
   void _tableId
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categories[0]?.id ?? null)
   const [activeFilters, setActiveFilters] = useState<string[]>([])
@@ -46,6 +49,12 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
 
   const venueType = normalizeVenueType(restaurant.venue_type)
   const venueConfig = getVenueConfig(venueType)
+  const theme = getRestaurantTheme(restaurant.primary_color)
+  const themeStyle = {
+    '--restaurant-primary': theme.primary,
+    '--restaurant-primary-light': theme.primaryLight,
+    '--restaurant-primary-foreground': theme.primaryForeground,
+  } as CSSProperties
   const availableFilterTags = useMemo(() => {
     if (venueType !== 'restaurant') return []
     return RESTAURANT_FILTER_TAGS.filter(tag =>
@@ -79,12 +88,12 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${fontClasses.body}`} style={themeStyle}>
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto px-5 pt-4 pb-3">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="font-serif text-xl text-foreground">{restaurant.name}</h1>
+              <h1 className={`${fontClasses.heading} text-xl text-foreground`}>{restaurant.name}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-0.5">
                 <p className="text-xs text-muted-foreground">{venueConfig.label}</p>
                 {tableNumber && (
@@ -100,8 +109,11 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
                 className="h-10 w-10 rounded-full object-cover border border-border"
               />
             ) : (
-              <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center">
-                <span className="font-serif text-sm text-primary">
+              <div
+                className="h-10 w-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'var(--restaurant-primary-light)' }}
+              >
+                <span className={`${fontClasses.heading} text-sm`} style={{ color: 'var(--restaurant-primary)' }}>
                   {restaurant.name.charAt(0)}
                 </span>
               </div>
@@ -121,9 +133,14 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
                   aria-pressed={activeFilters.includes(tag)}
                   className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
                     activeFilters.includes(tag)
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-card text-muted-foreground border-border hover:border-primary/40'
+                      ? ''
+                      : 'bg-card text-muted-foreground border-border'
                   }`}
+                  style={activeFilters.includes(tag) ? {
+                    backgroundColor: 'var(--restaurant-primary)',
+                    borderColor: 'var(--restaurant-primary)',
+                    color: 'var(--restaurant-primary-foreground)',
+                  } : undefined}
                 >
                   {tag}
                 </button>
@@ -142,9 +159,13 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
                 aria-current={activeCategory === category.id ? 'true' : undefined}
                 className={`shrink-0 text-sm px-3.5 py-1.5 rounded-full transition-colors cursor-pointer ${
                   activeCategory === category.id
-                    ? 'bg-foreground text-background font-medium'
+                    ? 'font-medium'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
+                style={activeCategory === category.id ? {
+                  backgroundColor: 'var(--restaurant-primary)',
+                  color: 'var(--restaurant-primary-foreground)',
+                } : undefined}
               >
                 {category.emoji && <span className="mr-1">{category.emoji}</span>}
                 {category.name}
@@ -161,7 +182,8 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
             <p className="font-medium">No hay productos con los filtros seleccionados</p>
             <button
               onClick={() => setActiveFilters([])}
-              className="text-sm text-primary mt-3 underline underline-offset-4 cursor-pointer"
+              className="text-sm mt-3 underline underline-offset-4 cursor-pointer"
+              style={{ color: 'var(--restaurant-primary)' }}
             >
               Quitar filtros
             </button>
@@ -170,7 +192,7 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
           filteredCategories.map(category => (
             <section key={category.id} id={`cat-${category.id}`} className="scroll-mt-36">
               <div className="mb-4">
-                <h2 className="font-serif text-2xl text-foreground flex items-center gap-2">
+                <h2 className={`${fontClasses.heading} text-2xl text-foreground flex items-center gap-2`}>
                   {category.emoji && <span>{category.emoji}</span>}
                   {category.name}
                 </h2>
@@ -182,7 +204,7 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
               <ul role="list" className="space-y-3">
                 {category.menu_items.map(item => (
                   <li key={item.id}>
-                    <MenuItemCard item={item} />
+                    <MenuItemCard item={item} fontClasses={fontClasses} />
                   </li>
                 ))}
               </ul>
@@ -194,7 +216,11 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
       <div className="fixed bottom-6 right-5 z-40">
         <button
           onClick={() => setChatOpen(true)}
-          className="flex items-center gap-2.5 bg-foreground text-background px-5 py-3 rounded-full shadow-lg transition-all active:scale-[0.97] cursor-pointer hover:opacity-90"
+          className="flex items-center gap-2.5 px-5 py-3 rounded-full shadow-lg transition-all active:scale-[0.97] cursor-pointer hover:opacity-90"
+          style={{
+            backgroundColor: 'var(--restaurant-primary)',
+            color: 'var(--restaurant-primary-foreground)',
+          }}
           aria-label="Abrir asistente IA"
         >
           <MessageCircle className="w-5 h-5" />
@@ -214,12 +240,12 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
   )
 }
 
-function MenuItemCard({ item }: { item: MenuItem }) {
+function MenuItemCard({ item, fontClasses }: { item: MenuItem; fontClasses: RestaurantFontClasses }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
     <div
-      className="bg-card rounded-xl border border-border overflow-hidden cursor-pointer transition-colors hover:border-primary/20 active:scale-[0.995]"
+      className="bg-card rounded-xl border border-border overflow-hidden cursor-pointer transition-colors active:scale-[0.995]"
       onClick={() => setExpanded(!expanded)}
       role="button"
       tabIndex={0}
@@ -246,8 +272,8 @@ function MenuItemCard({ item }: { item: MenuItem }) {
         )}
         <div className="p-4 flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="font-medium text-foreground leading-snug">{item.name}</h3>
-            <span className="text-primary font-semibold shrink-0 tabular-nums">
+            <h3 className={`font-medium text-foreground leading-snug ${fontClasses.body}`}>{item.name}</h3>
+            <span className="font-semibold shrink-0 tabular-nums" style={{ color: 'var(--restaurant-primary)' }}>
               {item.price.toFixed(2)}EUR
             </span>
           </div>

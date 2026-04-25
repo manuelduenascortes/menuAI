@@ -2,6 +2,8 @@ export type VenueType = 'restaurant' | 'bar_cafe' | 'cocktail_bar'
 
 export type MenuAccessMode = 'general_qr' | 'table_qr' | 'both'
 
+export type FontStyle = 'clasico' | 'elegante' | 'moderno' | 'casual' | 'minimalista'
+
 export interface Restaurant {
   id: string
   user_id: string
@@ -11,6 +13,8 @@ export interface Restaurant {
   menu_access_mode?: MenuAccessMode | null
   description?: string
   logo_url?: string
+  primary_color?: string
+  font_style?: FontStyle | null
   address?: string
   phone?: string
   trial_ends_at?: string

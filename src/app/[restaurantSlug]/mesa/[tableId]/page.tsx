@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import MenuView from '@/components/cliente/MenuView'
 import type { Metadata } from 'next'
 import { getVenueConfig } from '@/lib/venue-config'
+import { getRestaurantFontClasses } from '@/lib/restaurant-fonts'
 
 interface Props {
   params: Promise<{ restaurantSlug: string; tableId: string }>
@@ -45,5 +46,13 @@ export default async function TablePage({ params }: Props) {
 
   if (!table) notFound()
 
-  return <MenuView restaurant={result.restaurant} categories={result.categories} tableId={tableId} tableNumber={table.number} />
+  return (
+    <MenuView
+      restaurant={result.restaurant}
+      categories={result.categories}
+      tableId={tableId}
+      tableNumber={table.number}
+      fontClasses={getRestaurantFontClasses(result.restaurant.font_style)}
+    />
+  )
 }
