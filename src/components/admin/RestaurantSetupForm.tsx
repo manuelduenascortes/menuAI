@@ -13,7 +13,9 @@ import { toast } from 'sonner'
 import {
   DEFAULT_MENU_ACCESS_MODE,
   DEFAULT_VENUE_TYPE,
+  getAccessModeLabel,
   getVenueConfig,
+  getVenueTypeLabel,
   MENU_ACCESS_OPTIONS,
   VENUE_OPTIONS,
 } from '@/lib/venue-config'
@@ -88,7 +90,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
           id="setup-name"
           placeholder="Ej: Bar La Malagueña"
           value={form.name}
-          onChange={e => setForm({ ...form, name: e.target.value })}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
           required
         />
         {form.name && (
@@ -103,13 +105,15 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
           <Label htmlFor="setup-venue-type">Tipo de local *</Label>
           <Select
             value={form.venue_type}
-            onValueChange={value => setForm({ ...form, venue_type: value as VenueType })}
+            onValueChange={(value) => setForm({ ...form, venue_type: value as VenueType })}
           >
             <SelectTrigger id="setup-venue-type" className="w-full bg-transparent">
-              <SelectValue placeholder="Seleccionar tipo de local" />
+              <SelectValue placeholder="Seleccionar tipo de local">
+                {(value) => value ? getVenueTypeLabel(value as VenueType) : 'Seleccionar tipo de local'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {VENUE_OPTIONS.map(option => (
+              {VENUE_OPTIONS.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -117,7 +121,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            {VENUE_OPTIONS.find(option => option.value === form.venue_type)?.description}
+            {VENUE_OPTIONS.find((option) => option.value === form.venue_type)?.description}
           </p>
         </div>
 
@@ -125,13 +129,15 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
           <Label htmlFor="setup-access-mode">Acceso a la carta *</Label>
           <Select
             value={form.menu_access_mode}
-            onValueChange={value => setForm({ ...form, menu_access_mode: value as MenuAccessMode })}
+            onValueChange={(value) => setForm({ ...form, menu_access_mode: value as MenuAccessMode })}
           >
             <SelectTrigger id="setup-access-mode" className="w-full bg-transparent">
-              <SelectValue placeholder="Seleccionar acceso a la carta" />
+              <SelectValue placeholder="Seleccionar acceso a la carta">
+                {(value) => value ? getAccessModeLabel(value as MenuAccessMode) : 'Seleccionar acceso a la carta'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {MENU_ACCESS_OPTIONS.map(option => (
+              {MENU_ACCESS_OPTIONS.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -139,7 +145,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            {MENU_ACCESS_OPTIONS.find(option => option.value === form.menu_access_mode)?.description}
+            {MENU_ACCESS_OPTIONS.find((option) => option.value === form.menu_access_mode)?.description}
           </p>
         </div>
       </div>
@@ -150,7 +156,7 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
           id="setup-description"
           placeholder={venueConfig.descriptionPlaceholder}
           value={form.description}
-          onChange={e => setForm({ ...form, description: e.target.value })}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
           rows={3}
         />
       </div>
@@ -159,9 +165,9 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
         <Label htmlFor="setup-address">Dirección</Label>
         <Input
           id="setup-address"
-          placeholder="Calle Mayor 1, Malaga"
+          placeholder="Calle Mayor 1, Málaga"
           value={form.address}
-          onChange={e => setForm({ ...form, address: e.target.value })}
+          onChange={(e) => setForm({ ...form, address: e.target.value })}
         />
       </div>
 
@@ -171,15 +177,14 @@ export default function RestaurantSetupForm({ userId }: { userId: string }) {
           id="setup-phone"
           placeholder="952 123 456"
           value={form.phone}
-          onChange={e => setForm({ ...form, phone: e.target.value })}
+          onChange={(e) => setForm({ ...form, phone: e.target.value })}
         />
       </div>
 
-
-      {error && <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>}
+      {error && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
 
       <Button type="submit" disabled={loading} className="w-full cursor-pointer">
-        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Crear local'}
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crear local'}
       </Button>
     </form>
   )

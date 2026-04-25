@@ -3,7 +3,7 @@ import type { VenueType } from '@/lib/types'
 import type { RestaurantFontClasses } from '@/lib/restaurant-fonts'
 import { getRestaurantTheme } from '@/lib/restaurant-theme'
 import { getVenueConfig } from '@/lib/venue-config'
-import { MessageCircle } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 
 export default function RestaurantThemePreview({
   restaurantName,
@@ -24,10 +24,15 @@ export default function RestaurantThemePreview({
     '--preview-primary': theme.primary,
     '--preview-primary-light': theme.primaryLight,
     '--preview-primary-foreground': theme.primaryForeground,
+    '--preview-primary-readable-light': theme.primaryReadableOnLight,
+    '--preview-primary-readable-dark': theme.primaryReadableOnDark,
   } as CSSProperties
 
   return (
-    <aside className="rounded-xl border border-border bg-card p-3 shadow-sm" style={style}>
+    <aside
+      className="rounded-xl border border-border bg-card p-3 shadow-sm [--preview-primary-readable:var(--preview-primary-readable-light)] dark:[--preview-primary-readable:var(--preview-primary-readable-dark)]"
+      style={style}
+    >
       <div className="mb-3 flex items-center justify-between gap-3 border-b border-border pb-3">
         <div className="min-w-0">
           <p className={`truncate text-lg leading-tight text-foreground ${fontClasses.heading}`}>
@@ -45,7 +50,7 @@ export default function RestaurantThemePreview({
         ) : (
           <div
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
-            style={{ backgroundColor: 'var(--preview-primary-light)', color: 'var(--preview-primary)' }}
+            style={{ backgroundColor: 'var(--preview-primary-light)', color: 'var(--preview-primary-readable)' }}
           >
             {(restaurantName || 'M').charAt(0)}
           </div>
@@ -76,7 +81,7 @@ export default function RestaurantThemePreview({
                     <p className="text-sm font-medium text-foreground">{name}</p>
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
                   </div>
-                  <p className="shrink-0 text-sm font-semibold" style={{ color: 'var(--preview-primary)' }}>
+                  <p className="shrink-0 text-sm font-semibold" style={{ color: 'var(--preview-primary-readable)' }}>
                     {price}
                   </p>
                 </div>
@@ -87,11 +92,11 @@ export default function RestaurantThemePreview({
 
         <div className="mt-4 flex justify-end">
           <div
-            className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium shadow-sm"
+            className="flex items-center gap-2.5 rounded-full px-5 py-3 text-sm font-semibold shadow-xl ring-2 ring-white/30"
             style={{ backgroundColor: 'var(--preview-primary)', color: 'var(--preview-primary-foreground)' }}
           >
-            <MessageCircle className="h-3.5 w-3.5" />
-            Te ayudo?
+            <Sparkles className="h-5 w-5" />
+            Elegir con IA
           </div>
         </div>
       </div>

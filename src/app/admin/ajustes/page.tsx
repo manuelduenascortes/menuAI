@@ -31,14 +31,14 @@ export default async function AjustesPage() {
     <div className="mx-auto max-w-5xl px-5 py-10">
       <div className="mb-8">
         <h1 className="font-serif text-3xl text-foreground">Ajustes</h1>
-        <p className="text-muted-foreground mt-1">Edita los datos de tu local</p>
+        <p className="mt-1 text-muted-foreground">Edita los datos de tu local</p>
       </div>
 
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="font-serif text-xl flex items-center gap-2">
-              <Settings className="w-5 h-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 font-serif text-xl">
+              <Settings className="h-5 w-5 text-primary" />
               Datos del negocio
             </CardTitle>
             <CardDescription>
@@ -52,12 +52,12 @@ export default async function AjustesPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-serif text-xl flex items-center gap-2">
-              <Shield className="w-5 h-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 font-serif text-xl">
+              <Shield className="h-5 w-5 text-primary" />
               Seguridad
             </CardTitle>
             <CardDescription>
-              Actualiza la contrasena de tu cuenta
+              Actualiza la contraseña de tu cuenta
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -67,8 +67,8 @@ export default async function AjustesPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-serif text-xl flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-primary" aria-hidden="true" />
+            <CardTitle className="flex items-center gap-2 font-serif text-xl">
+              <MessageSquare className="h-5 w-5 text-primary" aria-hidden="true" />
               Uso del asistente IA
             </CardTitle>
             <CardDescription>
@@ -79,7 +79,7 @@ export default async function AjustesPage() {
             <Progress value={chatPercent} aria-label="Uso mensual del asistente IA" />
             <p className={`text-sm ${chatCount >= chatLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
               {Math.min(chatCount, chatLimit)} de {chatLimit} consultas usadas este mes
-              {chatCount >= chatLimit && ' — límite alcanzado'}
+              {chatCount >= chatLimit && ' - límite alcanzado'}
             </p>
           </CardContent>
         </Card>

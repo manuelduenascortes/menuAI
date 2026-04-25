@@ -37,13 +37,22 @@ test('derives readable theme colors from the selected primary color', () => {
     primary: '#000000',
     primaryLight: '#E6E6E6',
     primaryForeground: '#FFFFFF',
+    primaryReadableOnLight: '#000000',
+    primaryReadableOnDark: '#7F7F7F',
   })
 
   assert.deepEqual(getRestaurantTheme('#FFFFFF'), {
     primary: '#FFFFFF',
     primaryLight: '#FFFFFF',
     primaryForeground: '#1C1917',
+    primaryReadableOnLight: '#737373',
+    primaryReadableOnDark: '#FFFFFF',
   })
+})
+
+test('derives readable accent colors for light and dark backgrounds', () => {
+  assert.equal(getRestaurantTheme('#FFE680').primaryReadableOnLight, '#807340')
+  assert.equal(getRestaurantTheme('#1A0F05').primaryReadableOnDark, '#8D8782')
 })
 
 test('extracts previous logo paths only from the restaurant logos bucket', () => {

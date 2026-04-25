@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { MessageCircle, AlertTriangle, Leaf, Search } from 'lucide-react'
+import { AlertTriangle, Leaf, Search, Sparkles, X } from 'lucide-react'
 import ChatInterface from './ChatInterface'
+import ThemeToggle from '@/components/ThemeToggle'
 import type { Restaurant } from '@/lib/types'
 import type { RestaurantFontClasses } from '@/lib/restaurant-fonts'
 import { getRestaurantTheme } from '@/lib/restaurant-theme'
@@ -41,19 +42,39 @@ interface Props {
 
 const RESTAURANT_FILTER_TAGS = ['Vegetariano', 'Vegano', 'Sin gluten', 'Sin lactosa', 'Halal']
 
+const ASSISTANT_TUTORIAL_COPY = {
+  restaurant: {
+    title: '¿No sabes qué pedir?',
+    body: 'Toca aquí y el asistente te recomienda platos según tus gustos, alergias o si quieres algo ligero.',
+  },
+  bar_cafe: {
+    title: '¿No sabes qué tomar?',
+    body: 'Toca aquí y el asistente te recomienda cafés, tapas, desayunos o bebidas según lo que te apetezca.',
+  },
+  cocktail_bar: {
+    title: '¿No sabes qué tomar?',
+    body: 'Toca aquí y el asistente te recomienda cócteles, copas o bebidas según sabor, intensidad y si prefieres alcohol o no.',
+  },
+} satisfies Record<string, { title: string; body: string }>
+
 export default function MenuView({ restaurant, categories, tableId: _tableId, tableNumber, fontClasses }: Props) {
   void _tableId
+  const assistantTipStorageKey = `menuai-assistant-tip:${restaurant.slug}`
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categories[0]?.id ?? null)
   const [activeFilters, setActiveFilters] = useState<string[]>([])
   const [chatOpen, setChatOpen] = useState(false)
+  const [showAssistantTip, setShowAssistantTip] = useState(false)
 
   const venueType = normalizeVenueType(restaurant.venue_type)
   const venueConfig = getVenueConfig(venueType)
+  const assistantTutorial = ASSISTANT_TUTORIAL_COPY[venueType]
   const theme = getRestaurantTheme(restaurant.primary_color)
   const themeStyle = {
     '--restaurant-primary': theme.primary,
     '--restaurant-primary-light': theme.primaryLight,
     '--restaurant-primary-foreground': theme.primaryForeground,
+    '--restaurant-primary-readable-light': theme.primaryReadableOnLight,
+    '--restaurant-primary-readable-dark': theme.primaryReadableOnDark,
   } as CSSProperties
   const availableFilterTags = useMemo(() => {
     if (venueType !== 'restaurant') return []
@@ -81,14 +102,41 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
     ? selectedCategory
     : filteredCategories[0]?.id ?? null
 
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      try {
+        setShowAssistantTip(window.localStorage.getItem(assistantTipStorageKey) !== 'seen')
+      } catch {
+        setShowAssistantTip(true)
+      }
+    }, 0)
+
+    return () => window.clearTimeout(timeout)
+  }, [assistantTipStorageKey])
+
   function toggleFilter(name: string) {
     setActiveFilters(prev =>
       prev.includes(name) ? prev.filter(value => value !== name) : [...prev, name]
     )
   }
 
+  function dismissAssistantTip() {
+    setShowAssistantTip(false)
+    try {
+      window.localStorage.setItem(assistantTipStorageKey, 'seen')
+    } catch {}
+  }
+
+  function openChat() {
+    dismissAssistantTip()
+    setChatOpen(true)
+  }
+
   return (
-    <div className={`min-h-screen bg-background ${fontClasses.body}`} style={themeStyle}>
+    <div
+      className={`min-h-screen bg-background [--restaurant-primary-readable:var(--restaurant-primary-readable-light)] dark:[--restaurant-primary-readable:var(--restaurant-primary-readable-dark)] ${fontClasses.body}`}
+      style={themeStyle}
+    >
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto px-5 pt-4 pb-3">
           <div className="flex items-center justify-between mb-3">
@@ -101,23 +149,26 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
                 )}
               </div>
             </div>
-            {restaurant.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={restaurant.logo_url}
-                alt={restaurant.name}
-                className="h-10 w-10 rounded-full object-cover border border-border"
-              />
-            ) : (
-              <div
-                className="h-10 w-10 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: 'var(--restaurant-primary-light)' }}
-              >
-                <span className={`${fontClasses.heading} text-sm`} style={{ color: 'var(--restaurant-primary)' }}>
-                  {restaurant.name.charAt(0)}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <ThemeToggle variant="ghost" size="icon" />
+              {restaurant.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={restaurant.logo_url}
+                  alt={restaurant.name}
+                  className="h-10 w-10 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <div
+                  className="h-10 w-10 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--restaurant-primary-light)' }}
+                >
+                  <span className={`${fontClasses.heading} text-sm`} style={{ color: 'var(--restaurant-primary-readable)' }}>
+                    {restaurant.name.charAt(0)}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           <p className="text-xs text-muted-foreground leading-relaxed mb-2.5">
@@ -183,7 +234,7 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
             <button
               onClick={() => setActiveFilters([])}
               className="text-sm mt-3 underline underline-offset-4 cursor-pointer"
-              style={{ color: 'var(--restaurant-primary)' }}
+              style={{ color: 'var(--restaurant-primary-readable)' }}
             >
               Quitar filtros
             </button>
@@ -213,18 +264,50 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
         )}
       </main>
 
-      <div className="fixed bottom-6 right-5 z-40">
+      {showAssistantTip && !chatOpen && (
         <button
-          onClick={() => setChatOpen(true)}
-          className="flex items-center gap-2.5 px-5 py-3 rounded-full shadow-lg transition-all active:scale-[0.97] cursor-pointer hover:opacity-90"
+          type="button"
+          className="fixed inset-0 z-40 bg-black/45"
+          onClick={dismissAssistantTip}
+          aria-label="Cerrar ayuda del asistente"
+        />
+      )}
+
+      <div className="fixed bottom-6 right-5 z-50 flex max-w-[calc(100vw-2.5rem)] flex-col items-end gap-3">
+        {showAssistantTip && !chatOpen && (
+          <div className="relative w-[min(21rem,calc(100vw-2.5rem))] rounded-2xl border border-white/20 bg-background p-4 shadow-2xl">
+            <button
+              type="button"
+              onClick={dismissAssistantTip}
+              className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Cerrar ayuda del asistente"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <p className={`pr-8 text-lg leading-tight text-foreground ${fontClasses.heading}`}>
+              {assistantTutorial.title}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {assistantTutorial.body}
+            </p>
+            <div
+              className="absolute -bottom-2 right-16 h-4 w-4 rotate-45 border-b border-r border-white/20 bg-background"
+              aria-hidden="true"
+            />
+          </div>
+        )}
+
+        <button
+          onClick={openChat}
+          className="flex items-center gap-2.5 rounded-full px-5 py-3 text-sm font-semibold shadow-xl ring-2 ring-white/30 transition-all hover:-translate-y-0.5 active:scale-[0.97] cursor-pointer"
           style={{
             backgroundColor: 'var(--restaurant-primary)',
             color: 'var(--restaurant-primary-foreground)',
           }}
           aria-label="Abrir asistente IA"
         >
-          <MessageCircle className="w-5 h-5" />
-          <span className="font-medium text-sm">Te ayudo a elegir?</span>
+          <Sparkles className="h-5 w-5" />
+          <span>Elegir con IA</span>
         </button>
       </div>
 
@@ -273,7 +356,7 @@ function MenuItemCard({ item, fontClasses }: { item: MenuItem; fontClasses: Rest
         <div className="p-4 flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
             <h3 className={`font-medium text-foreground leading-snug ${fontClasses.body}`}>{item.name}</h3>
-            <span className="font-semibold shrink-0 tabular-nums" style={{ color: 'var(--restaurant-primary)' }}>
+            <span className="font-semibold shrink-0 tabular-nums" style={{ color: 'var(--restaurant-primary-readable)' }}>
               {item.price.toFixed(2)}EUR
             </span>
           </div>

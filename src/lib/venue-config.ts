@@ -22,43 +22,43 @@ const VENUE_CONFIGS: Record<VenueType, VenueConfig> = {
     businessLabel: 'restaurante',
     itemSingular: 'plato',
     itemPlural: 'platos',
-    descriptionPlaceholder: 'Cocina mediterranea, menu del día, brasas, producto local...',
-    publicDescription: 'Consulta la carta y recibe recomendaciones segun gustos y restricciones.',
-    publicHint: 'Usa el asistente para encontrar platos segun gustos, alergias o momento de la comida.',
+    descriptionPlaceholder: 'Cocina mediterránea, menú del día, brasas, producto local...',
+    publicDescription: 'Consulta la carta y recibe recomendaciones según gustos y restricciones.',
+    publicHint: 'Usa el asistente para encontrar platos según gustos, alergias o momento de la comida.',
     chatGreeting:
-      'Hola! Soy el asistente de este local. Puedo ayudarte a elegir platos segun tus gustos, restricciones o lo que te apetezca ahora mismo.',
+      '¡Hola! Soy el asistente de este local. Puedo ayudarte a elegir platos según tus gustos, restricciones o lo que te apetezca ahora mismo.',
     chatFocus:
       'Prioriza restricciones alimentarias, gustos, intensidad, tipo de plato y momento de consumo.',
     chatComplementHint:
-      'Cuando tenga sentido, sugiere acompanamientos, bebidas o postres solo si existen en la carta.',
+      'Cuando tenga sentido, sugiere acompañamientos, bebidas o postres solo si existen en la carta.',
   },
   bar_cafe: {
-    label: 'Bar / Cafeteria',
-    businessLabel: 'bar o cafeteria',
+    label: 'Bar / Cafetería',
+    businessLabel: 'bar o cafetería',
     itemSingular: 'producto',
     itemPlural: 'productos',
-    descriptionPlaceholder: 'Cafes, desayunos, meriendas, tapas, refrescos, bolleria...',
-    publicDescription: 'Descubre la oferta del local y pide recomendaciones segun el momento del día.',
-    publicHint: 'El asistente puede ayudarte a elegir algo caliente o frio, dulce o salado, suave o intenso.',
+    descriptionPlaceholder: 'Cafés, desayunos, meriendas, tapas, refrescos, bollería...',
+    publicDescription: 'Descubre la oferta del local y pide recomendaciones según el momento del día.',
+    publicHint: 'El asistente puede ayudarte a elegir algo caliente o frío, dulce o salado, suave o intenso.',
     chatGreeting:
-      'Hola! Soy el asistente de este local. Puedo ayudarte a encontrar algo para desayunar, merendar, tomar un cafe o pedir una tapa o bebida.',
+      '¡Hola! Soy el asistente de este local. Puedo ayudarte a encontrar algo para desayunar, merendar, tomar un café o pedir una tapa o bebida.',
     chatFocus:
-      'Prioriza momento del día, caliente o frio, dulce o salado, suave o intenso, con o sin cafeina o alcohol si aplica.',
+      'Prioriza momento del día, caliente o frío, dulce o salado, suave o intenso, con o sin cafeína o alcohol si aplica.',
     chatComplementHint:
-      'Cuando aporte valor, sugiere combinaciones naturales como cafe y dulce, tapa y bebida o alternativas sin alcohol si existen.',
+      'Cuando aporte valor, sugiere combinaciones naturales como café y dulce, tapa y bebida o alternativas sin alcohol si existen.',
   },
   cocktail_bar: {
-    label: 'Cocteleria / Bar de copas',
-    businessLabel: 'cocteleria o bar de copas',
-    itemSingular: 'consumicion',
+    label: 'Coctelería / Bar de copas',
+    businessLabel: 'coctelería o bar de copas',
+    itemSingular: 'consumición',
     itemPlural: 'consumiciones',
-    descriptionPlaceholder: 'Cocteles de autor, clásicos, combinados premium, sin alcohol...',
-    publicDescription: 'Explora la carta de bebidas y recibe sugerencias segun sabor, intensidad o tipo de copa.',
-    publicHint: 'El asistente puede recomendar algo refrescante, intenso, clasico, afrutado o sin alcohol.',
+    descriptionPlaceholder: 'Cócteles de autor, clásicos, combinados premium, sin alcohol...',
+    publicDescription: 'Explora la carta de bebidas y recibe sugerencias según sabor, intensidad o tipo de copa.',
+    publicHint: 'El asistente puede recomendar algo refrescante, intenso, clásico, afrutado o sin alcohol.',
     chatGreeting:
-      'Hola! Soy el asistente de este local. Puedo ayudarte a elegir una copa, coctel o bebida segun sabores, intensidad y si prefieres alcohol o no.',
+      '¡Hola! Soy el asistente de este local. Puedo ayudarte a elegir una copa, cóctel o bebida según sabores, intensidad y si prefieres alcohol o no.',
     chatFocus:
-      'Prioriza perfil de sabor, intensidad, con o sin alcohol, clasico o de autor, refrescante o seco.',
+      'Prioriza perfil de sabor, intensidad, con o sin alcohol, clásico o de autor, refrescante o seco.',
     chatComplementHint:
       'Cuando tenga sentido, sugiere alternativas relacionadas o versiones sin alcohol solo si existen en la carta.',
   },
@@ -73,12 +73,12 @@ export const VENUE_OPTIONS: { value: VenueType; label: string; description: stri
   {
     value: 'bar_cafe',
     label: VENUE_CONFIGS.bar_cafe.label,
-    description: 'Ideal para bares, cafeterias, desayunos, meriendas o tapas.',
+    description: 'Ideal para bares, cafeterías, desayunos, meriendas o tapas.',
   },
   {
     value: 'cocktail_bar',
     label: VENUE_CONFIGS.cocktail_bar.label,
-    description: 'Orientado a copas, cocteles, combinados y bebidas de noche.',
+    description: 'Orientado a copas, cócteles, combinados y bebidas de noche.',
   },
 ]
 
@@ -110,6 +110,11 @@ export function normalizeMenuAccessMode(menuAccessMode?: MenuAccessMode | null):
 
 export function getVenueConfig(venueType?: VenueType | null): VenueConfig {
   return VENUE_CONFIGS[normalizeVenueType(venueType)]
+}
+
+export function getVenueTypeLabel(venueType?: VenueType | null): string {
+  const type = normalizeVenueType(venueType)
+  return VENUE_OPTIONS.find((option) => option.value === type)?.label ?? VENUE_OPTIONS[0].label
 }
 
 export function supportsGeneralQr(menuAccessMode?: MenuAccessMode | null): boolean {

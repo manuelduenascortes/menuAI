@@ -20,6 +20,8 @@ import {
 import type { RestaurantFontClasses } from '@/lib/restaurant-fonts'
 import {
   getVenueConfig,
+  getVenueTypeLabel,
+  getAccessModeLabel,
   MENU_ACCESS_OPTIONS,
   normalizeMenuAccessMode,
   normalizeVenueType,
@@ -158,7 +160,7 @@ export default function RestaurantEditForm({
           <Label htmlFor="edit-name">Nombre del local *</Label>
           <Input
             id="edit-name"
-            placeholder="Ej: Bar La Malaguena"
+            placeholder="Ej: Bar La Malagueña"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
@@ -173,7 +175,9 @@ export default function RestaurantEditForm({
               onValueChange={(value) => setForm({ ...form, venue_type: value as VenueType })}
             >
               <SelectTrigger id="edit-venue-type" className="w-full bg-transparent">
-                <SelectValue placeholder="Seleccionar tipo de local" />
+                <SelectValue placeholder="Seleccionar tipo de local">
+                  {(value) => value ? getVenueTypeLabel(value as VenueType) : 'Seleccionar tipo de local'}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {VENUE_OPTIONS.map((option) => (
@@ -195,7 +199,9 @@ export default function RestaurantEditForm({
               onValueChange={(value) => setForm({ ...form, menu_access_mode: value as MenuAccessMode })}
             >
               <SelectTrigger id="edit-access-mode" className="w-full bg-transparent">
-                <SelectValue placeholder="Seleccionar acceso a la carta" />
+                <SelectValue placeholder="Seleccionar acceso a la carta">
+                  {(value) => value ? getAccessModeLabel(value as MenuAccessMode) : 'Seleccionar acceso a la carta'}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {MENU_ACCESS_OPTIONS.map((option) => (
@@ -212,7 +218,7 @@ export default function RestaurantEditForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="edit-description">Descripcion</Label>
+          <Label htmlFor="edit-description">Descripción</Label>
           <Textarea
             id="edit-description"
             placeholder={venueConfig.descriptionPlaceholder}
@@ -224,17 +230,17 @@ export default function RestaurantEditForm({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="edit-address">Direccion</Label>
+            <Label htmlFor="edit-address">Dirección</Label>
             <Input
               id="edit-address"
-              placeholder="Calle Mayor 1, Malaga"
+              placeholder="Calle Mayor 1, Málaga"
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-phone">Telefono</Label>
+            <Label htmlFor="edit-phone">Teléfono</Label>
             <Input
               id="edit-phone"
               placeholder="952 123 456"
@@ -248,7 +254,7 @@ export default function RestaurantEditForm({
           <div className="mb-4">
             <h3 className="text-sm font-medium text-foreground">Identidad visual</h3>
             <p className="text-xs text-muted-foreground">
-              Personaliza como se vera la carta publica.
+              Personaliza cómo se verá la carta pública.
             </p>
           </div>
 
@@ -297,7 +303,7 @@ export default function RestaurantEditForm({
                 )}
                 <div className="min-w-0 text-xs text-muted-foreground">
                   <p>JPG, PNG, WebP o GIF.</p>
-                  <p>Maximo 5 MB.</p>
+                  <p>Máximo 5 MB.</p>
                 </div>
               </div>
             </div>
@@ -324,7 +330,7 @@ export default function RestaurantEditForm({
             </div>
 
             <div className="space-y-2">
-              <Label>Estilo tipografico</Label>
+              <Label>Estilo tipográfico</Label>
               <div className="grid gap-2 sm:grid-cols-2">
                 {FONT_STYLE_OPTIONS.map((option) => {
                   const fontClasses = fontClassMap[option.value]
@@ -347,7 +353,7 @@ export default function RestaurantEditForm({
                         Nombre del plato
                       </span>
                       <span className={`mt-1 block text-xs opacity-75 ${fontClasses.body}`}>
-                        Descripcion de ejemplo
+                        Descripción de ejemplo
                       </span>
                     </button>
                   )

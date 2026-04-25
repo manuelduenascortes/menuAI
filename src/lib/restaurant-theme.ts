@@ -77,6 +77,16 @@ function mixWithWhite(hex: string, amount: number) {
   })
 }
 
+function mixWithBlack(hex: string, amount: number) {
+  const rgb = hexToRgb(hex)
+
+  return rgbToHex({
+    r: rgb.r * (1 - amount),
+    g: rgb.g * (1 - amount),
+    b: rgb.b * (1 - amount),
+  })
+}
+
 function getRelativeLuminance(hex: string) {
   const { r, g, b } = hexToRgb(hex)
   const channels = [r, g, b].map((channel) => {
@@ -89,6 +99,39 @@ function getRelativeLuminance(hex: string) {
   return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722
 }
 
+function getContrastRatio(foreground: string, background: string) {
+  const foregroundLuminance = getRelativeLuminance(foreground)
+  const backgroundLuminance = getRelativeLuminance(background)
+  const lighter = Math.max(foregroundLuminance, backgroundLuminance)
+  const darker = Math.min(foregroundLuminance, backgroundLuminance)
+
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+function getReadableColorOnLight(hex: string) {
+  const background = '#FAFAF7'
+  let readable = normalizePrimaryColor(hex)
+
+  for (let amount = 0; amount <= 1; amount += 0.05) {
+    readable = mixWithBlack(hex, amount)
+    if (getContrastRatio(readable, background) >= 4.5) return readable
+  }
+
+  return '#1C1917'
+}
+
+function getReadableColorOnDark(hex: string) {
+  const background = '#141210'
+  let readable = normalizePrimaryColor(hex)
+
+  for (let amount = 0; amount <= 1; amount += 0.05) {
+    readable = mixWithWhite(hex, amount)
+    if (getContrastRatio(readable, background) >= 4.5) return readable
+  }
+
+  return '#EDE8E3'
+}
+
 export function getRestaurantTheme(value: unknown) {
   const primary = normalizePrimaryColor(value)
 
@@ -96,6 +139,8 @@ export function getRestaurantTheme(value: unknown) {
     primary,
     primaryLight: mixWithWhite(primary, 0.9),
     primaryForeground: getRelativeLuminance(primary) > 0.55 ? '#1C1917' : '#FFFFFF',
+    primaryReadableOnLight: getReadableColorOnLight(primary),
+    primaryReadableOnDark: getReadableColorOnDark(primary),
   }
 }
 
