@@ -45,11 +45,16 @@ function LoginForm() {
 
     try {
       if (mode === 'reset') {
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/api/auth/callback/recovery`,
+        const res = await fetch('/api/auth/recover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
         })
-        if (resetError) throw resetError
-        setSuccess('Te hemos enviado un email para restablecer tu contraseña.')
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data?.error || 'Error enviando el email')
+        }
+        setSuccess('Si existe una cuenta con ese email, recibirás un enlace para restablecer la contraseña.')
       } else if (mode === 'login') {
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
         if (loginError) throw loginError

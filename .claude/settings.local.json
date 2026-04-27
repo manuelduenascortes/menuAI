@@ -17,7 +17,9 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git merge-base *)",
-      "Bash(npx supabase *)"
+      "Bash(npx supabase *)",
+      "Bash(echo \"---exit:$?---\")",
+      "Bash(nslookup *)"
     ]
   }
 }
