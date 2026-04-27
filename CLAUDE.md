@@ -21,6 +21,9 @@ Required in `.env.local`:
 - `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — Stripe publishable key (client-side)
 - `NEXT_PUBLIC_STRIPE_PRICE_MONTHLY` / `NEXT_PUBLIC_STRIPE_PRICE_SEMESTRAL` / `NEXT_PUBLIC_STRIPE_PRICE_ANNUAL` — Stripe Price IDs for each plan
+- `NEXT_PUBLIC_SITE_URL` — public origin (e.g. `https://menuai.app` in prod, `http://localhost:3000` in dev). Used by auth flows (signup confirmation + password reset) to build absolute `redirectTo` / `emailRedirectTo` URLs. Must also be allowlisted in Supabase → Authentication → URL Configuration.
+- `RESEND_API_KEY` — Resend API key. Used by `/api/auth/recover` to send password recovery emails (bypasses Supabase SMTP rate limits).
+- `EMAIL_FROM` — verified sender for transactional email, e.g. `MenuAI <noreply@yourdomain.com>`. Domain must be verified in Resend.
 
 ## Architecture
 

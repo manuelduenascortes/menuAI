@@ -44,29 +44,43 @@ function LoginForm() {
     setSuccess('')
 
     try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
       if (mode === 'reset') {
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/api/auth/callback/recovery`,
+        const res = await fetch('/api/auth/recover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
         })
-        if (resetError) throw resetError
-        setSuccess('Te hemos enviado un email para restablecer tu contraseña.')
+        if (!res.ok) {
+          throw new Error('No se pudo enviar el email. Inténtalo de nuevo en unos minutos.')
+        }
+        setSuccess('Si existe una cuenta con ese email, te hemos enviado un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta de spam.')
       } else if (mode === 'login') {
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
         if (loginError) throw loginError
         router.push('/admin/dashboard')
         router.refresh()
       } else {
-        const res = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${siteUrl}/auth/confirm?next=${encodeURIComponent('/admin/dashboard')}`,
+          },
         })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error)
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-        if (signInError) throw signInError
-        router.push('/admin/dashboard')
-        router.refresh()
+        if (signUpError) {
+          if (signUpError.message.toLowerCase().includes('already')) {
+            throw new Error('Este email ya está registrado. Inicia sesión.')
+          }
+          throw signUpError
+        }
+        if (data.user && !data.session) {
+          setSuccess('Cuenta creada. Te hemos enviado un email de confirmación. Revisa tu bandeja de entrada y haz clic en el enlace para activarla.')
+          setPassword('')
+        } else if (data.session) {
+          router.push('/admin/dashboard')
+          router.refresh()
+        }
       }
     } catch (err: unknown) {
       console.error('Auth error:', err)

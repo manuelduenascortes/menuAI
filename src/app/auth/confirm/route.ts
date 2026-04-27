@@ -9,6 +9,8 @@ export async function GET(request: Request) {
     | 'signup'
     | 'email'
     | null
+  const nextParam = searchParams.get('next')
+  const next = nextParam && nextParam.startsWith('/') ? nextParam : '/admin/dashboard'
 
   if (token_hash && type) {
     const supabase = await createServerSupabase()
@@ -18,7 +20,7 @@ export async function GET(request: Request) {
       if (type === 'recovery') {
         return NextResponse.redirect(`${origin}/auth/update-password`)
       }
-      return NextResponse.redirect(`${origin}/admin/dashboard`)
+      return NextResponse.redirect(`${origin}${next}`)
     }
   }
 
