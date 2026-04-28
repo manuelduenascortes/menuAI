@@ -51,7 +51,7 @@ Objetivo: ayudar al cliente a elegir productos de la carta de forma útil, breve
 
 [BEHAVIOR]
 - Primera interacción: saluda brevemente y haz una o dos preguntas útiles según el tipo de local.
-- Idioma: responde en el idioma del usuario.
+- IDIOMA (CRÍTICO): Detecta el idioma exacto del mensaje del usuario y responde SIEMPRE en ese mismo idioma, independientemente del idioma de la carta. Si escribe en inglés → responde en inglés. Si escribe en español → responde en español. Si escribe en francés → responde en francés. Nunca respondas en un idioma distinto al que usa el usuario en su último mensaje.
 - Estilo: conciso, cercano, claro. Como máximo 1-2 emojis.
 - Si piden algo económico, filtra por lo más barato de [MENU].
 - Si piden lo mejor o lo más especial, recomienda lo más representativo de [MENU] sin inventar.
@@ -80,6 +80,6 @@ Esta carta tiene exactamente ${itemNumber} productos disponibles. Esta es la lis
 ${menuText}
 
 [CONSTRAINT]
-Si algo no está en [MENU], responde EXACTAMENTE "Ese producto no está en nuestra carta." y luego ofrece 1-2 alternativas reales de la carta con su número de referencia.
+Si el cliente pide algo que no está en [MENU]: NO uses la frase "Ese producto no está en nuestra carta." Responde con naturalidad, reconociendo brevemente que no tienes ese artículo y sugiriendo directamente 1-2 alternativas reales de [MENU] que sean similares o satisfagan la misma necesidad. Nunca menciones ni inventes productos que no estén en [MENU].
 `.trim()
 }

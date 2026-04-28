@@ -476,15 +476,6 @@ export default function MenuImport({
               Foto
             </Button>
             <Button
-              variant={mode === 'text' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setMode('text')}
-              className="cursor-pointer"
-            >
-              <FileText className="mr-1.5 h-4 w-4" />
-              Texto
-            </Button>
-            <Button
               variant={mode === 'pdf' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setMode('pdf')}
@@ -493,13 +484,21 @@ export default function MenuImport({
               <FileUp className="mr-1.5 h-4 w-4" />
               PDF
             </Button>
+            <Button
+              variant={mode === 'text' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setMode('text')}
+              className="cursor-pointer"
+            >
+              <FileText className="mr-1.5 h-4 w-4" />
+              Texto
+            </Button>
           </div>
 
           {mode === 'image' ? (
             <div className="space-y-3">
               <Label>Sube una foto o captura de la carta</Label>
-              <Input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} />
-              {imagePreview && (
+              {imagePreview ? (
                 <div className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -517,6 +516,23 @@ export default function MenuImport({
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
+                </div>
+              ) : (
+                <div
+                  className="cursor-pointer rounded-xl border-2 border-dashed border-primary/30 bg-muted/30 p-8 text-center transition-colors hover:border-primary/60"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <Camera className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                  <p className="text-sm font-medium text-foreground">Haz clic para seleccionar una foto</p>
+                  <p className="mt-1 text-xs text-muted-foreground">JPG, PNG, WebP · Max. 10 MB</p>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
                 </div>
               )}
             </div>

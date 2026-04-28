@@ -36,7 +36,7 @@ export default function EditBusinessDialog({
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[90vh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle className="font-serif text-xl">Editar datos del local</DialogTitle>
             <DialogDescription>

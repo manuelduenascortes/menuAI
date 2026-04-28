@@ -52,7 +52,8 @@ function LoginForm() {
           body: JSON.stringify({ email }),
         })
         if (!res.ok) {
-          throw new Error('No se pudo enviar el email. Inténtalo de nuevo en unos minutos.')
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data?.error || 'No se pudo enviar el email. Inténtalo de nuevo en unos minutos.')
         }
         setSuccess('Si existe una cuenta con ese email, te hemos enviado un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta de spam.')
       } else if (mode === 'login') {

@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { AlertTriangle, Leaf, Search, Sparkles, X } from 'lucide-react'
-import ChatInterface from './ChatInterface'
+import { AlertTriangle, Leaf, Search, ShoppingCart, Sparkles, X } from 'lucide-react'
+import ChatInterface, { type ChatMenuItem } from './ChatInterface'
+import CartDrawer from './CartDrawer'
 import ThemeToggle from '@/components/ThemeToggle'
-import type { Restaurant } from '@/lib/types'
+import type { CartItem, Restaurant } from '@/lib/types'
 import type { RestaurantFontClasses } from '@/lib/restaurant-fonts'
 import { getRestaurantTheme } from '@/lib/restaurant-theme'
 import { getVenueConfig, normalizeVenueType } from '@/lib/venue-config'
@@ -64,6 +65,8 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
   const [activeFilters, setActiveFilters] = useState<string[]>([])
   const [chatOpen, setChatOpen] = useState(false)
   const [showAssistantTip, setShowAssistantTip] = useState(false)
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [cartOpen, setCartOpen] = useState(false)
 
   const venueType = normalizeVenueType(restaurant.venue_type)
   const venueConfig = getVenueConfig(venueType)
@@ -86,6 +89,14 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
       )
     )
   }, [categories, venueType])
+
+  const chatMenuItems = useMemo<ChatMenuItem[]>(() =>
+    categories
+      .flatMap(c => c.menu_items)
+      .filter(item => item.available)
+      .map(item => ({ id: item.id, name: item.name, image_url: item.image_url, price: item.price })),
+    [categories]
+  )
 
   const filteredCategories = useMemo(() => categories.map(category => ({
     ...category,
@@ -113,6 +124,33 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
 
     return () => window.clearTimeout(timeout)
   }, [assistantTipStorageKey])
+
+  function addToCart(item: { id: string; name: string; image_url?: string; price: number }) {
+    setCartItems(prev => {
+      const existing = prev.find(i => i.id === item.id)
+      if (existing) {
+        return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i)
+      }
+      return [...prev, { id: item.id, name: item.name, image_url: item.image_url, price: item.price, quantity: 1 }]
+    })
+  }
+
+  function handleAddToCart(itemId: string) {
+    const source = chatMenuItems.find(i => i.id === itemId)
+    if (source) addToCart(source)
+  }
+
+  function handleUpdateQuantity(itemId: string, delta: number) {
+    setCartItems(prev =>
+      prev
+        .map(i => i.id === itemId ? { ...i, quantity: i.quantity + delta } : i)
+        .filter(i => i.quantity > 0)
+    )
+  }
+
+  function handleClearCart() {
+    setCartItems([])
+  }
 
   function toggleFilter(name: string) {
     setActiveFilters(prev =>
@@ -255,7 +293,12 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
               <ul role="list" className="space-y-3">
                 {category.menu_items.map(item => (
                   <li key={item.id}>
-                    <MenuItemCard item={item} fontClasses={fontClasses} />
+                    <MenuItemCard
+                      item={item}
+                      fontClasses={fontClasses}
+                      cartCount={cartItems.find(c => c.id === item.id)?.quantity ?? 0}
+                      onAddToCart={() => addToCart(item)}
+                    />
                   </li>
                 ))}
               </ul>
@@ -263,6 +306,29 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
           ))
         )}
       </main>
+
+      {cartItems.length > 0 && (
+        <button
+          onClick={() => setCartOpen(true)}
+          className="fixed bottom-6 left-5 z-50 flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow-xl ring-2 ring-white/30 transition-all hover:-translate-y-0.5 active:scale-[0.97] cursor-pointer"
+          style={{
+            backgroundColor: 'var(--restaurant-primary)',
+            color: 'var(--restaurant-primary-foreground)',
+          }}
+          aria-label={`Ver pedido, ${cartItems.reduce((s, i) => s + i.quantity, 0)} artículos`}
+        >
+          <ShoppingCart className="h-5 w-5" />
+          <span
+            className="flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold"
+            style={{
+              backgroundColor: 'var(--restaurant-primary-foreground)',
+              color: 'var(--restaurant-primary)',
+            }}
+          >
+            {cartItems.reduce((s, i) => s + i.quantity, 0)}
+          </span>
+        </button>
+      )}
 
       {showAssistantTip && !chatOpen && (
         <button
@@ -317,13 +383,32 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
           restaurantName={restaurant.name}
           venueType={restaurant.venue_type}
           onClose={() => setChatOpen(false)}
+          menuItems={chatMenuItems}
+          cartItems={cartItems}
+          onAddToCart={handleAddToCart}
+          onUpdateQuantity={handleUpdateQuantity}
+          onOpenCart={() => setCartOpen(true)}
         />
       )}
+
+      <CartDrawer
+        open={cartOpen}
+        onOpenChange={setCartOpen}
+        cartItems={cartItems}
+        onUpdateQuantity={handleUpdateQuantity}
+        onClear={handleClearCart}
+        themeVars={themeStyle}
+      />
     </div>
   )
 }
 
-function MenuItemCard({ item, fontClasses }: { item: MenuItem; fontClasses: RestaurantFontClasses }) {
+function MenuItemCard({ item, fontClasses, cartCount = 0, onAddToCart }: {
+  item: MenuItem
+  fontClasses: RestaurantFontClasses
+  cartCount?: number
+  onAddToCart?: () => void
+}) {
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -356,9 +441,25 @@ function MenuItemCard({ item, fontClasses }: { item: MenuItem; fontClasses: Rest
         <div className="p-4 flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
             <h3 className={`font-medium text-foreground leading-snug ${fontClasses.body}`}>{item.name}</h3>
-            <span className="font-semibold shrink-0 tabular-nums" style={{ color: 'var(--restaurant-primary-readable)' }}>
-              {item.price.toFixed(2)}EUR
-            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="font-semibold tabular-nums" style={{ color: 'var(--restaurant-primary-readable)' }}>
+                {item.price.toFixed(2)}EUR
+              </span>
+              <button
+                onClick={e => { e.stopPropagation(); onAddToCart?.() }}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold leading-none cursor-pointer transition-all active:scale-90"
+                style={cartCount > 0 ? {
+                  backgroundColor: 'var(--restaurant-primary)',
+                  color: 'var(--restaurant-primary-foreground)',
+                } : {
+                  backgroundColor: 'var(--restaurant-primary-light)',
+                  color: 'var(--restaurant-primary-readable)',
+                }}
+                aria-label={cartCount > 0 ? `${cartCount} en carrito, añadir otro ${item.name}` : `Añadir ${item.name} al carrito`}
+              >
+                {cartCount > 0 ? cartCount : '+'}
+              </button>
+            </div>
           </div>
 
           {item.description && (
