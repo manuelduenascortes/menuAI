@@ -10,6 +10,9 @@ import type { CartItem, Restaurant } from '@/lib/types'
 import type { RestaurantFontClasses } from '@/lib/restaurant-fonts'
 import { getRestaurantTheme } from '@/lib/restaurant-theme'
 import { getVenueConfig, normalizeVenueType } from '@/lib/venue-config'
+import { motion } from 'framer-motion'
+import CartAnimationProvider from './CartAnimationProvider'
+import { useCartAnimation } from '@/hooks/useCartAnimation'
 
 interface Allergen { id: string; name: string; icon?: string }
 interface DietaryTag { id: string; name: string; icon?: string; color?: string }
@@ -58,7 +61,7 @@ const ASSISTANT_TUTORIAL_COPY = {
   },
 } satisfies Record<string, { title: string; body: string }>
 
-export default function MenuView({ restaurant, categories, tableId: _tableId, tableNumber, fontClasses }: Props) {
+function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber, fontClasses }: Props) {
   void _tableId
   const assistantTipStorageKey = `menuai-assistant-tip:${restaurant.slug}`
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categories[0]?.id ?? null)
@@ -67,6 +70,8 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
   const [showAssistantTip, setShowAssistantTip] = useState(false)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [cartOpen, setCartOpen] = useState(false)
+
+  const { cartButtonRef, cartBumpControls, badgePulseControls } = useCartAnimation()
 
   const venueType = normalizeVenueType(restaurant.venue_type)
   const venueConfig = getVenueConfig(venueType)
@@ -308,7 +313,9 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
       </main>
 
       {cartItems.length > 0 && (
-        <button
+        <motion.button
+          ref={cartButtonRef}
+          animate={cartBumpControls}
           onClick={() => setCartOpen(true)}
           className="fixed bottom-6 left-5 z-50 flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow-xl ring-2 ring-white/30 transition-all hover:-translate-y-0.5 active:scale-[0.97] cursor-pointer"
           style={{
@@ -318,7 +325,8 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
           aria-label={`Ver pedido, ${cartItems.reduce((s, i) => s + i.quantity, 0)} artículos`}
         >
           <ShoppingCart className="h-5 w-5" />
-          <span
+          <motion.span
+            animate={badgePulseControls}
             className="flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold"
             style={{
               backgroundColor: 'var(--restaurant-primary-foreground)',
@@ -326,8 +334,8 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
             }}
           >
             {cartItems.reduce((s, i) => s + i.quantity, 0)}
-          </span>
-        </button>
+          </motion.span>
+        </motion.button>
       )}
 
       {showAssistantTip && !chatOpen && (
@@ -400,6 +408,14 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
         themeVars={themeStyle}
       />
     </div>
+  )
+}
+
+export default function MenuView(props: Props) {
+  return (
+    <CartAnimationProvider>
+      <MenuViewInner {...props} />
+    </CartAnimationProvider>
   )
 }
 
