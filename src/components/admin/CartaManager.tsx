@@ -28,6 +28,7 @@ import {
   Loader2,
   Pencil,
   Plus,
+  Sparkles,
   Trash2,
   X,
 } from 'lucide-react'
@@ -101,6 +102,7 @@ export default function CartaManager({
   const [categories, setCategories] = useState<CategoryWithItems[]>(initialCategories)
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
+  const [uploadingItems, setUploadingItems] = useState<Set<string>>(new Set())
   const [newCategory, setNewCategory] = useState({ name: '', emoji: '', description: '' })
   const [addingCategory, setAddingCategory] = useState(false)
   const [loadingCategory, setLoadingCategory] = useState(false)
@@ -336,6 +338,55 @@ export default function CartaManager({
     })
   }
 
+  function setItemImage(itemId: string, categoryId: string, imageUrl: string | null) {
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.id === categoryId
+          ? {
+              ...cat,
+              menu_items: cat.menu_items.map((item) =>
+                item.id === itemId ? { ...item, image_url: imageUrl ?? undefined } : item,
+              ),
+            }
+          : cat,
+      ),
+    )
+  }
+
+  async function handleQuickImageUpload(itemId: string, categoryId: string, file: File) {
+    setUploadingItems((prev) => new Set(prev).add(itemId))
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      body.append('restaurantId', restaurant.id)
+      const response = await fetch('/api/upload', { method: 'POST', body })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error)
+      const { error } = await supabase.from('menu_items').update({ image_url: data.url }).eq('id', itemId)
+      if (error) throw error
+      setItemImage(itemId, categoryId, data.url)
+      toast.success('Imagen actualizada')
+    } catch {
+      toast.error('Error subiendo imagen')
+    } finally {
+      setUploadingItems((prev) => { const next = new Set(prev); next.delete(itemId); return next })
+    }
+  }
+
+  async function handleQuickImageDelete(itemId: string, categoryId: string) {
+    setUploadingItems((prev) => new Set(prev).add(itemId))
+    try {
+      const { error } = await supabase.from('menu_items').update({ image_url: null }).eq('id', itemId)
+      if (error) throw error
+      setItemImage(itemId, categoryId, null)
+      toast.success('Imagen eliminada')
+    } catch {
+      toast.error('Error eliminando imagen')
+    } finally {
+      setUploadingItems((prev) => { const next = new Set(prev); next.delete(itemId); return next })
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -559,6 +610,57 @@ export default function CartaManager({
                                   onCheckedChange={() => toggleItemSelection(item.id)}
                                   className="mt-1"
                                 />
+                                {uploadingItems.has(item.id) ? (
+                                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-muted">
+                                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                  </div>
+                                ) : item.image_url ? (
+                                  <div className="group relative h-14 w-14 shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={item.image_url}
+                                      alt={item.name}
+                                      className="h-14 w-14 rounded-md object-cover"
+                                    />
+                                    <div className="absolute inset-0 hidden items-center justify-center gap-1.5 rounded-md bg-black/55 group-hover:flex">
+                                      <label className="cursor-pointer rounded p-1 transition-colors hover:bg-white/20" title="Cambiar foto">
+                                        <Pencil className="h-3.5 w-3.5 text-white" />
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0]
+                                            if (file) handleQuickImageUpload(item.id, category.id, file)
+                                            e.target.value = ''
+                                          }}
+                                        />
+                                      </label>
+                                      <button
+                                        type="button"
+                                        className="rounded p-1 transition-colors hover:bg-white/20"
+                                        title="Eliminar foto"
+                                        onClick={() => handleQuickImageDelete(item.id, category.id)}
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5 text-white" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <label className="flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-md bg-muted transition-colors hover:bg-muted/60" title="Añadir foto">
+                                    <ImagePlus className="h-5 w-5 text-muted-foreground/40" />
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) handleQuickImageUpload(item.id, category.id, file)
+                                        e.target.value = ''
+                                      }}
+                                    />
+                                  </label>
+                                )}
                                 <div className="min-w-0 flex-1">
                                   <div className="flex flex-wrap items-center gap-2">
                                     <span className="font-medium text-foreground">{item.name}</span>
@@ -747,6 +849,11 @@ function ItemFormDialog({
   const [loading, setLoading] = useState(false)
   const [imageUrl, setImageUrl] = useState<string | null>(item?.image_url ?? null)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [aiLoading, setAiLoading] = useState({ photo: false, description: false, allergens: false })
+  const [aiPreviewPhoto, setAiPreviewPhoto] = useState<string | null>(null)
+  const [aiPreviewDescription, setAiPreviewDescription] = useState<string | null>(null)
+  const [aiPreviewAllergenIds, setAiPreviewAllergenIds] = useState<string[]>([])
+  const [aiPreviewAllergenNames, setAiPreviewAllergenNames] = useState<string[]>([])
 
   const emptyForm = { name: '', description: '', price: '', ingredients: '' }
   const itemForm = item
@@ -767,6 +874,12 @@ function ItemFormDialog({
   )
 
   function handleOpenChange(value: boolean) {
+    setAiLoading({ photo: false, description: false, allergens: false })
+    setAiPreviewPhoto(null)
+    setAiPreviewDescription(null)
+    setAiPreviewAllergenIds([])
+    setAiPreviewAllergenNames([])
+
     if (value && item) {
       setForm({
         name: item.name,
@@ -787,6 +900,107 @@ function ItemFormDialog({
     }
 
     setOpen(value)
+  }
+
+  async function callEnrich() {
+    const response = await fetch('/api/products/enrich', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: form.name.trim(), restaurantId }),
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error)
+    return data
+  }
+
+  async function handleAIPhoto() {
+    setAiLoading((p) => ({ ...p, photo: true }))
+    try {
+      const data = await callEnrich()
+      if (data.imageUrl) {
+        setAiPreviewPhoto(data.imageUrl)
+      } else {
+        toast.info('No se encontró foto para este producto')
+      }
+    } catch {
+      toast.error('Error buscando foto')
+    } finally {
+      setAiLoading((p) => ({ ...p, photo: false }))
+    }
+  }
+
+  async function handleAIDescription() {
+    setAiLoading((p) => ({ ...p, description: true }))
+    try {
+      const data = await callEnrich()
+      if (data.description) {
+        setAiPreviewDescription(data.description)
+      } else {
+        toast.info('No se pudo generar descripción')
+      }
+    } catch {
+      toast.error('Error generando descripción')
+    } finally {
+      setAiLoading((p) => ({ ...p, description: false }))
+    }
+  }
+
+  async function handleAIAllergens() {
+    setAiLoading((p) => ({ ...p, allergens: true }))
+    try {
+      const data = await callEnrich()
+      if (data.allergenNames?.length > 0) {
+        const idsToAdd = (data.allergenNames as string[])
+          .map((n) => allergens.find((a) => a.name === n)?.id)
+          .filter((id): id is string => Boolean(id) && !selectedAllergens.includes(id!))
+        if (idsToAdd.length > 0) {
+          const namesToShow = (data.allergenNames as string[]).filter((n) => {
+            const id = allergens.find((a) => a.name === n)?.id
+            return id && !selectedAllergens.includes(id)
+          })
+          setAiPreviewAllergenIds(idsToAdd)
+          setAiPreviewAllergenNames(namesToShow)
+        } else {
+          toast.info('No se detectaron alérgenos nuevos')
+        }
+      } else {
+        toast.info('No se detectaron alérgenos')
+      }
+    } catch {
+      toast.error('Error detectando alérgenos')
+    } finally {
+      setAiLoading((p) => ({ ...p, allergens: false }))
+    }
+  }
+
+  function acceptPhoto() {
+    if (aiPreviewPhoto) setImageUrl(aiPreviewPhoto)
+    setAiPreviewPhoto(null)
+  }
+
+  function acceptDescription() {
+    if (aiPreviewDescription) setForm((p) => ({ ...p, description: aiPreviewDescription }))
+    setAiPreviewDescription(null)
+  }
+
+  function acceptAllergens() {
+    if (aiPreviewAllergenIds.length > 0) {
+      setSelectedAllergens((p) => [...p, ...aiPreviewAllergenIds.filter((id) => !p.includes(id))])
+    }
+    setAiPreviewAllergenIds([])
+    setAiPreviewAllergenNames([])
+  }
+
+  function acceptAll() {
+    if (aiPreviewPhoto) setImageUrl(aiPreviewPhoto)
+    if (aiPreviewDescription) setForm((p) => ({ ...p, description: aiPreviewDescription }))
+    if (aiPreviewAllergenIds.length > 0) {
+      setSelectedAllergens((p) => [...p, ...aiPreviewAllergenIds.filter((id) => !p.includes(id))])
+    }
+    setAiPreviewPhoto(null)
+    setAiPreviewDescription(null)
+    setAiPreviewAllergenIds([])
+    setAiPreviewAllergenNames([])
   }
 
   async function handleImageUpload(file: File) {
@@ -1024,7 +1238,31 @@ function ItemFormDialog({
                 />
               </label>
             )}
+            <button
+              type="button"
+              disabled={form.name.trim().length < 3 || aiLoading.photo}
+              onClick={handleAIPhoto}
+              className="flex cursor-pointer items-center gap-1.5 text-xs text-primary hover:underline disabled:cursor-default disabled:opacity-40"
+            >
+              {aiLoading.photo
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <Sparkles className="h-3 w-3" />}
+              {imageUrl ? 'Cambiar con IA' : 'Buscar con IA'}
+            </button>
           </div>
+          {aiPreviewPhoto && (
+            <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={aiPreviewPhoto} alt="Preview" className="h-14 w-14 shrink-0 rounded-md object-cover" />
+              <div className="flex-1 space-y-1.5">
+                <p className="text-xs text-muted-foreground">Foto encontrada por IA</p>
+                <div className="flex gap-2">
+                  <Button type="button" size="sm" className="h-7 cursor-pointer text-xs" onClick={acceptPhoto}>✓ Usar esta</Button>
+                  <Button type="button" variant="ghost" size="sm" className="h-7 cursor-pointer text-xs" onClick={() => setAiPreviewPhoto(null)}>✗ Descartar</Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -1038,13 +1276,36 @@ function ItemFormDialog({
         </div>
 
         <div className="space-y-2">
-          <Label>Descripción</Label>
+          <div className="flex items-center justify-between">
+            <Label>Descripción</Label>
+            <button
+              type="button"
+              disabled={form.name.trim().length < 3 || aiLoading.description}
+              onClick={handleAIDescription}
+              className="flex cursor-pointer items-center gap-1 text-xs text-primary hover:underline disabled:cursor-default disabled:opacity-40"
+            >
+              {aiLoading.description
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <Sparkles className="h-3 w-3" />}
+              Generar con IA
+            </button>
+          </div>
           <Textarea
             placeholder={`Breve descripción del ${itemSingular}...`}
             value={form.description}
             onChange={(event) => setForm({ ...form, description: event.target.value })}
             rows={2}
           />
+          {aiPreviewDescription && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+              <p className="text-xs text-muted-foreground">Descripción generada por IA:</p>
+              <p className="text-sm">{aiPreviewDescription}</p>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" className="h-7 cursor-pointer text-xs" onClick={acceptDescription}>✓ Usar esta</Button>
+                <Button type="button" variant="ghost" size="sm" className="h-7 cursor-pointer text-xs" onClick={() => setAiPreviewDescription(null)}>✗ Descartar</Button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -1072,7 +1333,20 @@ function ItemFormDialog({
         <Separator />
 
         <div className="space-y-2">
-          <Label>Alérgenos</Label>
+          <div className="flex items-center justify-between">
+            <Label>Alérgenos</Label>
+            <button
+              type="button"
+              disabled={form.name.trim().length < 3 || aiLoading.allergens}
+              onClick={handleAIAllergens}
+              className="flex cursor-pointer items-center gap-1 text-xs text-primary hover:underline disabled:cursor-default disabled:opacity-40"
+            >
+              {aiLoading.allergens
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <Sparkles className="h-3 w-3" />}
+              Detectar con IA
+            </button>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             {allergens.map((allergen) => (
               <div key={allergen.id} className="flex items-center gap-2">
@@ -1090,6 +1364,20 @@ function ItemFormDialog({
               </div>
             ))}
           </div>
+          {aiPreviewAllergenIds.length > 0 && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+              <p className="text-xs text-muted-foreground">Alérgenos detectados por IA:</p>
+              <div className="flex flex-wrap gap-1">
+                {aiPreviewAllergenNames.map((name) => (
+                  <Badge key={name} variant="secondary" className="text-xs">{name}</Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" className="h-7 cursor-pointer text-xs" onClick={acceptAllergens}>✓ Añadir</Button>
+                <Button type="button" variant="ghost" size="sm" className="h-7 cursor-pointer text-xs" onClick={() => { setAiPreviewAllergenIds([]); setAiPreviewAllergenNames([]) }}>✗ Descartar</Button>
+              </div>
+            </div>
+          )}
         </div>
 
         <Separator />
@@ -1114,6 +1402,13 @@ function ItemFormDialog({
             ))}
           </div>
         </div>
+
+        {(aiPreviewPhoto ? 1 : 0) + (aiPreviewDescription ? 1 : 0) + (aiPreviewAllergenIds.length > 0 ? 1 : 0) >= 2 && (
+          <Button type="button" variant="outline" className="w-full cursor-pointer" onClick={acceptAll}>
+            <Sparkles className="mr-1.5 h-4 w-4" />
+            Aceptar todo
+          </Button>
+        )}
 
         <div className="flex gap-2 pt-2">
           <Button type="submit" disabled={loading} className="flex-1 cursor-pointer">

@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import CartaManager from '@/components/admin/CartaManager'
 import MenuImport from '@/components/admin/MenuImport'
+import AIEnrichPanel from '@/components/admin/AIEnrichPanel'
 import { Button } from '@/components/ui/button'
-import { Sparkles, X } from 'lucide-react'
+import { Sparkles, Wand2, X } from 'lucide-react'
 import type { Restaurant, Allergen, DietaryTag } from '@/lib/types'
 
 interface CategoryWithItems {
@@ -40,30 +41,42 @@ export default function CartaPageClient({
 }) {
   const router = useRouter()
   const [showImport, setShowImport] = useState(false)
+  const [showEnrich, setShowEnrich] = useState(false)
 
   return (
     <div className="space-y-6">
-      {/* Import toggle button */}
-      <div className="flex justify-center">
+      {/* Mode buttons */}
+      <div className="flex flex-wrap justify-center gap-3">
         {showImport ? (
           <Button
             variant="outline"
             onClick={() => setShowImport(false)}
             className="cursor-pointer"
           >
-            <X className="w-4 h-4 mr-1.5" />
+            <X className="mr-1.5 h-4 w-4" />
             Cerrar importador
           </Button>
-        ) : (
-          <Button
-            size="lg"
-            onClick={() => setShowImport(true)}
-            className="cursor-pointer gap-2 px-8 shadow-md"
-          >
-            <Sparkles className="w-5 h-5" />
-            Importar carta con IA
-          </Button>
-        )}
+        ) : !showEnrich ? (
+          <>
+            <Button
+              size="lg"
+              onClick={() => setShowImport(true)}
+              className="cursor-pointer gap-2 px-8 shadow-md"
+            >
+              <Sparkles className="h-5 w-5" />
+              Importar carta con IA
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setShowEnrich(true)}
+              className="cursor-pointer gap-2 px-8"
+            >
+              <Wand2 className="h-5 w-5" />
+              Enriquecer carta con IA
+            </Button>
+          </>
+        ) : null}
       </div>
 
       {/* Import panel */}
@@ -79,13 +92,28 @@ export default function CartaPageClient({
         />
       )}
 
-      {/* Existing carta manager */}
-      <CartaManager
-        restaurant={restaurant}
-        initialCategories={initialCategories}
-        allergens={allergens}
-        dietaryTags={dietaryTags}
-      />
+      {/* AI enrichment panel */}
+      {showEnrich && (
+        <AIEnrichPanel
+          restaurant={restaurant}
+          categories={initialCategories}
+          allergens={allergens}
+          onClose={() => {
+            setShowEnrich(false)
+            router.refresh()
+          }}
+        />
+      )}
+
+      {/* Carta manager (hidden when enrich panel is active) */}
+      {!showEnrich && (
+        <CartaManager
+          restaurant={restaurant}
+          initialCategories={initialCategories}
+          allergens={allergens}
+          dietaryTags={dietaryTags}
+        />
+      )}
     </div>
   )
 }

@@ -35,7 +35,8 @@
       "Bash(curl -s -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{\"restaurantSlug\":\"no-existe\",\"messages\":[{\"role\":\"user\",\"content\":\"hola\"}]}' -w \"\\\\nHTTP %{http_code}\\\\n\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/restaurante-inexistente)",
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$|^d\")",
-      "Bash(xargs -I {} basename {})"
+      "Bash(xargs -I {} basename {})",
+      "WebSearch"
     ]
   }
 }
