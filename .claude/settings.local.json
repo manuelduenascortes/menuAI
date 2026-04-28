@@ -18,8 +18,24 @@
       "Bash(git commit *)",
       "Bash(git merge-base *)",
       "Bash(npx supabase *)",
-      "Bash(echo \"---exit:$?---\")",
-      "Bash(nslookup *)"
+      "Bash(git merge *)",
+      "Bash(git restore *)",
+      "Bash(git push *)",
+      "Bash(node --test src/lib/restaurant-theme.test.mjs)",
+      "Bash(node --test src/lib/single-accordion-state.test.mjs)",
+      "Bash(node --test src/lib/hydration-store.test.mjs)",
+      "Bash(node --test src/lib/table-selection.test.mjs)",
+      "Bash(node --test src/components/cookie-banner-visibility.test.mjs)",
+      "Bash(npm run *)",
+      "Bash(echo \"Dev server started with PID $!\")",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" -L http://localhost:3000/admin/dashboard)",
+      "Bash(curl -s -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{}' -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{\"restaurantSlug\":\"no-existe\",\"messages\":[{\"role\":\"user\",\"content\":\"hola\"}]}' -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/restaurante-inexistente)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$|^d\")",
+      "Bash(xargs -I {} basename {})"
     ]
   }
 }

@@ -307,9 +307,9 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
       }
     } finally {
       if (added === count) {
-        toast.success(`${count} mesas anadidas`)
+        toast.success(`${count} mesas añadidas`)
       } else if (added > 0) {
-        toast.warning(`${added} de ${count} mesas se anadieron. Algunas fallaron.`)
+        toast.warning(`${added} de ${count} mesas se añadieron. Algunas fallaron.`)
       } else {
         toast.error('No se pudieron añadir las mesas.')
       }
@@ -680,8 +680,8 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
             <DialogTitle className="font-serif text-xl">Añadir varias mesas</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <Label>Cuantas mesas quieres añadir?</Label>
-            <p className="text-sm text-muted-foreground">Se anadiran a partir de la última mesa existente.</p>
+            <Label>¿Cuántas mesas quieres añadir?</Label>
+            <p className="text-sm text-muted-foreground">Se añadirán a partir de la última mesa existente.</p>
             <Input
               type="number"
               min="1"

@@ -197,7 +197,7 @@ export default function CartaManager({
         }
 
         if (errorOccurred) {
-          toast.error('Ocurrio un error al borrar algunos elementos')
+          toast.error('Ocurrió un error al borrar algunos elementos')
         } else {
           toast.success('Elementos seleccionados eliminados')
         }
@@ -312,7 +312,7 @@ export default function CartaManager({
     setConfirmDialog({
       open: true,
       title: `Eliminar este ${itemSingular}?`,
-      description: `El ${itemSingular} se eliminara permanentemente. Esta acción no se puede deshacer.`,
+      description: `El ${itemSingular} se eliminará permanentemente. Esta acción no se puede deshacer.`,
       onConfirm: async () => {
         const { error } = await supabase.from('menu_items').delete().eq('id', itemId)
 
