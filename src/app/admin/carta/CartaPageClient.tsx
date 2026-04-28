@@ -46,24 +46,26 @@ export default function CartaPageClient({
   return (
     <div className="space-y-6">
       {/* Import toggle button */}
-      <div className="flex justify-end">
-        <Button
-          variant={showImport ? 'outline' : 'default'}
-          onClick={() => setShowImport(!showImport)}
-          className="cursor-pointer"
-        >
-          {showImport ? (
-            <>
-              <X className="w-4 h-4 mr-1.5" />
-              Cerrar importador
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 mr-1.5" />
-              {`Importar ${venueConfig.itemPlural} con IA`}
-            </>
-          )}
-        </Button>
+      <div className="flex justify-center">
+        {showImport ? (
+          <Button
+            variant="outline"
+            onClick={() => setShowImport(false)}
+            className="cursor-pointer"
+          >
+            <X className="w-4 h-4 mr-1.5" />
+            Cerrar importador
+          </Button>
+        ) : (
+          <Button
+            size="lg"
+            onClick={() => setShowImport(true)}
+            className="cursor-pointer gap-2 px-8 shadow-md"
+          >
+            <Sparkles className="w-5 h-5" />
+            Importar carta con IA
+          </Button>
+        )}
       </div>
 
       {/* Import panel */}

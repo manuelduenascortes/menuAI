@@ -1154,9 +1154,8 @@ function ItemFormDialog({
 
   return (
     <>
-      <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => handleOpenChange(true)}>
-        <Plus className="mr-1 h-3.5 w-3.5" />
-        {itemSingularTitle}
+      <Button size="sm" className="cursor-pointer" onClick={() => handleOpenChange(true)}>
+        Añadir <Plus className="ml-1 h-3.5 w-3.5" />
       </Button>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         {dialogContent}
