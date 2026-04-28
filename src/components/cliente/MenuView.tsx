@@ -71,7 +71,7 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [cartOpen, setCartOpen] = useState(false)
 
-  const { cartButtonRef, cartBumpControls, badgePulseControls } = useCartAnimation()
+  const { cartButtonRef, cartBumpControls, badgePulseControls, flyToCart } = useCartAnimation()
 
   const venueType = normalizeVenueType(restaurant.venue_type)
   const venueConfig = getVenueConfig(venueType)
@@ -302,7 +302,10 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
                       item={item}
                       fontClasses={fontClasses}
                       cartCount={cartItems.find(c => c.id === item.id)?.quantity ?? 0}
-                      onAddToCart={() => addToCart(item)}
+                      onAddToCart={(originEl: HTMLElement) => {
+                        flyToCart(originEl)
+                        addToCart(item)
+                      }}
                     />
                   </li>
                 ))}
@@ -428,7 +431,7 @@ function MenuItemCard({ item, fontClasses, cartCount = 0, onAddToCart }: {
   item: MenuItem
   fontClasses: RestaurantFontClasses
   cartCount?: number
-  onAddToCart?: () => void
+  onAddToCart?: (originEl: HTMLElement) => void
 }) {
   const [expanded, setExpanded] = useState(false)
 
@@ -467,7 +470,7 @@ function MenuItemCard({ item, fontClasses, cartCount = 0, onAddToCart }: {
                 {item.price.toFixed(2)}EUR
               </span>
               <button
-                onClick={e => { e.stopPropagation(); onAddToCart?.() }}
+                onClick={e => { e.stopPropagation(); onAddToCart?.(e.currentTarget) }}
                 className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold leading-none cursor-pointer transition-all active:scale-90"
                 style={cartCount > 0 ? {
                   backgroundColor: 'var(--restaurant-primary)',
