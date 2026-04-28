@@ -7,16 +7,46 @@ import rehypeSanitize from 'rehype-sanitize'
 import type { ChatMessage, VenueType } from '@/lib/types'
 import { getVenueConfig } from '@/lib/venue-config'
 
+export interface ChatMenuItem {
+  id: string
+  name: string
+  image_url: string
+}
+
+type LocalMessage = ChatMessage & {
+  images?: { id: string; name: string; url: string }[]
+}
+
 interface Props {
   restaurantSlug: string
   restaurantName: string
   venueType?: VenueType | null
   onClose: () => void
+  menuItems?: ChatMenuItem[]
 }
 
-export default function ChatInterface({ restaurantSlug, restaurantName, venueType, onClose }: Props) {
+function matchMenuImages(text: string, items: ChatMenuItem[]) {
+  if (!items.length) return []
+  const matched: { id: string; name: string; url: string }[] = []
+  const seen = new Set<string>()
+  const lower = text.toLowerCase()
+  const sorted = [...items].sort((a, b) => b.name.length - a.name.length)
+
+  for (const item of sorted) {
+    if (seen.has(item.id)) continue
+    const name = item.name.toLowerCase()
+    if (lower.includes(`**${name}**`) || lower.includes(name)) {
+      matched.push({ id: item.id, name: item.name, url: item.image_url })
+      seen.add(item.id)
+      if (matched.length >= 5) break
+    }
+  }
+  return matched
+}
+
+export default function ChatInterface({ restaurantSlug, restaurantName, venueType, onClose, menuItems = [] }: Props) {
   const venueConfig = getVenueConfig(venueType)
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState<LocalMessage[]>([
     { role: 'assistant', content: venueConfig.chatGreeting },
   ])
   const [input, setInput] = useState('')
@@ -81,14 +111,16 @@ export default function ChatInterface({ restaurantSlug, restaurantName, venueTyp
     const controller = new AbortController()
     abortRef.current = controller
 
-    const userMsg: ChatMessage = { role: 'user', content: text }
+    const userMsg: LocalMessage = { role: 'user', content: text }
     const newMessages = [...messages, userMsg]
     setMessages(newMessages)
     setInput('')
     setLoading(true)
 
     try {
-      const apiMessages = newMessages.filter((_, index) => index > 0)
+      const apiMessages = newMessages
+        .filter((_, index) => index > 0)
+        .map(({ role, content }) => ({ role, content }))
 
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -116,6 +148,14 @@ export default function ChatInterface({ restaurantSlug, restaurantName, venueTyp
         setMessages(prev => [
           ...prev.slice(0, -1),
           { role: 'assistant', content: assistantContent },
+        ])
+      }
+
+      const matchedImages = matchMenuImages(assistantContent, menuItems)
+      if (matchedImages.length > 0) {
+        setMessages(prev => [
+          ...prev.slice(0, -1),
+          { role: 'assistant', content: assistantContent, images: matchedImages },
         ])
       }
 
@@ -181,6 +221,23 @@ export default function ChatInterface({ restaurantSlug, restaurantName, venueTyp
               <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
                 {msg.content}
               </ReactMarkdown>
+              {msg.role === 'assistant' && msg.images && msg.images.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto mt-3 pb-1 -mx-1 px-1">
+                  {msg.images.map(img => (
+                    <div key={img.id} className="shrink-0 flex flex-col items-center gap-1">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.url}
+                        alt={img.name}
+                        className="w-20 h-20 rounded-lg object-cover border border-border/50"
+                      />
+                      <span className="text-[10px] text-muted-foreground text-center max-w-[80px] leading-tight line-clamp-2">
+                        {img.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ))}

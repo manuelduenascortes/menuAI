@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, Leaf, Search, Sparkles, X } from 'lucide-react'
-import ChatInterface from './ChatInterface'
+import ChatInterface, { type ChatMenuItem } from './ChatInterface'
 import ThemeToggle from '@/components/ThemeToggle'
 import type { Restaurant } from '@/lib/types'
 import type { RestaurantFontClasses } from '@/lib/restaurant-fonts'
@@ -86,6 +86,14 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
       )
     )
   }, [categories, venueType])
+
+  const chatMenuItems = useMemo<ChatMenuItem[]>(() =>
+    categories
+      .flatMap(c => c.menu_items)
+      .filter(item => item.available && item.image_url)
+      .map(item => ({ id: item.id, name: item.name, image_url: item.image_url! })),
+    [categories]
+  )
 
   const filteredCategories = useMemo(() => categories.map(category => ({
     ...category,
@@ -317,6 +325,7 @@ export default function MenuView({ restaurant, categories, tableId: _tableId, ta
           restaurantName={restaurant.name}
           venueType={restaurant.venue_type}
           onClose={() => setChatOpen(false)}
+          menuItems={chatMenuItems}
         />
       )}
     </div>

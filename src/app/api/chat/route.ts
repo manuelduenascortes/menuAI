@@ -12,7 +12,7 @@ const ChatReq = z.object({
   messages: z.array(z.object({
     role: z.enum(['user', 'assistant']),
     content: z.string().min(1).max(1200),
-  })).min(1).max(10),
+  })).min(1).max(100),
 })
 
 const menuCache = new Map<string, { data: FullMenu; ts: number }>()
