@@ -18,6 +18,7 @@ interface Props {
 
 export default function CartAnimationProvider({ children }: Props) {
   const cartButtonRef = useRef<HTMLButtonElement | null>(null)
+  const overrideTargetRef = useRef<HTMLElement | null>(null)
   const cartBumpControls = useAnimationControls()
   const badgePulseControls = useAnimationControls()
   const [dots, setDots] = useState<FlyingDot[]>([])
@@ -34,10 +35,11 @@ export default function CartAnimationProvider({ children }: Props) {
     })
   }, [cartBumpControls, badgePulseControls])
 
-  const flyToCart = useCallback((originEl: HTMLElement | null) => {
-    const cartEl = cartButtonRef.current
-    if (!originEl || !cartEl) return
+  const setOverrideCartTarget = useCallback((el: HTMLElement | null) => {
+    overrideTargetRef.current = el
+  }, [])
 
+  const spawnFlight = useCallback((originEl: HTMLElement, cartEl: HTMLElement) => {
     if (prefersReducedMotion()) {
       triggerLandingFx()
       return
@@ -56,6 +58,24 @@ export default function CartAnimationProvider({ children }: Props) {
     setDots(prev => [...prev, { id, origin, destination, color }])
   }, [triggerLandingFx])
 
+  const flyToCart = useCallback((originEl: HTMLElement | null) => {
+    if (!originEl) return
+
+    const cartEl = overrideTargetRef.current ?? cartButtonRef.current
+    if (cartEl) {
+      spawnFlight(originEl, cartEl)
+      return
+    }
+
+    // First add: cart button isn't mounted yet because it's gated by
+    // cartItems.length > 0. The state update from the click handler will mount
+    // it on the next commit, so retry once after the next paint.
+    requestAnimationFrame(() => {
+      const retryEl = overrideTargetRef.current ?? cartButtonRef.current
+      if (retryEl) spawnFlight(originEl, retryEl)
+    })
+  }, [spawnFlight])
+
   const handleDotComplete = useCallback((id: string) => {
     setDots(prev => prev.filter(d => d.id !== id))
     triggerLandingFx()
@@ -66,7 +86,8 @@ export default function CartAnimationProvider({ children }: Props) {
     cartBumpControls,
     badgePulseControls,
     flyToCart,
-  }), [flyToCart, cartBumpControls, badgePulseControls])
+    setOverrideCartTarget,
+  }), [flyToCart, cartBumpControls, badgePulseControls, setOverrideCartTarget])
 
   return (
     <CartAnimationContext.Provider value={value}>

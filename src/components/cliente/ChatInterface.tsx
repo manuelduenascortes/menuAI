@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { Send, X, MessageCircle, ShoppingCart } from 'lucide-react'
+import { motion } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import rehypeSanitize from 'rehype-sanitize'
 import type { CartItem, ChatMessage, VenueType } from '@/lib/types'
@@ -60,7 +61,7 @@ export default function ChatInterface({
   onOpenCart,
 }: Props) {
   const venueConfig = getVenueConfig(venueType)
-  const { flyToCart } = useCartAnimation()
+  const { flyToCart, setOverrideCartTarget, cartBumpControls, badgePulseControls } = useCartAnimation()
   const [messages, setMessages] = useState<LocalMessage[]>([
     { role: 'assistant', content: venueConfig.chatGreeting },
   ])
@@ -71,6 +72,17 @@ export default function ChatInterface({
   const inputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
+  const chatCartButtonRef = useRef<HTMLButtonElement | null>(null)
+
+  // Ref callback for the chat-header cart icon: registers/clears the override
+  // target so flying dots land on a visible element while the chat is open
+  // (the floating cart button below is occluded by the chat backdrop).
+  const setChatCartButton = useCallback((el: HTMLButtonElement | null) => {
+    chatCartButtonRef.current = el
+    setOverrideCartTarget(el)
+  }, [setOverrideCartTarget])
+
+  useEffect(() => () => setOverrideCartTarget(null), [setOverrideCartTarget])
 
   const markdownComponents = useMemo(() => {
     function extractText(node: ReactNode): string {
@@ -262,24 +274,30 @@ export default function ChatInterface({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          {cartItems.length > 0 && (
-            <button
-              onClick={onOpenCart}
-              className="relative flex items-center justify-center w-11 h-11 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-              aria-label={`Ver carrito, ${cartItems.reduce((s, i) => s + i.quantity, 0)} artículos`}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span
-                className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold"
-                style={{
-                  backgroundColor: 'var(--restaurant-primary)',
-                  color: 'var(--restaurant-primary-foreground)',
-                }}
+          {cartItems.length > 0 && (() => {
+            const totalCartCount = cartItems.reduce((s, i) => s + i.quantity, 0)
+            return (
+              <motion.button
+                ref={setChatCartButton}
+                animate={cartBumpControls}
+                onClick={onOpenCart}
+                className="relative flex items-center justify-center w-11 h-11 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                aria-label={`Ver carrito, ${totalCartCount} artículos`}
               >
-                {cartItems.reduce((s, i) => s + i.quantity, 0)}
-              </span>
-            </button>
-          )}
+                <ShoppingCart className="w-5 h-5" />
+                <motion.span
+                  animate={badgePulseControls}
+                  className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold"
+                  style={{
+                    backgroundColor: 'var(--restaurant-primary)',
+                    color: 'var(--restaurant-primary-foreground)',
+                  }}
+                >
+                  {totalCartCount}
+                </motion.span>
+              </motion.button>
+            )
+          })()}
           <button
             onClick={onClose}
             className="w-11 h-11 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
