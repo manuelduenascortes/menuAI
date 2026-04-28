@@ -1,905 +1,972 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="utf-8">
-<title>MenuAI — Product Demo</title>
-<style>
-  /* ─── MENUAI BRAND: MEDITERRANEAN CALM ───
-     bg cream #FAFAF7 · ink #1C1917 · primary #8B5E3C · accent #D4A574
-     fonts: Outfit (sans), DM Serif Display (serif) */
-  body { margin: 0; background: #0a0908; }
+  <head>
+    <meta charset="utf-8" />
+    <title>menuAI — Demo</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #141210;
+        color: #ede8e3;
+        font-family: "Outfit", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      [data-composition-id="demo-menuai"] {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #141210;
+        font-family: "Outfit", sans-serif;
+      }
 
-  [data-composition-id="menuai-demo"] {
-    width: 1920px;
-    height: 1080px;
-    position: relative;
-    overflow: hidden;
-    background: #FAFAF7;
-    font-family: 'Outfit', system-ui, sans-serif;
-    color: #1C1917;
-  }
+      /* --- Scene wrappers --- */
+      .scene {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 120px;
+        box-sizing: border-box;
+      }
+      .scene.s1 {
+        opacity: 1;
+      }
+      .scene::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at 50% 50%,
+          rgba(212, 165, 116, 0.07) 0%,
+          rgba(212, 165, 116, 0) 55%
+        );
+        pointer-events: none;
+      }
+      .scene.s4 {
+        background: #1c1917;
+      }
+      .scene.s4::before {
+        background: radial-gradient(
+          circle at 30% 40%,
+          rgba(212, 165, 116, 0.09) 0%,
+          rgba(212, 165, 116, 0) 60%
+        );
+      }
+      .scene.s6 {
+        background: #0a0908;
+      }
 
-  /* Warm radial glow on canvas (avoid flat backgrounds) */
-  [data-composition-id="menuai-demo"]::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 1200px 800px at 20% 10%, rgba(212, 165, 116, 0.18), transparent 60%),
-      radial-gradient(ellipse 1000px 700px at 85% 95%, rgba(139, 94, 60, 0.12), transparent 60%);
-    pointer-events: none;
-  }
+      /* --- Scene 1: Intro --- */
+      .s1 .brand {
+        font-family: "DM Serif Display", serif;
+        font-style: italic;
+        font-size: 168px;
+        color: #d4a574;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .s1 .tagline {
+        margin-top: 32px;
+        font-family: "Outfit", sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+        color: #a8a29e;
+        letter-spacing: 0.02em;
+      }
 
-  /* Subtle paper grain via repeating dots */
-  [data-composition-id="menuai-demo"]::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(circle at 1px 1px, rgba(28, 25, 23, 0.025) 1px, transparent 0);
-    background-size: 4px 4px;
-    pointer-events: none;
-  }
+      /* --- Scene 2: ¿Cómo funciona? --- */
+      .s2 .scene-inner {
+        width: 100%;
+        max-width: 1500px;
+        display: flex;
+        flex-direction: column;
+        gap: 56px;
+      }
+      .s2 .heading {
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        font-size: 84px;
+        color: #ede8e3;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .s2 .cards {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .s2 .card {
+        background: #1c1917;
+        border: 1px solid #2c2a27;
+        border-radius: 12px;
+        padding: 36px 40px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        position: relative;
+      }
+      .s2 .card .icon {
+        font-size: 56px;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+      .s2 .card .text {
+        font-family: "Outfit", sans-serif;
+        font-weight: 500;
+        font-size: 30px;
+        color: #ede8e3;
+        line-height: 1.35;
+      }
 
-  .scene {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1;
-  }
-  .scene-1 { z-index: 5; opacity: 1; }
-  .scene-2 { z-index: 4; opacity: 0; }
-  .scene-3 { z-index: 6; opacity: 0; }
-  .scene-4 { z-index: 7; opacity: 0; }
-  .scene-5 { z-index: 8; opacity: 0; }
+      /* --- Scene 3: Demo del Chat IA --- */
+      .s3 .powered {
+        position: absolute;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: "Outfit", sans-serif;
+        font-weight: 600;
+        font-size: 20px;
+        color: #d4a574;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+      .s3 .chat {
+        width: 100%;
+        max-width: 880px;
+        background: #1c1917;
+        border: 1px solid rgba(237, 232, 227, 0.08);
+        border-radius: 20px;
+        padding: 44px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+      .s3 .row {
+        display: flex;
+      }
+      .s3 .row.user {
+        justify-content: flex-end;
+      }
+      .s3 .bubble {
+        max-width: 82%;
+        font-family: "Outfit", sans-serif;
+        font-weight: 400;
+        font-size: 26px;
+        line-height: 1.45;
+      }
+      .s3 .bubble.user {
+        background: #8b5e3c;
+        color: #ede8e3;
+        padding: 22px 28px;
+        border-radius: 22px 22px 6px 22px;
+      }
+      .s3 .typing {
+        align-self: flex-start;
+        background: #292524;
+        border-radius: 22px 22px 22px 6px;
+        padding: 22px 26px;
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .s3 .typing .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #d4a574;
+        opacity: 0.35;
+      }
+      .s3 .bubble.ai {
+        background: #292524;
+        color: #ede8e3;
+        padding: 22px 28px;
+        border-radius: 22px 22px 22px 6px;
+        white-space: pre-wrap;
+      }
+      .s3 .bubble.ai .char {
+        opacity: 0;
+      }
 
-  /* ───────── SCENE 1: LOGO INTRO ───────── */
-  .s1-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 32px;
-  }
-  .s1-mark {
-    display: flex;
-    align-items: center;
-    gap: 28px;
-  }
-  .s1-icon {
-    width: 132px;
-    height: 132px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #8B5E3C;
-    color: #FAFAF7;
-    border-radius: 32px;
-    box-shadow: 0 20px 60px -20px rgba(139, 94, 60, 0.5);
-  }
-  .s1-icon svg {
-    width: 76px;
-    height: 76px;
-  }
-  .s1-wordmark {
-    font-family: 'DM Serif Display', 'Outfit', serif;
-    font-size: 156px;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    color: #1C1917;
-  }
-  .s1-wordmark .ai {
-    color: #8B5E3C;
-    font-style: italic;
-  }
-  .s1-tagline {
-    font-size: 36px;
-    font-weight: 400;
-    color: #44403C;
-    letter-spacing: 0.01em;
-  }
-  .s1-rule {
-    width: 80px;
-    height: 3px;
-    background: #D4A574;
-    border-radius: 2px;
-  }
+      /* --- Scene 4: Panel de administración (mock dashboard) --- */
+      .s4 .scene-inner {
+        width: 100%;
+        max-width: 1680px;
+        display: flex;
+        flex-direction: column;
+        gap: 36px;
+      }
+      .s4 .heading {
+        font-family: "DM Serif Display", serif;
+        font-style: italic;
+        font-size: 64px;
+        color: #d4a574;
+        line-height: 1;
+        letter-spacing: -0.01em;
+      }
+      .s4 .dashboard {
+        position: relative;
+        background: #141210;
+        border: 1px solid rgba(212, 165, 116, 0.18);
+        border-radius: 16px;
+        height: 720px;
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        overflow: hidden;
+      }
+      .s4 .sidebar {
+        background: #110f0d;
+        border-right: 1px solid rgba(237, 232, 227, 0.06);
+        padding: 32px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        position: relative;
+      }
+      .s4 .sidebar .logo {
+        font-family: "DM Serif Display", serif;
+        font-style: italic;
+        font-size: 32px;
+        color: #d4a574;
+        padding: 4px 16px 22px;
+      }
+      .s4 .navitem {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 18px;
+        border-radius: 10px;
+        font-family: "Outfit", sans-serif;
+        font-weight: 500;
+        font-size: 20px;
+        color: #a8a29e;
+      }
+      .s4 .navitem .nav-icon {
+        font-size: 24px;
+        line-height: 1;
+      }
+      .s4 .nav-highlight {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        height: 50px;
+        border-radius: 10px;
+        background: rgba(212, 165, 116, 0.14);
+        border: 1px solid rgba(212, 165, 116, 0.35);
+        top: 90px; /* default: first nav item */
+      }
+      .s4 .panel {
+        position: relative;
+        padding: 32px 40px;
+      }
+      .s4 .panel-stage {
+        position: absolute;
+        inset: 32px 40px;
+        opacity: 0;
+      }
+      .s4 .panel-stage .panel-header {
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        font-size: 36px;
+        color: #ede8e3;
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+      }
+      .s4 .panel-stage .panel-sub {
+        font-family: "Outfit", sans-serif;
+        font-weight: 400;
+        font-size: 20px;
+        color: #a8a29e;
+        margin-bottom: 28px;
+      }
 
-  /* ───────── SCENE 2: APP MENU MOCKUP ───────── */
-  .s2-content {
-    display: grid;
-    grid-template-columns: 540px 1fr;
-    gap: 120px;
-    align-items: center;
-    padding: 0 160px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .phone-frame {
-    width: 540px;
-    height: 880px;
-    background: #1C1917;
-    border-radius: 64px;
-    padding: 18px;
-    box-sizing: border-box;
-    box-shadow:
-      0 60px 120px -40px rgba(28, 25, 23, 0.45),
-      0 0 0 2px rgba(28, 25, 23, 0.06);
-    position: relative;
-  }
-  .phone-frame::before {
-    content: '';
-    position: absolute;
-    top: 28px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 130px;
-    height: 30px;
-    background: #0a0908;
-    border-radius: 20px;
-    z-index: 2;
-  }
-  .phone-screen {
-    width: 100%;
-    height: 100%;
-    background: #FAFAF7;
-    border-radius: 48px;
-    overflow: hidden;
-    padding: 80px 28px 28px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-  .resto-header {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid #E7E0D8;
-  }
-  .resto-name {
-    font-family: 'DM Serif Display', serif;
-    font-size: 32px;
-    color: #1C1917;
-    line-height: 1.1;
-  }
-  .resto-meta {
-    font-size: 16px;
-    color: #6B6560;
-  }
-  .cat-tabs {
-    display: flex;
-    gap: 10px;
-    overflow: hidden;
-  }
-  .cat-tab {
-    padding: 8px 18px;
-    border-radius: 999px;
-    font-size: 16px;
-    font-weight: 500;
-    background: #F3EDE4;
-    color: #44403C;
-    white-space: nowrap;
-  }
-  .cat-tab.active {
-    background: #6B4530;
-    color: #FAFAF7;
-  }
-  .menu-items {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    flex: 1;
-  }
-  .menu-item {
-    display: grid;
-    grid-template-columns: 80px 1fr auto;
-    gap: 14px;
-    align-items: center;
-    padding: 12px;
-    background: #FFFFFF;
-    border: 1px solid #E7E0D8;
-    border-radius: 18px;
-  }
-  .item-img {
-    width: 80px;
-    height: 80px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #D4A574, #8B5E3C);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #FAFAF7;
-    font-size: 30px;
-  }
-  .item-img.b { background: linear-gradient(135deg, #B8A48A, #6B5340); }
-  .item-img.c { background: linear-gradient(135deg, #E8C4A0, #A47854); }
-  .item-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-  .item-name { font-size: 19px; font-weight: 600; color: #1C1917; line-height: 1.2; }
-  .item-desc { font-size: 14px; color: #6B6560; line-height: 1.3; }
-  .item-allergens { display: flex; gap: 4px; margin-top: 4px; }
-  .all-pill {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: #F5F0EB;
-    color: #44403C;
-    font-weight: 500;
-  }
-  .item-price { font-size: 20px; font-weight: 600; color: #8B5E3C; font-family: 'Outfit'; }
+      /* Restaurante panel */
+      .s4 .cat-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: 20px;
+        padding: 20px 26px;
+        background: #1c1917;
+        border: 1px solid rgba(237, 232, 227, 0.06);
+        border-radius: 12px;
+        margin-bottom: 14px;
+      }
+      .s4 .cat-row .cat-name {
+        font-family: "Outfit", sans-serif;
+        font-weight: 600;
+        font-size: 24px;
+        color: #ede8e3;
+      }
+      .s4 .cat-row .cat-count {
+        font-family: "Outfit", sans-serif;
+        font-weight: 500;
+        font-size: 18px;
+        color: #a8a29e;
+        background: #2c2a27;
+        padding: 6px 14px;
+        border-radius: 999px;
+      }
+      .s4 .cat-row .tag {
+        font-family: "Outfit", sans-serif;
+        font-weight: 600;
+        font-size: 14px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #d4a574;
+        background: rgba(212, 165, 116, 0.12);
+        padding: 6px 12px;
+        border-radius: 6px;
+      }
 
-  .s2-text {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-  .s2-eyebrow {
-    font-size: 22px;
-    font-weight: 600;
-    color: #8B5E3C;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-  .s2-headline {
-    font-family: 'DM Serif Display', serif;
-    font-size: 96px;
-    line-height: 1.02;
-    color: #1C1917;
-    letter-spacing: -0.02em;
-    max-width: 720px;
-  }
-  .s2-headline em {
-    color: #8B5E3C;
-    font-style: italic;
-  }
-  .s2-sub {
-    font-size: 28px;
-    color: #44403C;
-    max-width: 620px;
-    line-height: 1.4;
-  }
+      /* Mesas panel */
+      .s4 .mesa-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .s4 .mesa-card {
+        background: #1c1917;
+        border: 1px solid rgba(237, 232, 227, 0.06);
+        border-radius: 12px;
+        padding: 22px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+      }
+      .s4 .qr-glyph {
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
+        background: #ede8e3;
+        position: relative;
+        background-image: linear-gradient(
+            45deg,
+            #141210 25%,
+            transparent 25%,
+            transparent 75%,
+            #141210 75%
+          ),
+          linear-gradient(
+            45deg,
+            #141210 25%,
+            transparent 25%,
+            transparent 75%,
+            #141210 75%
+          );
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+      }
+      .s4 .qr-glyph::before,
+      .s4 .qr-glyph::after {
+        content: "";
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        border: 4px solid #141210;
+        background: #ede8e3;
+      }
+      .s4 .qr-glyph::before {
+        top: 6px;
+        left: 6px;
+      }
+      .s4 .qr-glyph::after {
+        top: 6px;
+        right: 6px;
+      }
+      .s4 .mesa-label {
+        font-family: "Outfit", sans-serif;
+        font-weight: 600;
+        font-size: 20px;
+        color: #ede8e3;
+      }
+      .s4 .mesa-sub {
+        font-family: "Outfit", sans-serif;
+        font-weight: 400;
+        font-size: 14px;
+        color: #a8a29e;
+      }
 
-  /* ───────── SCENE 3: AI CHAT ───────── */
-  .s3-content {
-    display: grid;
-    grid-template-columns: 1fr 540px;
-    gap: 120px;
-    align-items: center;
-    padding: 0 160px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .chat-screen {
-    width: 100%;
-    height: 100%;
-    background: #FAFAF7;
-    border-radius: 48px;
-    overflow: hidden;
-    padding: 90px 24px 28px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .chat-head {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 8px 12px;
-    border-bottom: 1px solid #E7E0D8;
-  }
-  .ai-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    background: #8B5E3C;
-    color: #FAFAF7;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-  }
-  .ai-name { font-size: 17px; font-weight: 600; color: #1C1917; }
-  .ai-status { font-size: 13px; color: #15803d; display: flex; align-items: center; gap: 6px; }
-  .ai-status::before {
-    content: '';
-    width: 7px; height: 7px; border-radius: 50%; background: #16a34a;
-  }
-  .chat-body { flex: 1; display: flex; flex-direction: column; gap: 14px; }
-  .bubble {
-    max-width: 86%;
-    padding: 14px 18px;
-    border-radius: 22px;
-    font-size: 18px;
-    line-height: 1.4;
-  }
-  .bubble.user {
-    align-self: flex-end;
-    background: #6B4530;
-    color: #FAFAF7;
-    border-bottom-right-radius: 8px;
-  }
-  .bubble.ai {
-    align-self: flex-start;
-    background: #FFFFFF;
-    color: #1C1917;
-    border: 1px solid #E7E0D8;
-    border-bottom-left-radius: 8px;
-  }
-  .bubble.ai .ai-list {
-    margin: 6px 0 0;
-    padding-left: 18px;
-    font-size: 17px;
-    color: #44403C;
-  }
-  .bubble.ai .ai-list li { margin: 3px 0; }
-  .typing {
-    align-self: flex-start;
-    background: #FFFFFF;
-    border: 1px solid #E7E0D8;
-    border-radius: 22px;
-    border-bottom-left-radius: 8px;
-    padding: 16px 22px;
-    display: flex;
-    gap: 6px;
-  }
-  .typing span {
-    width: 9px; height: 9px; border-radius: 50%; background: #A8A29E;
-  }
+      /* Suscripción panel */
+      .s4 .plans {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+      .s4 .plan {
+        background: #1c1917;
+        border: 1px solid rgba(237, 232, 227, 0.08);
+        border-radius: 14px;
+        padding: 28px 26px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .s4 .plan.featured {
+        border-color: #d4a574;
+        background: linear-gradient(
+          180deg,
+          rgba(212, 165, 116, 0.08) 0%,
+          rgba(212, 165, 116, 0) 100%
+        ),
+          #1c1917;
+      }
+      .s4 .plan .plan-name {
+        font-family: "Outfit", sans-serif;
+        font-weight: 600;
+        font-size: 22px;
+        color: #ede8e3;
+      }
+      .s4 .plan .plan-price {
+        font-family: "DM Serif Display", serif;
+        font-style: italic;
+        font-size: 48px;
+        color: #d4a574;
+        line-height: 1;
+      }
+      .s4 .plan .plan-price small {
+        font-family: "Outfit", sans-serif;
+        font-style: normal;
+        font-weight: 400;
+        font-size: 18px;
+        color: #a8a29e;
+      }
+      .s4 .plan .plan-bullets {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .s4 .plan .plan-bullets li {
+        font-family: "Outfit", sans-serif;
+        font-weight: 400;
+        font-size: 16px;
+        color: #ede8e3;
+        padding-left: 22px;
+        position: relative;
+        line-height: 1.4;
+      }
+      .s4 .plan .plan-bullets li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: #d4a574;
+        font-weight: 700;
+      }
+      .s4 .plan .plan-badge {
+        align-self: flex-start;
+        font-family: "Outfit", sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #141210;
+        background: #d4a574;
+        padding: 5px 11px;
+        border-radius: 6px;
+      }
 
-  .s3-text {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    text-align: right;
-  }
-  .s3-text .s2-eyebrow { color: #8B5E3C; }
-  .s3-text .s2-headline { margin-left: auto; }
-  .s3-text .s2-sub { margin-left: auto; }
+      /* --- Scene 5: Stack tecnológico --- */
+      .s5 .scene-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 64px;
+        align-items: center;
+      }
+      .s5 .heading {
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        font-size: 72px;
+        color: #ede8e3;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .s5 .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+        max-width: 1400px;
+      }
+      .s5 .badge {
+        font-family: "Outfit", sans-serif;
+        font-weight: 600;
+        font-size: 26px;
+        color: #d4a574;
+        background: #1c1917;
+        border: 1px solid #d4a574;
+        border-radius: 999px;
+        padding: 14px 30px;
+        letter-spacing: 0.01em;
+      }
 
-  /* ───────── SCENE 4: FEATURES ───────── */
-  .s4-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 60px;
-    padding: 0 160px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .s4-eyebrow {
-    font-size: 22px;
-    font-weight: 600;
-    color: #8B5E3C;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-  .s4-headline {
-    font-family: 'DM Serif Display', serif;
-    font-size: 96px;
-    line-height: 1.05;
-    color: #1C1917;
-    letter-spacing: -0.02em;
-    text-align: center;
-    margin: 0;
-  }
-  .s4-headline em { color: #8B5E3C; font-style: italic; }
-  .s4-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 28px;
-    width: 100%;
-  }
-  .feat-card {
-    background: #FFFFFF;
-    border: 1px solid #E7E0D8;
-    border-radius: 28px;
-    padding: 36px 32px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    box-shadow: 0 12px 40px -20px rgba(28, 25, 23, 0.15);
-  }
-  .feat-icon {
-    width: 72px;
-    height: 72px;
-    border-radius: 20px;
-    background: #F3EDE4;
-    color: #8B5E3C;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .feat-icon svg { width: 38px; height: 38px; }
-  .feat-title {
-    font-size: 32px;
-    font-weight: 600;
-    color: #1C1917;
-    line-height: 1.1;
-    margin: 0;
-  }
-  .feat-desc {
-    font-size: 19px;
-    color: #44403C;
-    line-height: 1.4;
-    margin: 0;
-  }
+      /* --- Scene 6: Outro --- */
+      .s6 .outro-brand {
+        font-family: "DM Serif Display", serif;
+        font-style: italic;
+        font-size: 140px;
+        color: #d4a574;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      .s6 .outro-tag {
+        margin-top: 28px;
+        font-family: "Outfit", sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+        color: #a8a29e;
+      }
+      .s6 .outro-link {
+        margin-top: 36px;
+        font-family: "Outfit", sans-serif;
+        font-weight: 400;
+        font-size: 20px;
+        color: #6b6560;
+        letter-spacing: 0.12em;
+      }
 
-  /* ───────── SCENE 5: OUTRO ───────── */
-  .s5-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 28px;
-    text-align: center;
-  }
-  .s5-mark {
-    font-family: 'DM Serif Display', serif;
-    font-size: 132px;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    color: #1C1917;
-  }
-  .s5-mark em { color: #8B5E3C; font-style: italic; }
-  .s5-url {
-    display: inline-flex;
-    align-items: center;
-    gap: 16px;
-    background: #1C1917;
-    color: #FAFAF7;
-    font-size: 44px;
-    font-weight: 500;
-    padding: 22px 48px;
-    border-radius: 999px;
-    letter-spacing: 0.02em;
-    box-shadow: 0 24px 60px -20px rgba(28, 25, 23, 0.45);
-  }
-  .s5-url::before {
-    content: '';
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #D4A574;
-  }
-  .s5-cta {
-    font-size: 28px;
-    color: #6B6560;
-    margin-top: 6px;
-  }
-  .s5-rule {
-    width: 64px;
-    height: 3px;
-    background: #D4A574;
-    border-radius: 2px;
-    margin-bottom: 10px;
-  }
-
-  /* Curtain for final fade */
-  .curtain {
-    position: absolute;
-    inset: 0;
-    background: #0a0908;
-    z-index: 100;
-    opacity: 0;
-    pointer-events: none;
-  }
-</style>
-</head>
-<body>
-
-<div data-composition-id="menuai-demo" data-start="0" data-duration="30" data-width="1920" data-height="1080" data-track-index="0">
-
-  <!-- ─── SCENE 1: LOGO INTRO (0–3s) ─── -->
-  <section class="scene scene-1" id="scene-1">
-    <div class="s1-content">
-      <div class="s1-mark">
-        <div class="s1-icon" id="s1-icon">
-          <!-- UtensilsCrossed (lucide) -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8"/>
-            <path d="M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7"/>
-            <path d="m2.1 21.8 6.4-6.3"/>
-            <path d="m19 5-7 7"/>
-          </svg>
-        </div>
-        <div class="s1-wordmark" id="s1-wordmark">Menu<span class="ai">AI</span></div>
+      .black-veil {
+        position: absolute;
+        inset: 0;
+        background: #000;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 50;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="demo-menuai"
+      data-start="0"
+      data-duration="45"
+      data-track-index="0"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Scene 1: Intro (0-4.4s) -->
+      <div class="scene s1">
+        <div class="brand">menuAI</div>
+        <div class="tagline">El menú digital con IA para restaurantes</div>
       </div>
-      <div class="s1-rule" id="s1-rule"></div>
-      <div class="s1-tagline" id="s1-tagline">Cartas digitales con inteligencia artificial</div>
-    </div>
-  </section>
 
-  <!-- ─── SCENE 2: APP MENU MOCKUP (3–10s) ─── -->
-  <section class="scene scene-2" id="scene-2">
-    <div class="s2-content">
-      <!-- Phone -->
-      <div class="phone-frame" id="s2-phone">
-        <div class="phone-screen">
-          <div class="resto-header" id="s2-header">
-            <div class="resto-name">El Olivo Mediterráneo</div>
-            <div class="resto-meta">Mesa 7 · Málaga</div>
+      <!-- Scene 2: ¿Cómo funciona? (4.4-12.4s) -->
+      <div class="scene s2">
+        <div class="scene-inner">
+          <div class="heading">¿Cómo funciona?</div>
+          <div class="cards">
+            <div class="card c1">
+              <div class="icon">📱</div>
+              <div class="text">El cliente escanea el QR de su mesa</div>
+            </div>
+            <div class="card c2">
+              <div class="icon">🍽️</div>
+              <div class="text">
+                Ve el menú completo con alérgenos, ingredientes y etiquetas
+                dietéticas
+              </div>
+            </div>
+            <div class="card c3">
+              <div class="icon">🤖</div>
+              <div class="text">El asistente IA responde en tiempo real</div>
+            </div>
           </div>
-          <div class="cat-tabs" id="s2-tabs">
-            <div class="cat-tab active">Entrantes</div>
-            <div class="cat-tab">Principales</div>
-            <div class="cat-tab">Postres</div>
-            <div class="cat-tab">Bebidas</div>
+        </div>
+      </div>
+
+      <!-- Scene 3: Demo del Chat IA (12.4-24.4s) -->
+      <div class="scene s3">
+        <div class="powered">Powered by OpenRouter · GPT-4o mini</div>
+        <div class="chat">
+          <div class="row user">
+            <div class="bubble user">
+              ¿Qué plato me recomiendas si soy intolerante al gluten?
+            </div>
           </div>
-          <div class="menu-items">
-            <div class="menu-item s2-item" id="s2-item-1">
-              <div class="item-img">🥘</div>
-              <div class="item-info">
-                <div class="item-name">Salmorejo cordobés</div>
-                <div class="item-desc">Tomate, pan, AOVE, jamón ibérico</div>
-                <div class="item-allergens">
-                  <span class="all-pill">Gluten</span>
-                  <span class="all-pill">Huevo</span>
+          <div class="typing">
+            <span class="dot d1"></span>
+            <span class="dot d2"></span>
+            <span class="dot d3"></span>
+          </div>
+          <div class="bubble ai">¡Hola! Te recomiendo la Ensalada Mediterránea, libre de gluten 🥗
+También tenemos el Salmón a la Plancha con verduras de temporada —
+ambos perfectos para tu dieta. ¿Quieres saber más sobre alguno? 🍋</div>
+        </div>
+      </div>
+
+      <!-- Scene 4: Panel de administración (24.4-34.4s) -->
+      <div class="scene s4">
+        <div class="scene-inner">
+          <div class="heading">Panel de administración</div>
+          <div class="dashboard">
+            <div class="sidebar">
+              <div class="logo">menuAI</div>
+              <div class="nav-highlight"></div>
+              <div class="navitem nav-1">
+                <span class="nav-icon">🏪</span>
+                <span>Restaurante</span>
+              </div>
+              <div class="navitem nav-2">
+                <span class="nav-icon">📲</span>
+                <span>Mesas</span>
+              </div>
+              <div class="navitem nav-3">
+                <span class="nav-icon">💳</span>
+                <span>Suscripción</span>
+              </div>
+            </div>
+            <div class="panel">
+              <!-- Stage 1: Restaurante -->
+              <div class="panel-stage stage-1">
+                <div class="panel-header">Gestión de restaurante</div>
+                <div class="panel-sub">
+                  Categorías, platos, alérgenos y etiquetas dietéticas
+                </div>
+                <div class="cat-row r-1">
+                  <div class="cat-name">Entrantes</div>
+                  <div class="cat-count">8 platos</div>
+                  <div class="tag">Sin gluten</div>
+                </div>
+                <div class="cat-row r-2">
+                  <div class="cat-name">Principales</div>
+                  <div class="cat-count">14 platos</div>
+                  <div class="tag">Vegetariano</div>
+                </div>
+                <div class="cat-row r-3">
+                  <div class="cat-name">Postres</div>
+                  <div class="cat-count">6 platos</div>
+                  <div class="tag">Vegano</div>
+                </div>
+                <div class="cat-row r-4">
+                  <div class="cat-name">Bebidas</div>
+                  <div class="cat-count">22 platos</div>
+                  <div class="tag">Sin lactosa</div>
                 </div>
               </div>
-              <div class="item-price">8,50 €</div>
-            </div>
-            <div class="menu-item s2-item" id="s2-item-2">
-              <div class="item-img b">🐟</div>
-              <div class="item-info">
-                <div class="item-name">Pescaíto frito malagueño</div>
-                <div class="item-desc">Boquerón, calamar, salmonete</div>
-                <div class="item-allergens">
-                  <span class="all-pill">Pescado</span>
-                  <span class="all-pill">Gluten</span>
+              <!-- Stage 2: Mesas -->
+              <div class="panel-stage stage-2">
+                <div class="panel-header">Códigos QR por mesa</div>
+                <div class="panel-sub">
+                  Generación automática para cada mesa del local
+                </div>
+                <div class="mesa-grid">
+                  <div class="mesa-card m-1">
+                    <div class="qr-glyph"></div>
+                    <div class="mesa-label">Mesa 1</div>
+                    <div class="mesa-sub">/mesa/1</div>
+                  </div>
+                  <div class="mesa-card m-2">
+                    <div class="qr-glyph"></div>
+                    <div class="mesa-label">Mesa 2</div>
+                    <div class="mesa-sub">/mesa/2</div>
+                  </div>
+                  <div class="mesa-card m-3">
+                    <div class="qr-glyph"></div>
+                    <div class="mesa-label">Mesa 3</div>
+                    <div class="mesa-sub">/mesa/3</div>
+                  </div>
+                  <div class="mesa-card m-4">
+                    <div class="qr-glyph"></div>
+                    <div class="mesa-label">Mesa 4</div>
+                    <div class="mesa-sub">/mesa/4</div>
+                  </div>
+                  <div class="mesa-card m-5">
+                    <div class="qr-glyph"></div>
+                    <div class="mesa-label">Mesa 5</div>
+                    <div class="mesa-sub">/mesa/5</div>
+                  </div>
+                  <div class="mesa-card m-6">
+                    <div class="qr-glyph"></div>
+                    <div class="mesa-label">Mesa 6</div>
+                    <div class="mesa-sub">/mesa/6</div>
+                  </div>
+                  <div class="mesa-card m-7">
+                    <div class="qr-glyph"></div>
+                    <div class="mesa-label">Mesa 7</div>
+                    <div class="mesa-sub">/mesa/7</div>
+                  </div>
+                  <div class="mesa-card m-8">
+                    <div class="qr-glyph"></div>
+                    <div class="mesa-label">Mesa 8</div>
+                    <div class="mesa-sub">/mesa/8</div>
+                  </div>
                 </div>
               </div>
-              <div class="item-price">14,00 €</div>
-            </div>
-            <div class="menu-item s2-item" id="s2-item-3">
-              <div class="item-img c">🥗</div>
-              <div class="item-info">
-                <div class="item-name">Ensalada de naranja</div>
-                <div class="item-desc">Naranja, bacalao, cebolla, aceitunas</div>
-                <div class="item-allergens">
-                  <span class="all-pill">Pescado</span>
+              <!-- Stage 3: Suscripción -->
+              <div class="panel-stage stage-3">
+                <div class="panel-header">Planes de suscripción</div>
+                <div class="panel-sub">
+                  Mensual, semestral y anual gestionados con Stripe
+                </div>
+                <div class="plans">
+                  <div class="plan p-1">
+                    <div class="plan-name">Mensual</div>
+                    <div class="plan-price">19€<small>/mes</small></div>
+                    <ul class="plan-bullets">
+                      <li>Menú digital ilimitado</li>
+                      <li>QR para mesas</li>
+                      <li>Asistente IA</li>
+                    </ul>
+                  </div>
+                  <div class="plan p-2 featured">
+                    <div class="plan-badge">Recomendado</div>
+                    <div class="plan-name">Semestral</div>
+                    <div class="plan-price">99€<small>/6 meses</small></div>
+                    <ul class="plan-bullets">
+                      <li>Todo del plan mensual</li>
+                      <li>Personalización avanzada</li>
+                      <li>Soporte prioritario</li>
+                    </ul>
+                  </div>
+                  <div class="plan p-3">
+                    <div class="plan-name">Anual</div>
+                    <div class="plan-price">179€<small>/año</small></div>
+                    <ul class="plan-bullets">
+                      <li>Todo del semestral</li>
+                      <li>2 meses gratis</li>
+                      <li>Onboarding guiado</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-              <div class="item-price">9,80 €</div>
             </div>
           </div>
         </div>
       </div>
-      <!-- Side text -->
-      <div class="s2-text">
-        <div class="s2-eyebrow" id="s2-eyebrow">Paso 1 · Genera</div>
-        <h2 class="s2-headline" id="s2-headline">Tu carta completa,<br><em>en segundos.</em></h2>
-        <p class="s2-sub" id="s2-sub">Sube una foto de tu menú o díctaselo. La IA crea categorías, descripciones y alérgenos por ti.</p>
-      </div>
-    </div>
-  </section>
 
-  <!-- ─── SCENE 3: AI CHAT (10–17s) ─── -->
-  <section class="scene scene-3" id="scene-3">
-    <div class="s3-content">
-      <!-- Side text -->
-      <div class="s3-text">
-        <div class="s2-eyebrow" id="s3-eyebrow">Paso 2 · Conversa</div>
-        <h2 class="s2-headline" id="s3-headline">Un asistente que <em>conoce tu menú</em>.</h2>
-        <p class="s2-sub" id="s3-sub">Tus clientes preguntan en su idioma. La IA responde con tus platos, alérgenos y recomendaciones.</p>
-      </div>
-      <!-- Phone -->
-      <div class="phone-frame" id="s3-phone">
-        <div class="chat-screen">
-          <div class="chat-head" id="s3-head">
-            <div class="ai-avatar">✨</div>
-            <div style="display:flex;flex-direction:column;gap:2px;">
-              <div class="ai-name">Asistente MenuAI</div>
-              <div class="ai-status">En línea</div>
-            </div>
-          </div>
-          <div class="chat-body">
-            <div class="bubble user" id="s3-b1">¿Qué platos no llevan gluten?</div>
-            <div class="typing" id="s3-typing">
-              <span></span><span></span><span></span>
-            </div>
-            <div class="bubble ai" id="s3-b2">
-              Sin gluten te recomiendo:
-              <ul class="ai-list">
-                <li>Ensalada de naranja</li>
-                <li>Pulpo a la brasa</li>
-                <li>Tarta de almendra</li>
-              </ul>
-            </div>
-            <div class="bubble user" id="s3-b3">¿En inglés, please?</div>
+      <!-- Scene 5: Stack tecnológico (34.4-42.6s) -->
+      <div class="scene s5">
+        <div class="scene-inner">
+          <div class="heading">Stack tecnológico</div>
+          <div class="badges">
+            <div class="badge b1">Next.js 16</div>
+            <div class="badge b2">React 19</div>
+            <div class="badge b3">Supabase</div>
+            <div class="badge b4">OpenRouter · GPT-4o mini</div>
+            <div class="badge b5">Tailwind CSS v4</div>
+            <div class="badge b6">Stripe</div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- ─── SCENE 4: FEATURES (17–25s) ─── -->
-  <section class="scene scene-4" id="scene-4">
-    <div class="s4-content">
-      <div class="s4-eyebrow" id="s4-eye">Por qué MenuAI</div>
-      <h2 class="s4-headline" id="s4-head">Construido para <em>restaurantes</em>.</h2>
-      <div class="s4-grid">
-        <div class="feat-card s4-card" id="s4-c1">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-          </div>
-          <h3 class="feat-title">12 idiomas</h3>
-          <p class="feat-desc">Tus clientes leen y conversan en el suyo. Traducción automática.</p>
-        </div>
-        <div class="feat-card s4-card" id="s4-c2">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </div>
-          <h3 class="feat-title">14 alérgenos UE</h3>
-          <p class="feat-desc">Cumple la normativa. Cada plato etiquetado y filtrable.</p>
-        </div>
-        <div class="feat-card s4-card" id="s4-c3">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          </div>
-          <h3 class="feat-title">QR por mesa</h3>
-          <p class="feat-desc">Imprimes, pegas y listo. Sabes desde qué mesa pregunta cada cliente.</p>
-        </div>
-        <div class="feat-card s4-card" id="s4-c4">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          </div>
-          <h3 class="feat-title">Sin descargas</h3>
-          <p class="feat-desc">Funciona en cualquier móvil. Solo escanear y empezar.</p>
-        </div>
+      <!-- Scene 6: Outro (42.6-45s) -->
+      <div class="scene s6">
+        <div class="outro-brand">menuAI</div>
+        <div class="outro-tag">Tu restaurante, inteligente.</div>
+        <div class="outro-link">github.com/manuelduenascortes/menuAI</div>
       </div>
+
+      <div class="black-veil"></div>
     </div>
-  </section>
 
-  <!-- ─── SCENE 5: OUTRO (25–30s) ─── -->
-  <section class="scene scene-5" id="scene-5">
-    <div class="s5-content">
-      <div class="s5-rule" id="s5-rule"></div>
-      <div class="s5-mark" id="s5-mark">Menu<em>AI</em></div>
-      <div class="s5-url" id="s5-url">hosteleria.botqueron.com</div>
-      <div class="s5-cta" id="s5-cta">Empieza gratis · Sin tarjeta</div>
-    </div>
-  </section>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      window.__timelines = window.__timelines || {};
 
-  <div class="curtain" id="curtain"></div>
+      // Split AI message into per-grapheme spans (handles emoji + accents) BEFORE timeline build.
+      (function splitAi() {
+        const node = document.querySelector(
+          '[data-composition-id="demo-menuai"] .s3 .bubble.ai'
+        );
+        if (!node) return;
+        const text = node.textContent;
+        const segmenter = new Intl.Segmenter("es", { granularity: "grapheme" });
+        const parts = [];
+        for (const seg of segmenter.segment(text)) {
+          const ch = seg.segment;
+          if (ch === "\n") {
+            parts.push("\n");
+          } else if (ch === " ") {
+            parts.push(" ");
+          } else {
+            const safe = ch
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;");
+            parts.push('<span class="char">' + safe + "</span>");
+          }
+        }
+        node.innerHTML = parts.join("");
+      })();
 
-</div>
+      const tl = gsap.timeline({ paused: true });
 
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
-<script>
-  window.__timelines = window.__timelines || {};
-  const tl = gsap.timeline({ paused: true });
+      // ============================================================
+      // SCENE 1 — INTRO (0–4.4s)
+      // ============================================================
+      tl.from(".s1 .brand", { opacity: 0, scale: 0.92, duration: 0.8, ease: "power3.out" }, 0.2);
+      tl.from(".s1 .tagline", { opacity: 0, y: 24, duration: 0.6, ease: "power2.out" }, 0.85);
 
-  // ─── SCENE 1 entrance (0–3s) — wrapper already opacity 1 ───
-  tl.from('#s1-icon', {
-    scale: 0.4,
-    opacity: 0,
-    rotation: -25,
-    duration: 0.8,
-    ease: 'back.out(1.6)'
-  }, 0.2);
-  tl.from('#s1-wordmark', {
-    x: -60,
-    opacity: 0,
-    duration: 0.7,
-    ease: 'expo.out'
-  }, 0.45);
-  tl.from('#s1-rule', {
-    scaleX: 0,
-    opacity: 0,
-    transformOrigin: 'left center',
-    duration: 0.5,
-    ease: 'power3.out'
-  }, 0.95);
-  tl.from('#s1-tagline', {
-    y: 24,
-    opacity: 0,
-    duration: 0.6,
-    ease: 'power2.out'
-  }, 1.1);
+      // Crossfade S1 → S2
+      tl.to(".s1", { opacity: 0, duration: 0.55, ease: "sine.inOut" }, 4.0);
+      tl.fromTo(".s2", { opacity: 0 }, { opacity: 1, duration: 0.55, ease: "sine.inOut" }, 4.0);
 
-  // ─── TRANSITION 1 → 2 (crossfade ~2.6–3.0s) ───
-  tl.to('.scene-1', { opacity: 0, duration: 0.5, ease: 'power2.inOut' }, 2.55);
-  tl.to('.scene-2', { opacity: 1, duration: 0.5, ease: 'power2.inOut' }, 2.55);
+      // ============================================================
+      // SCENE 2 — ¿CÓMO FUNCIONA? (4.4–12.4s)
+      // ============================================================
+      tl.from(".s2 .heading", { x: -80, opacity: 0, duration: 0.6, ease: "power3.out" }, 4.7);
+      tl.from(".s2 .c1", { y: 40, opacity: 0, duration: 0.5, ease: "power2.out" }, 5.2);
+      tl.from(".s2 .c2", { y: 40, opacity: 0, duration: 0.5, ease: "power2.out" }, 5.4);
+      tl.from(".s2 .c3", { y: 40, opacity: 0, duration: 0.5, ease: "power2.out" }, 5.6);
 
-  // ─── SCENE 2 entrance (3.0s+) ───
-  tl.from('#s2-phone', {
-    y: 60,
-    opacity: 0,
-    scale: 0.92,
-    duration: 0.8,
-    ease: 'expo.out'
-  }, 3.0);
-  tl.from('#s2-header', {
-    y: 14,
-    opacity: 0,
-    duration: 0.4,
-    ease: 'power2.out'
-  }, 3.4);
-  tl.from('#s2-tabs > *', {
-    y: 12,
-    opacity: 0,
-    duration: 0.35,
-    stagger: 0.06,
-    ease: 'power3.out'
-  }, 3.55);
-  tl.from('.s2-item', {
-    x: -28,
-    opacity: 0,
-    duration: 0.5,
-    stagger: 0.18,
-    ease: 'back.out(1.2)'
-  }, 3.85);
-  tl.from('#s2-eyebrow', {
-    y: 16,
-    opacity: 0,
-    duration: 0.45,
-    ease: 'power3.out'
-  }, 4.4);
-  tl.from('#s2-headline', {
-    y: 32,
-    opacity: 0,
-    duration: 0.7,
-    ease: 'expo.out'
-  }, 4.55);
-  tl.from('#s2-sub', {
-    y: 20,
-    opacity: 0,
-    duration: 0.5,
-    ease: 'power2.out'
-  }, 4.95);
+      // Card focus cycle: highlight each card briefly to keep dwell alive.
+      tl.to(".s2 .c1", { borderColor: "#d4a574", boxShadow: "0 0 0 1px rgba(212,165,116,0.35), 0 12px 40px -12px rgba(212,165,116,0.4)", duration: 0.4, ease: "power1.inOut" }, 7.0);
+      tl.to(".s2 .c1", { borderColor: "#2c2a27", boxShadow: "0 0 0 0 rgba(212,165,116,0)", duration: 0.4, ease: "power1.inOut" }, 8.0);
+      tl.to(".s2 .c2", { borderColor: "#d4a574", boxShadow: "0 0 0 1px rgba(212,165,116,0.35), 0 12px 40px -12px rgba(212,165,116,0.4)", duration: 0.4, ease: "power1.inOut" }, 8.4);
+      tl.to(".s2 .c2", { borderColor: "#2c2a27", boxShadow: "0 0 0 0 rgba(212,165,116,0)", duration: 0.4, ease: "power1.inOut" }, 9.4);
+      tl.to(".s2 .c3", { borderColor: "#d4a574", boxShadow: "0 0 0 1px rgba(212,165,116,0.35), 0 12px 40px -12px rgba(212,165,116,0.4)", duration: 0.4, ease: "power1.inOut" }, 9.8);
+      tl.to(".s2 .c3", { borderColor: "#2c2a27", boxShadow: "0 0 0 0 rgba(212,165,116,0)", duration: 0.4, ease: "power1.inOut" }, 10.8);
 
-  // ─── TRANSITION 2 → 3 (~9.5–10.0s) ───
-  tl.to('.scene-2', { opacity: 0, duration: 0.5, ease: 'power2.inOut' }, 9.5);
-  tl.to('.scene-3', { opacity: 1, duration: 0.5, ease: 'power2.inOut' }, 9.5);
+      // Crossfade S2 → S3
+      tl.to(".s2", { opacity: 0, duration: 0.55, ease: "sine.inOut" }, 12.0);
+      tl.fromTo(".s3", { opacity: 0 }, { opacity: 1, duration: 0.55, ease: "sine.inOut" }, 12.0);
 
-  // ─── SCENE 3 entrance (10.0s+) ───
-  tl.from('#s3-eyebrow', {
-    y: 16,
-    opacity: 0,
-    duration: 0.45,
-    ease: 'power3.out'
-  }, 10.0);
-  tl.from('#s3-headline', {
-    y: 32,
-    opacity: 0,
-    duration: 0.7,
-    ease: 'expo.out'
-  }, 10.15);
-  tl.from('#s3-sub', {
-    y: 20,
-    opacity: 0,
-    duration: 0.5,
-    ease: 'power2.out'
-  }, 10.5);
-  tl.from('#s3-phone', {
-    y: 60,
-    opacity: 0,
-    scale: 0.92,
-    duration: 0.8,
-    ease: 'expo.out'
-  }, 10.2);
-  tl.from('#s3-head', {
-    opacity: 0,
-    y: 10,
-    duration: 0.35,
-    ease: 'power2.out'
-  }, 10.7);
-  tl.from('#s3-b1', {
-    x: 30,
-    opacity: 0,
-    duration: 0.45,
-    ease: 'back.out(1.4)'
-  }, 11.0);
-  tl.from('#s3-typing', {
-    opacity: 0,
-    y: 10,
-    duration: 0.3,
-    ease: 'power2.out'
-  }, 11.7);
-  // Typing dots pulse — finite repeats
-  tl.to('#s3-typing span', {
-    y: -6,
-    opacity: 0.4,
-    duration: 0.32,
-    yoyo: true,
-    repeat: 4,
-    stagger: 0.12,
-    ease: 'sine.inOut'
-  }, 11.8);
-  // Hide typing, show AI bubble
-  tl.set('#s3-typing', { display: 'none' }, 13.4);
-  tl.from('#s3-b2', {
-    x: -30,
-    opacity: 0,
-    duration: 0.55,
-    ease: 'back.out(1.3)'
-  }, 13.4);
-  tl.from('#s3-b2 .ai-list li', {
-    x: -16,
-    opacity: 0,
-    duration: 0.35,
-    stagger: 0.14,
-    ease: 'power3.out'
-  }, 13.9);
-  tl.from('#s3-b3', {
-    x: 30,
-    opacity: 0,
-    duration: 0.45,
-    ease: 'back.out(1.4)'
-  }, 15.1);
+      // ============================================================
+      // SCENE 3 — DEMO DEL CHAT IA (12.4–24.4s)
+      // ============================================================
+      tl.from(".s3 .powered", { y: -16, opacity: 0, duration: 0.5, ease: "power2.out" }, 12.6);
+      tl.from(".s3 .chat", { y: 30, opacity: 0, duration: 0.6, ease: "power3.out" }, 12.7);
 
-  // ─── TRANSITION 3 → 4 (~16.5–17.0s) ───
-  tl.to('.scene-3', { opacity: 0, duration: 0.5, ease: 'power2.inOut' }, 16.5);
-  tl.to('.scene-4', { opacity: 1, duration: 0.5, ease: 'power2.inOut' }, 16.5);
+      tl.set(".s3 .bubble.user", { x: 80, opacity: 0 }, 0);
+      tl.to(".s3 .bubble.user", { x: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, 13.1);
 
-  // ─── SCENE 4 entrance (17.0s+) ───
-  tl.from('#s4-eye', {
-    y: 16,
-    opacity: 0,
-    duration: 0.45,
-    ease: 'power3.out'
-  }, 17.0);
-  tl.from('#s4-head', {
-    y: 36,
-    opacity: 0,
-    duration: 0.7,
-    ease: 'expo.out'
-  }, 17.15);
-  tl.from('.s4-card', {
-    y: 50,
-    opacity: 0,
-    scale: 0.94,
-    duration: 0.6,
-    stagger: 0.15,
-    ease: 'back.out(1.3)'
-  }, 17.65);
-  tl.from('.s4-card .feat-icon', {
-    scale: 0.5,
-    rotation: -10,
-    duration: 0.5,
-    stagger: 0.15,
-    ease: 'back.out(2)'
-  }, 17.85);
+      tl.set(".s3 .typing", { opacity: 0 }, 0);
+      tl.to(".s3 .typing", { opacity: 1, duration: 0.2, ease: "power1.out" }, 14.2);
 
-  // ─── TRANSITION 4 → 5 (~24.5–25.0s) ───
-  tl.to('.scene-4', { opacity: 0, duration: 0.5, ease: 'power2.inOut' }, 24.5);
-  tl.to('.scene-5', { opacity: 1, duration: 0.5, ease: 'power2.inOut' }, 24.5);
+      // Pulse the dots — finite repeats, staggered.
+      tl.to(
+        ".s3 .typing .dot",
+        {
+          opacity: 1,
+          duration: 0.22,
+          ease: "sine.inOut",
+          repeat: 5,
+          yoyo: true,
+          stagger: { each: 0.1, from: "start" },
+        },
+        14.2
+      );
+      tl.to(".s3 .typing", { opacity: 0, duration: 0.2, ease: "power1.in" }, 15.5);
 
-  // ─── SCENE 5 entrance (25.0s+) ───
-  tl.from('#s5-rule', {
-    scaleX: 0,
-    opacity: 0,
-    transformOrigin: 'center',
-    duration: 0.5,
-    ease: 'power3.out'
-  }, 25.1);
-  tl.from('#s5-mark', {
-    y: 40,
-    opacity: 0,
-    duration: 0.8,
-    ease: 'expo.out'
-  }, 25.25);
-  tl.from('#s5-url', {
-    y: 28,
-    scale: 0.92,
-    opacity: 0,
-    duration: 0.6,
-    ease: 'back.out(1.4)'
-  }, 25.7);
-  tl.from('#s5-cta', {
-    y: 16,
-    opacity: 0,
-    duration: 0.5,
-    ease: 'power2.out'
-  }, 26.1);
+      // AI typewriter — start earlier, slightly faster.
+      tl.to(
+        ".s3 .bubble.ai .char",
+        { opacity: 1, duration: 0.01, stagger: 0.025, ease: "none" },
+        15.7
+      );
 
-  // ─── FINAL FADE (last scene only) ───
-  tl.to('.s5-content', { opacity: 0.4, duration: 0.8, ease: 'power2.in' }, 29.0);
-  tl.to('#curtain', { opacity: 0.7, duration: 0.8, ease: 'power2.in' }, 29.0);
+      // Crossfade S3 → S4
+      tl.to(".s3", { opacity: 0, duration: 0.55, ease: "sine.inOut" }, 24.0);
+      tl.fromTo(".s4", { opacity: 0 }, { opacity: 1, duration: 0.55, ease: "sine.inOut" }, 24.0);
 
-  window.__timelines['menuai-demo'] = tl;
-</script>
+      // ============================================================
+      // SCENE 4 — PANEL DE ADMINISTRACIÓN (24.4–34.4s)
+      // Mock dashboard: sidebar + 3 cycling panel stages
+      // ============================================================
+      tl.from(".s4 .heading", { y: 24, opacity: 0, duration: 0.55, ease: "power3.out" }, 24.3);
+      tl.from(".s4 .dashboard", { y: 30, opacity: 0, duration: 0.6, ease: "power3.out" }, 24.5);
+      tl.from(".s4 .sidebar .logo", { x: -16, opacity: 0, duration: 0.4, ease: "power2.out" }, 24.9);
+      tl.from(".s4 .navitem", { x: -20, opacity: 0, duration: 0.4, stagger: 0.08, ease: "power2.out" }, 25.0);
 
-</body>
+      // Stage 1 — Restaurante (25.4–28.4s)
+      tl.set(".s4 .nav-highlight", { top: 90 }, 24.4);
+      tl.set(".s4 .nav-1", { color: "#ede8e3" }, 25.4);
+      tl.set(".s4 .stage-1", { opacity: 1 }, 25.4);
+      tl.from(".s4 .stage-1 .panel-header", { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 25.4);
+      tl.from(".s4 .stage-1 .panel-sub", { y: 12, opacity: 0, duration: 0.4, ease: "power2.out" }, 25.55);
+      tl.from(
+        [".s4 .r-1", ".s4 .r-2", ".s4 .r-3", ".s4 .r-4"],
+        { x: 30, opacity: 0, duration: 0.45, stagger: 0.1, ease: "power2.out" },
+        25.75
+      );
+
+      // Stage 1 → Stage 2 transition (28.0–28.4s)
+      tl.to(".s4 .stage-1", { opacity: 0, duration: 0.4, ease: "sine.inOut" }, 28.0);
+      tl.to(".s4 .nav-1", { color: "#a8a29e", duration: 0.3 }, 28.0);
+      tl.to(".s4 .nav-highlight", { top: 158, duration: 0.5, ease: "power3.inOut" }, 28.0);
+
+      // Stage 2 — Mesas (28.4–31.0s)
+      tl.set(".s4 .stage-2", { opacity: 1 }, 28.4);
+      tl.set(".s4 .nav-2", { color: "#ede8e3" }, 28.4);
+      tl.from(".s4 .stage-2 .panel-header", { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 28.4);
+      tl.from(".s4 .stage-2 .panel-sub", { y: 12, opacity: 0, duration: 0.4, ease: "power2.out" }, 28.55);
+      tl.from(
+        ".s4 .mesa-card",
+        { y: 24, opacity: 0, scale: 0.92, duration: 0.4, stagger: 0.06, ease: "back.out(1.4)" },
+        28.7
+      );
+
+      // Stage 2 → Stage 3 transition (30.6–31.0s)
+      tl.to(".s4 .stage-2", { opacity: 0, duration: 0.4, ease: "sine.inOut" }, 30.6);
+      tl.to(".s4 .nav-2", { color: "#a8a29e", duration: 0.3 }, 30.6);
+      tl.to(".s4 .nav-highlight", { top: 226, duration: 0.5, ease: "power3.inOut" }, 30.6);
+
+      // Stage 3 — Suscripción (31.0–34.0s)
+      tl.set(".s4 .stage-3", { opacity: 1 }, 31.0);
+      tl.set(".s4 .nav-3", { color: "#ede8e3" }, 31.0);
+      tl.from(".s4 .stage-3 .panel-header", { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 31.0);
+      tl.from(".s4 .stage-3 .panel-sub", { y: 12, opacity: 0, duration: 0.4, ease: "power2.out" }, 31.15);
+      tl.from(
+        [".s4 .p-1", ".s4 .p-2", ".s4 .p-3"],
+        { y: 30, opacity: 0, duration: 0.5, stagger: 0.1, ease: "power3.out" },
+        31.3
+      );
+      tl.from(".s4 .plan-badge", { scale: 0.7, opacity: 0, duration: 0.4, ease: "back.out(1.7)" }, 31.9);
+
+      // Crossfade S4 → S5
+      tl.to(".s4", { opacity: 0, duration: 0.55, ease: "sine.inOut" }, 34.0);
+      tl.fromTo(".s5", { opacity: 0 }, { opacity: 1, duration: 0.55, ease: "sine.inOut" }, 34.0);
+
+      // ============================================================
+      // SCENE 5 — STACK TECNOLÓGICO (34.4–42.6s)
+      // ============================================================
+      tl.from(".s5 .heading", { y: 30, opacity: 0, duration: 0.55, ease: "power3.out" }, 34.4);
+
+      const badgeStarts = [34.95, 35.07, 35.19, 35.31, 35.43, 35.55];
+      [".s5 .b1", ".s5 .b2", ".s5 .b3", ".s5 .b4", ".s5 .b5", ".s5 .b6"].forEach(
+        (sel, i) => {
+          tl.from(
+            sel,
+            { opacity: 0, scale: 0.85, duration: 0.45, ease: "back.out(1.6)" },
+            badgeStarts[i]
+          );
+        }
+      );
+
+      // Subtle wave pulse across badges to keep dwell alive.
+      const waveStarts = [37.0, 37.12, 37.24, 37.36, 37.48, 37.6];
+      [".s5 .b1", ".s5 .b2", ".s5 .b3", ".s5 .b4", ".s5 .b5", ".s5 .b6"].forEach(
+        (sel, i) => {
+          tl.to(sel, { scale: 1.06, duration: 0.3, ease: "sine.inOut" }, waveStarts[i]);
+          tl.to(sel, { scale: 1, duration: 0.3, ease: "sine.inOut" }, waveStarts[i] + 0.3);
+        }
+      );
+
+      // ============================================================
+      // SCENE 6 — OUTRO (42.6–45s)
+      // ============================================================
+      tl.to(".black-veil", { opacity: 1, duration: 0.7, ease: "power2.inOut" }, 42.4);
+      tl.set(".s5", { opacity: 0 }, 43.1);
+      tl.set(".s6", { opacity: 1 }, 43.1);
+      tl.to(".black-veil", { opacity: 0, duration: 0.4, ease: "power2.out" }, 43.1);
+
+      tl.from(".s6 .outro-brand", { opacity: 0, scale: 0.94, duration: 0.55, ease: "power3.out" }, 43.2);
+      tl.from(".s6 .outro-tag", { opacity: 0, y: 16, duration: 0.45, ease: "power2.out" }, 43.55);
+      tl.from(".s6 .outro-link", { opacity: 0, y: 12, duration: 0.45, ease: "power2.out" }, 43.85);
+
+      window.__timelines["demo-menuai"] = tl;
+    </script>
+  </body>
 </html>
