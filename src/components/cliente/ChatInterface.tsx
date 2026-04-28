@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown'
 import rehypeSanitize from 'rehype-sanitize'
 import type { CartItem, ChatMessage, VenueType } from '@/lib/types'
 import { getVenueConfig } from '@/lib/venue-config'
+import { useCartAnimation } from '@/hooks/useCartAnimation'
 
 export interface ChatMenuItem {
   id: string
@@ -59,6 +60,7 @@ export default function ChatInterface({
   onOpenCart,
 }: Props) {
   const venueConfig = getVenueConfig(venueType)
+  const { flyToCart } = useCartAnimation()
   const [messages, setMessages] = useState<LocalMessage[]>([
     { role: 'assistant', content: venueConfig.chatGreeting },
   ])
@@ -111,7 +113,7 @@ export default function ChatInterface({
 
         return (
           <button
-            onClick={() => onAddToCart?.(item.id)}
+            onClick={e => { flyToCart(e.currentTarget); onAddToCart?.(item.id) }}
             className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold align-baseline mx-0.5 cursor-pointer transition-opacity hover:opacity-80 active:scale-95"
             style={{ backgroundColor: 'var(--restaurant-primary)', color: 'var(--restaurant-primary-foreground)' }}
             aria-label={`Añadir ${item.name} al pedido`}
@@ -340,7 +342,7 @@ export default function ChatInterface({
                           </div>
                         ) : (
                           <button
-                            onClick={() => onAddToCart?.(img.id)}
+                            onClick={e => { flyToCart(e.currentTarget); onAddToCart?.(img.id) }}
                             className="text-[10px] font-semibold rounded-full px-2 py-1 text-center cursor-pointer transition-opacity hover:opacity-80 leading-tight"
                             style={{ backgroundColor: 'var(--restaurant-primary)', color: 'var(--restaurant-primary-foreground)' }}
                             aria-label={`Añadir ${img.name} al pedido`}
