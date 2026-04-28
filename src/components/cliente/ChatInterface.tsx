@@ -124,7 +124,7 @@ export default function ChatInterface({
         )
       },
     }
-  }, [menuItems, cartItems, onAddToCart, onUpdateQuantity])
+  }, [menuItems, cartItems, onAddToCart, onUpdateQuantity, flyToCart])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })

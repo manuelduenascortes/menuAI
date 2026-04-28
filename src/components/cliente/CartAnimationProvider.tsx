@@ -66,7 +66,7 @@ export default function CartAnimationProvider({ children }: Props) {
     cartBumpControls,
     badgePulseControls,
     flyToCart,
-  }), [flyToCart])
+  }), [flyToCart, cartBumpControls, badgePulseControls])
 
   return (
     <CartAnimationContext.Provider value={value}>
