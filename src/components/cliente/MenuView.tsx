@@ -312,31 +312,36 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
         )}
       </main>
 
-      {cartItems.length > 0 && (
-        <motion.button
-          ref={cartButtonRef}
-          animate={cartBumpControls}
-          onClick={() => setCartOpen(true)}
-          className="fixed bottom-6 left-5 z-50 flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow-xl ring-2 ring-white/30 transition-all hover:-translate-y-0.5 active:scale-[0.97] cursor-pointer"
-          style={{
-            backgroundColor: 'var(--restaurant-primary)',
-            color: 'var(--restaurant-primary-foreground)',
-          }}
-          aria-label={`Ver pedido, ${cartItems.reduce((s, i) => s + i.quantity, 0)} artículos`}
-        >
-          <ShoppingCart className="h-5 w-5" />
-          <motion.span
-            animate={badgePulseControls}
-            className="flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold"
+      {cartItems.length > 0 && (() => {
+        const totalCartCount = cartItems.reduce((s, i) => s + i.quantity, 0)
+        return (
+          <motion.button
+            ref={cartButtonRef}
+            animate={cartBumpControls}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setCartOpen(true)}
+            className="fixed bottom-6 left-5 z-50 flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow-xl ring-2 ring-white/30 cursor-pointer"
             style={{
-              backgroundColor: 'var(--restaurant-primary-foreground)',
-              color: 'var(--restaurant-primary)',
+              backgroundColor: 'var(--restaurant-primary)',
+              color: 'var(--restaurant-primary-foreground)',
             }}
+            aria-label={`Ver pedido, ${totalCartCount} artículos`}
           >
-            {cartItems.reduce((s, i) => s + i.quantity, 0)}
-          </motion.span>
-        </motion.button>
-      )}
+            <ShoppingCart className="h-5 w-5" />
+            <motion.span
+              animate={badgePulseControls}
+              className="flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold"
+              style={{
+                backgroundColor: 'var(--restaurant-primary-foreground)',
+                color: 'var(--restaurant-primary)',
+              }}
+            >
+              {totalCartCount}
+            </motion.span>
+          </motion.button>
+        )
+      })()}
 
       {showAssistantTip && !chatOpen && (
         <button
