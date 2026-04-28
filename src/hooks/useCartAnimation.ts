@@ -1,6 +1,8 @@
 'use client'
 
 import { createContext, useContext, type RefObject } from 'react'
+// framer-motion v12 doesn't re-export AnimationControls from its own package boundary,
+// so we derive the type from the hook's return signature instead.
 import { type useAnimationControls } from 'framer-motion'
 
 type AnimationControls = ReturnType<typeof useAnimationControls>

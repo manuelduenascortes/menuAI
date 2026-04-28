@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion'
 
@@ -38,15 +38,15 @@ export default function CartAnimationProvider({ children }: Props) {
     const cartEl = cartButtonRef.current
     if (!originEl || !cartEl) return
 
-    const originRect = originEl.getBoundingClientRect()
-    const destRect = cartEl.getBoundingClientRect()
-    const origin = getElementCenter(originRect)
-    const destination = getElementCenter(destRect)
-
     if (prefersReducedMotion()) {
       triggerLandingFx()
       return
     }
+
+    const originRect = originEl.getBoundingClientRect()
+    const destRect = cartEl.getBoundingClientRect()
+    const origin = getElementCenter(originRect)
+    const destination = getElementCenter(destRect)
 
     const id = `dot-${dotIdRef.current++}`
     // Theme CSS vars live on the MenuView wrapper, not document root, so read from cartEl
@@ -61,12 +61,12 @@ export default function CartAnimationProvider({ children }: Props) {
     triggerLandingFx()
   }, [triggerLandingFx])
 
-  const value = {
+  const value = useMemo(() => ({
     cartButtonRef,
     cartBumpControls,
     badgePulseControls,
     flyToCart,
-  }
+  }), [flyToCart])
 
   return (
     <CartAnimationContext.Provider value={value}>
