@@ -96,3 +96,11 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
 }
+
+export interface CartItem {
+  id: string
+  name: string
+  image_url?: string
+  price: number
+  quantity: number
+}

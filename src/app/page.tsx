@@ -257,7 +257,7 @@ export default function HomePage() {
               <div className="flex h-full flex-col rounded-2xl border border-border bg-background p-8 shadow-sm transition-shadow hover:shadow-md">
                 <h3 className="mb-2 font-serif text-2xl">Mensual</h3>
                 <div className="mb-4">
-                  <span className="font-serif text-4xl font-bold tracking-tight">19,99 EUR</span>
+                  <span className="font-serif text-4xl font-bold tracking-tight">89 EUR</span>
                   <span className="text-muted-foreground">/mes</span>
                 </div>
                 <p className="mb-2 text-sm text-muted-foreground">Facturación mes a mes</p>
@@ -304,12 +304,12 @@ export default function HomePage() {
               <div className="flex h-full flex-col rounded-2xl border border-border bg-background p-8 shadow-sm transition-shadow hover:shadow-md">
                 <h3 className="mb-2 font-serif text-2xl">Semestral</h3>
                 <div className="mb-4">
-                  <span className="font-serif text-4xl font-bold tracking-tight">14,99 EUR</span>
+                  <span className="font-serif text-4xl font-bold tracking-tight">79 EUR</span>
                   <span className="text-muted-foreground">/mes</span>
                 </div>
-                <p className="mb-2 text-sm text-muted-foreground">89,94 EUR cada 6 meses</p>
+                <p className="mb-2 text-sm text-muted-foreground">474 EUR cada 6 meses</p>
                 <div className="mb-4 inline-flex items-center rounded-full bg-green-100/50 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                  Ahorra 25%
+                  Ahorra 11%
                 </div>
                 <Link
                   href="/admin/login?trial=1"
@@ -338,12 +338,12 @@ export default function HomePage() {
                 </div>
                 <h3 className="mb-2 font-serif text-2xl">Anual</h3>
                 <div className="mb-4">
-                  <span className="font-serif text-4xl font-bold tracking-tight">9,99 EUR</span>
+                  <span className="font-serif text-4xl font-bold tracking-tight">69 EUR</span>
                   <span className="text-muted-foreground">/mes</span>
                 </div>
-                <p className="mb-2 text-sm text-muted-foreground">119,88 EUR al año</p>
+                <p className="mb-2 text-sm text-muted-foreground">828 EUR al año</p>
                 <div className="mb-4 inline-flex items-center rounded-full bg-green-100/50 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                  Ahorra 50%
+                  Ahorra 22%
                 </div>
                 <Link
                   href="/admin/login?trial=1"

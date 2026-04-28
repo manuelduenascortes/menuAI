@@ -1,20 +1,22 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, X, MessageCircle } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import type { ReactNode } from 'react'
+import { Send, X, MessageCircle, ShoppingCart } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import rehypeSanitize from 'rehype-sanitize'
-import type { ChatMessage, VenueType } from '@/lib/types'
+import type { CartItem, ChatMessage, VenueType } from '@/lib/types'
 import { getVenueConfig } from '@/lib/venue-config'
 
 export interface ChatMenuItem {
   id: string
   name: string
-  image_url: string
+  image_url?: string
+  price: number
 }
 
 type LocalMessage = ChatMessage & {
-  images?: { id: string; name: string; url: string }[]
+  images?: { id: string; name: string; url?: string; price: number }[]
 }
 
 interface Props {
@@ -23,11 +25,15 @@ interface Props {
   venueType?: VenueType | null
   onClose: () => void
   menuItems?: ChatMenuItem[]
+  cartItems?: CartItem[]
+  onAddToCart?: (itemId: string) => void
+  onUpdateQuantity?: (itemId: string, delta: number) => void
+  onOpenCart?: () => void
 }
 
 function matchMenuImages(text: string, items: ChatMenuItem[]) {
   if (!items.length) return []
-  const matched: { id: string; name: string; url: string }[] = []
+  const matched: { id: string; name: string; url?: string; price: number }[] = []
   const seen = new Set<string>()
   const lower = text.toLowerCase()
   const sorted = [...items].sort((a, b) => b.name.length - a.name.length)
@@ -36,7 +42,7 @@ function matchMenuImages(text: string, items: ChatMenuItem[]) {
     if (seen.has(item.id)) continue
     const name = item.name.toLowerCase()
     if (lower.includes(`**${name}**`) || lower.includes(name)) {
-      matched.push({ id: item.id, name: item.name, url: item.image_url })
+      matched.push({ id: item.id, name: item.name, url: item.image_url, price: item.price })
       seen.add(item.id)
       if (matched.length >= 5) break
     }
@@ -44,7 +50,14 @@ function matchMenuImages(text: string, items: ChatMenuItem[]) {
   return matched
 }
 
-export default function ChatInterface({ restaurantSlug, restaurantName, venueType, onClose, menuItems = [] }: Props) {
+export default function ChatInterface({
+  restaurantSlug, restaurantName, venueType, onClose,
+  menuItems = [],
+  cartItems = [],
+  onAddToCart,
+  onUpdateQuantity,
+  onOpenCart,
+}: Props) {
   const venueConfig = getVenueConfig(venueType)
   const [messages, setMessages] = useState<LocalMessage[]>([
     { role: 'assistant', content: venueConfig.chatGreeting },
@@ -56,6 +69,60 @@ export default function ChatInterface({ restaurantSlug, restaurantName, venueTyp
   const inputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
+
+  const markdownComponents = useMemo(() => {
+    function extractText(node: ReactNode): string {
+      if (typeof node === 'string') return node
+      if (Array.isArray(node)) return node.map(extractText).join('')
+      if (node !== null && typeof node === 'object' && 'props' in node) {
+        return extractText((node as React.ReactElement<{ children?: ReactNode }>).props.children)
+      }
+      return ''
+    }
+
+    return {
+      strong: ({ children }: { children?: ReactNode }) => {
+        const text = extractText(children)
+        const item = menuItems.find(i => !i.image_url && i.name.toLowerCase() === text.toLowerCase())
+        if (!item) return <strong>{children}</strong>
+
+        const inCart = cartItems.find(c => c.id === item.id)
+        if (inCart) {
+          return (
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold align-baseline mx-0.5"
+              style={{ backgroundColor: 'var(--restaurant-primary)', color: 'var(--restaurant-primary-foreground)' }}
+            >
+              <button
+                onClick={() => onUpdateQuantity?.(item.id, -1)}
+                className="cursor-pointer leading-none hover:opacity-70 transition-opacity"
+                aria-label={`Quitar un ${item.name}`}
+              >−</button>
+              <span>{children}</span>
+              <span className="font-bold">{inCart.quantity}</span>
+              <button
+                onClick={() => onUpdateQuantity?.(item.id, +1)}
+                className="cursor-pointer leading-none hover:opacity-70 transition-opacity"
+                aria-label={`Añadir otro ${item.name}`}
+              >+</button>
+            </span>
+          )
+        }
+
+        return (
+          <button
+            onClick={() => onAddToCart?.(item.id)}
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold align-baseline mx-0.5 cursor-pointer transition-opacity hover:opacity-80 active:scale-95"
+            style={{ backgroundColor: 'var(--restaurant-primary)', color: 'var(--restaurant-primary-foreground)' }}
+            aria-label={`Añadir ${item.name} al pedido`}
+          >
+            {children}
+            <span className="text-[11px] font-bold leading-none">+</span>
+          </button>
+        )
+      },
+    }
+  }, [menuItems, cartItems, onAddToCart, onUpdateQuantity])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -192,13 +259,33 @@ export default function ChatInterface({ restaurantSlug, restaurantName, venueTyp
             <p className="text-xs text-muted-foreground">{restaurantName}</p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="w-11 h-11 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-          aria-label="Cerrar chat"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          {cartItems.length > 0 && (
+            <button
+              onClick={onOpenCart}
+              className="relative flex items-center justify-center w-11 h-11 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+              aria-label={`Ver carrito, ${cartItems.reduce((s, i) => s + i.quantity, 0)} artículos`}
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <span
+                className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold"
+                style={{
+                  backgroundColor: 'var(--restaurant-primary)',
+                  color: 'var(--restaurant-primary-foreground)',
+                }}
+              >
+                {cartItems.reduce((s, i) => s + i.quantity, 0)}
+              </span>
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="w-11 h-11 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+            aria-label="Cerrar chat"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       <div
@@ -218,24 +305,50 @@ export default function ChatInterface({ restaurantSlug, restaurantName, venueTyp
                   : 'bg-secondary text-foreground rounded-bl-md'
               }`}
             >
-              <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
+              <ReactMarkdown rehypePlugins={[rehypeSanitize]} components={markdownComponents}>
                 {msg.content}
               </ReactMarkdown>
-              {msg.role === 'assistant' && msg.images && msg.images.length > 0 && (
+              {msg.role === 'assistant' && msg.images && msg.images.some(i => i.url) && (
                 <div className="flex gap-2 overflow-x-auto mt-3 pb-1 -mx-1 px-1">
-                  {msg.images.map(img => (
-                    <div key={img.id} className="shrink-0 flex flex-col items-center gap-1">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={img.url}
-                        alt={img.name}
-                        className="w-20 h-20 rounded-lg object-cover border border-border/50"
-                      />
-                      <span className="text-[10px] text-muted-foreground text-center max-w-[80px] leading-tight line-clamp-2">
-                        {img.name}
-                      </span>
-                    </div>
-                  ))}
+                  {msg.images.filter(img => img.url).map(img => {
+                    const inCart = cartItems.find(c => c.id === img.id)
+                    return (
+                      <div key={img.id} className="shrink-0 flex flex-col items-center gap-1.5 w-20">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={img.url}
+                          alt={img.name}
+                          className="w-20 h-20 rounded-lg object-cover border border-border/50"
+                        />
+                        <span className="text-[10px] text-muted-foreground text-center max-w-[80px] leading-tight line-clamp-2">
+                          {img.name}
+                        </span>
+                        {inCart ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => onUpdateQuantity?.(img.id, -1)}
+                              className="w-6 h-6 rounded-full bg-background/60 text-foreground flex items-center justify-center text-sm font-bold leading-none cursor-pointer hover:bg-muted transition-colors"
+                              aria-label={`Quitar un ${img.name}`}
+                            >−</button>
+                            <span className="text-xs font-semibold w-4 text-center tabular-nums">{inCart.quantity}</span>
+                            <button
+                              onClick={() => onUpdateQuantity?.(img.id, +1)}
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold leading-none cursor-pointer transition-colors"
+                              style={{ backgroundColor: 'var(--restaurant-primary)', color: 'var(--restaurant-primary-foreground)' }}
+                              aria-label={`Añadir otro ${img.name}`}
+                            >+</button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => onAddToCart?.(img.id)}
+                            className="text-[10px] font-semibold rounded-full px-2 py-1 text-center cursor-pointer transition-opacity hover:opacity-80 leading-tight"
+                            style={{ backgroundColor: 'var(--restaurant-primary)', color: 'var(--restaurant-primary-foreground)' }}
+                            aria-label={`Añadir ${img.name} al pedido`}
+                          >+ Añadir</button>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>

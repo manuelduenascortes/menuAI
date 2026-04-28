@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 const plans = [
   {
     name: 'Mensual',
-    price: '19,99 EUR',
+    price: '89 EUR',
     period: '/mes',
     detail: 'Facturación mes a mes',
     priceEnv: 'monthly',
@@ -18,21 +18,21 @@ const plans = [
   },
   {
     name: 'Semestral',
-    price: '14,99 EUR',
+    price: '79 EUR',
     period: '/mes',
-    detail: '89,94 EUR cada 6 meses',
+    detail: '474 EUR cada 6 meses',
     priceEnv: 'semestral',
     featured: false,
-    badge: 'Ahorra 25%',
+    badge: 'Ahorra 11%',
   },
   {
     name: 'Anual',
-    price: '9,99 EUR',
+    price: '69 EUR',
     period: '/mes',
-    detail: '119,88 EUR al año',
+    detail: '828 EUR al año',
     priceEnv: 'annual',
     featured: true,
-    badge: 'Ahorra 50%',
+    badge: 'Ahorra 22%',
   },
 ]
 
