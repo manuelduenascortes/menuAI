@@ -13,6 +13,30 @@ import { getVenueConfig, normalizeVenueType } from '@/lib/venue-config'
 import { motion } from 'framer-motion'
 import CartAnimationProvider from './CartAnimationProvider'
 import { useCartAnimation } from '@/hooks/useCartAnimation'
+import { parseOpeningHours, type DayHours } from '@/components/admin/OpeningHoursTable'
+
+function formatHoursForDisplay(raw: string): string {
+  const days = parseOpeningHours(raw)
+  if (!days) return raw
+  const open = days.filter((d: DayHours) => d.open && d.from && d.to)
+  if (open.length === 0) return ''
+
+  const groups: { label: string; hours: string }[] = []
+  let i = 0
+  while (i < open.length) {
+    const start = open[i]
+    let end = start
+    let j = i + 1
+    while (j < open.length && open[j].from === start.from && open[j].to === start.to) {
+      end = open[j]
+      j++
+    }
+    const label = start.day === end.day ? start.day : `${start.day}–${end.day}`
+    groups.push({ label, hours: `${start.from}–${start.to}` })
+    i = j
+  }
+  return groups.map(g => `${g.label}: ${g.hours}`).join(' · ')
+}
 
 interface Allergen { id: string; name: string; icon?: string }
 interface DietaryTag { id: string; name: string; icon?: string; color?: string }
@@ -183,7 +207,7 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
       style={themeStyle}
     >
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-2xl mx-auto px-5 pt-4 pb-3">
+        <div className="max-w-2xl mx-auto px-5 pt-3 pb-2">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h1 className={`${fontClasses.heading} text-xl text-foreground`}>{restaurant.name}</h1>
@@ -193,12 +217,15 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
                   <p className="text-xs text-muted-foreground">Mesa {tableNumber}</p>
                 )}
               </div>
-              {restaurant.opening_hours && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3 shrink-0" />
-                  {restaurant.opening_hours}
-                </p>
-              )}
+              {restaurant.opening_hours && (() => {
+                const formatted = formatHoursForDisplay(restaurant.opening_hours)
+                return formatted ? (
+                  <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3 shrink-0" />
+                    {formatted}
+                  </p>
+                ) : null
+              })()}
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle variant="ghost" size="icon" />
@@ -222,7 +249,7 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
             </div>
           </div>
 
-          <p className="text-xs text-muted-foreground leading-relaxed mb-2.5">
+          <p className="hidden sm:block text-xs text-muted-foreground leading-relaxed mb-2.5">
             {venueConfig.publicHint}
           </p>
 
@@ -316,7 +343,7 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
           </div>
         ) : (
           filteredCategories.map(category => (
-            <section key={category.id} id={`cat-${category.id}`} className="scroll-mt-36">
+            <section key={category.id} id={`cat-${category.id}`} className="scroll-mt-52">
               <div className="mb-4">
                 <h2 className={`${fontClasses.heading} text-2xl text-foreground flex items-center gap-2`}>
                   {category.emoji && <span>{category.emoji}</span>}
@@ -421,7 +448,7 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
           aria-label="Abrir asistente IA"
         >
           <Sparkles className="h-5 w-5" />
-          <span>Elegir con IA</span>
+          <span className="hidden sm:inline">Elegir con IA</span>
         </button>
       </div>
 
@@ -496,10 +523,10 @@ function MenuItemCard({ item, fontClasses, cartCount = 0, onAddToCart }: {
         )}
         <div className="p-4 flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
-            <h3 className={`font-medium text-foreground leading-snug ${fontClasses.body}`}>{item.name}</h3>
+            <h3 className={`min-w-0 font-medium text-foreground leading-snug ${fontClasses.body}`}>{item.name}</h3>
             <div className="flex items-center gap-2 shrink-0">
               <span className="font-semibold tabular-nums" style={{ color: 'var(--restaurant-primary-readable)' }}>
-                {item.price.toFixed(2)}EUR
+                {item.price.toFixed(2)} €
               </span>
               <button
                 onClick={e => { e.stopPropagation(); onAddToCart?.(e.currentTarget) }}

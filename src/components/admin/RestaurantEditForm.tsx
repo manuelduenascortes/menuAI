@@ -28,6 +28,7 @@ import {
   VENUE_OPTIONS,
 } from '@/lib/venue-config'
 import RestaurantThemePreview from './RestaurantThemePreview'
+import OpeningHoursTable, { DEFAULT_HOURS, parseOpeningHours, type DayHours } from './OpeningHoursTable'
 
 export type EditableRestaurant = {
   id: string
@@ -42,6 +43,7 @@ export type EditableRestaurant = {
   address?: string | null
   phone?: string | null
   establishment_type?: string | null
+  opening_hours?: string | null
 }
 
 export default function RestaurantEditForm({
@@ -75,6 +77,9 @@ export default function RestaurantEditForm({
     address: restaurant.address ?? '',
     phone: restaurant.phone ?? '',
   })
+  const [hours, setHours] = useState<DayHours[]>(
+    parseOpeningHours(restaurant.opening_hours ?? '') ?? DEFAULT_HOURS
+  )
   const [logoObjectUrl, setLogoObjectUrl] = useState<string | null>(null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -132,6 +137,7 @@ export default function RestaurantEditForm({
         font_style: normalizeFontStyle(form.font_style),
         address: form.address || null,
         phone: form.phone || null,
+        opening_hours: JSON.stringify(hours),
       })
       .eq('id', restaurant.id)
 
@@ -248,6 +254,14 @@ export default function RestaurantEditForm({
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
           </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <h3 className="text-sm font-medium text-foreground">Horarios del local</h3>
+            <p className="text-xs text-muted-foreground">Se muestra en la carta pública debajo del nombre.</p>
+          </div>
+          <OpeningHoursTable value={hours} onChange={setHours} />
         </div>
 
         <div className="rounded-lg border border-border p-4">

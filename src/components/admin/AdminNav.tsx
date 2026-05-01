@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase-client'
-import { LayoutDashboard, BookOpen, QrCode, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, BookOpen, QrCode, Settings, LogOut, Menu, X } from 'lucide-react'
 import BrandLogo from '@/components/BrandLogo'
 import ThemeToggle from '@/components/ThemeToggle'
 import type { User } from '@supabase/supabase-js'
@@ -25,6 +25,7 @@ export default function AdminNav({ user, restaurant }: AdminNavProps) {
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/carta', label: 'Carta', icon: BookOpen },
     { href: '/admin/mesas', label: accessLabel, icon: QrCode },
+    { href: '/admin/ajustes', label: 'Ajustes', icon: Settings },
   ]
 
   async function handleSignOut() {

@@ -283,7 +283,7 @@ export default function ChatInterface({
           </div>
           <div>
             <p className="font-medium text-sm text-foreground">Asistente</p>
-            <p className="text-xs text-muted-foreground">{restaurantName}</p>
+            <p className="truncate text-xs text-muted-foreground">{restaurantName}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">

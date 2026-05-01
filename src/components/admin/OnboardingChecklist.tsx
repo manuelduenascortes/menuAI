@@ -9,6 +9,8 @@ import { CheckCircle2, Circle, Store, BookOpen, QrCode, X } from 'lucide-react'
 import type { MenuAccessMode } from '@/lib/types'
 import { getAccessChecklistStep, normalizeMenuAccessMode, supportsTableQr } from '@/lib/venue-config'
 
+const STORAGE_KEY = 'onboarding_checklist_dismissed'
+
 interface Props {
   hasRestaurant: boolean
   hasItems: boolean
@@ -17,9 +19,17 @@ interface Props {
 }
 
 export default function OnboardingChecklist({ hasRestaurant, hasItems, hasTables, accessMode }: Props) {
-  const [hidden, setHidden] = useState(false)
+  const [hidden, setHidden] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem(STORAGE_KEY) === 'true'
+  })
 
   if (hidden) return null
+
+  function dismiss() {
+    localStorage.setItem(STORAGE_KEY, 'true')
+    setHidden(true)
+  }
 
   const normalizedAccessMode = normalizeMenuAccessMode(accessMode)
   const accessDone = supportsTableQr(normalizedAccessMode) ? hasTables : hasRestaurant
@@ -39,16 +49,14 @@ export default function OnboardingChecklist({ hasRestaurant, hasItems, hasTables
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="font-serif text-lg">Primeros pasos</CardTitle>
-          {allDone && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 cursor-pointer text-muted-foreground"
-              onClick={() => setHidden(true)}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 cursor-pointer text-muted-foreground"
+            onClick={dismiss}
+          >
+            <X className="w-4 h-4" />
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

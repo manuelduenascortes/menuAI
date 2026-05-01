@@ -559,66 +559,82 @@ export default function CartaManager({
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      {(selectedCategories.size > 0 || selectedItems.size > 0) && (
+        <div className="sticky top-14 z-40 -mx-5 px-5 py-2 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-medium text-foreground mr-1">
+              {selectedCategories.size + selectedItems.size} seleccionados
+            </span>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              className="h-8 shrink-0 cursor-pointer text-xs"
+            >
+              <Trash2 className="mr-1 h-3.5 w-3.5" />
+              Borrar ({selectedCategories.size + selectedItems.size})
+            </Button>
+            {selectedItems.size > 0 && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBulkPriceDialog({ open: true, price: '' })}
+                  className="h-8 shrink-0 cursor-pointer text-xs"
+                >
+                  Cambiar precio
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAvailability(true)}
+                  className="h-8 shrink-0 cursor-pointer text-xs"
+                >
+                  <Eye className="mr-1 h-3.5 w-3.5" />
+                  Activar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAvailability(false)}
+                  className="h-8 shrink-0 cursor-pointer text-xs"
+                >
+                  <EyeOff className="mr-1 h-3.5 w-3.5" />
+                  Desactivar
+                </Button>
+              </>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setSelectedCategories(new Set()); setSelectedItems(new Set()) }}
+              className="h-8 shrink-0 cursor-pointer text-xs ml-auto text-muted-foreground"
+            >
+              <X className="mr-1 h-3.5 w-3.5" />
+              Deseleccionar
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-6">
       <div className="flex flex-col gap-3">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="mr-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <p className="mr-2 shrink-0 text-sm text-muted-foreground">
               {categories.length} categorías · {categories.reduce((acc, category) => acc + category.menu_items.length, 0)} {itemPlural}
             </p>
             <Button
               variant="outline"
               size="sm"
               onClick={toggleSelectAll}
-              className="hidden h-8 cursor-pointer text-xs sm:flex"
+              className="hidden h-8 shrink-0 cursor-pointer text-xs sm:flex"
             >
               {selectedCategories.size === categories.length && selectedItems.size === totalItems && categories.length > 0
                 ? 'Deseleccionar todo'
                 : 'Seleccionar todo'}
             </Button>
-            {(selectedCategories.size > 0 || selectedItems.size > 0) && (
-              <>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBulkDelete}
-                  className="h-8 cursor-pointer text-xs"
-                >
-                  <Trash2 className="mr-1 h-3.5 w-3.5" />
-                  Borrar ({selectedCategories.size + selectedItems.size})
-                </Button>
-                {selectedItems.size > 0 && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setBulkPriceDialog({ open: true, price: '' })}
-                      className="h-8 cursor-pointer text-xs"
-                    >
-                      Cambiar precio
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleBulkAvailability(true)}
-                      className="h-8 cursor-pointer text-xs"
-                    >
-                      <Eye className="mr-1 h-3.5 w-3.5" />
-                      Activar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleBulkAvailability(false)}
-                      className="h-8 cursor-pointer text-xs"
-                    >
-                      <EyeOff className="mr-1 h-3.5 w-3.5" />
-                      Desactivar
-                    </Button>
-                  </>
-                )}
-              </>
-            )}
           </div>
 
           <Button onClick={() => setAddingCategory((current) => !current)} className="cursor-pointer">
@@ -761,8 +777,8 @@ export default function CartaManager({
                 {(dragHandleProps) => (
                   <Card>
                     <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2 font-serif text-xl">
+                      <div className="flex items-center justify-between gap-2">
+                        <CardTitle className="flex min-w-0 items-center gap-2 font-serif text-xl truncate">
                           <div
                             {...dragHandleProps}
                             suppressHydrationWarning
@@ -782,14 +798,14 @@ export default function CartaManager({
                           </Badge>
                         </CardTitle>
 
-                        <div className="flex gap-2">
+                        <div className="flex shrink-0 gap-2">
                           <Tooltip>
                             <TooltipTrigger
                               render={
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="cursor-pointer"
+                                  className="shrink-0 cursor-pointer"
                                   onClick={() => {
                                     setEditingCategoryId(category.id)
                                     setEditingCategoryData({
@@ -829,7 +845,7 @@ export default function CartaManager({
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="cursor-pointer text-destructive hover:text-destructive"
+                                  className="shrink-0 cursor-pointer text-destructive hover:text-destructive"
                                   onClick={() => deleteCategory(category.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -1033,7 +1049,7 @@ export default function CartaManager({
                                               <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-7 w-7 cursor-pointer p-0 text-destructive hover:text-destructive"
+                                                className="h-8 w-8 min-h-[32px] min-w-[32px] cursor-pointer touch-manipulation p-0 text-destructive hover:text-destructive"
                                                 onClick={() => deleteItem(item.id, category.id)}
                                               >
                                                 <X className="h-4 w-4" />
@@ -1060,6 +1076,7 @@ export default function CartaManager({
         </SortableContext>
       </DndContext>
     </div>
+    </>
   )
 }
 
@@ -1727,7 +1744,7 @@ function ItemFormDialog({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 cursor-pointer p-0"
+                className="h-8 w-8 min-h-[32px] min-w-[32px] cursor-pointer touch-manipulation p-0"
                 onClick={() => handleOpenChange(true)}
               >
                 <Pencil className="h-3.5 w-3.5" />
@@ -1745,7 +1762,7 @@ function ItemFormDialog({
 
   return (
     <>
-      <Button size="sm" className="cursor-pointer" onClick={() => handleOpenChange(true)}>
+      <Button size="sm" className="shrink-0 cursor-pointer" onClick={() => handleOpenChange(true)}>
         Añadir <Plus className="ml-1 h-3.5 w-3.5" />
       </Button>
       <Dialog open={open} onOpenChange={handleOpenChange}>

@@ -3,9 +3,8 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import RestaurantEditForm from '@/components/admin/RestaurantEditForm'
 import PasswordChangeForm from '@/components/admin/PasswordChangeForm'
-import OpeningHoursForm from '@/components/admin/OpeningHoursForm'
 import ExportMenuButton from '@/components/admin/ExportMenuButton'
-import { Settings, Shield, MessageSquare, Clock, Download } from 'lucide-react'
+import { Settings, Shield, MessageSquare, Download } from 'lucide-react'
 import { getChatUsage, getChatLimit } from '@/lib/usage'
 import { Progress } from '@/components/ui/progress'
 import { getRestaurantFontClassMap } from '@/lib/restaurant-fonts'
@@ -55,21 +54,6 @@ export default async function AjustesPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-serif text-xl">
-              <Shield className="h-5 w-5 text-primary" />
-              Seguridad
-            </CardTitle>
-            <CardDescription>
-              Actualiza la contraseña de tu cuenta
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PasswordChangeForm />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-serif text-xl">
               <MessageSquare className="h-5 w-5 text-primary" aria-hidden="true" />
               Uso del asistente IA
             </CardTitle>
@@ -89,21 +73,6 @@ export default async function AjustesPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-serif text-xl">
-              <Clock className="h-5 w-5 text-primary" />
-              Horarios del local
-            </CardTitle>
-            <CardDescription>
-              Se muestra en la carta pública debajo del nombre
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <OpeningHoursForm restaurantId={restaurant.id} initialValue={restaurant.opening_hours ?? ''} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-serif text-xl">
               <Download className="h-5 w-5 text-primary" />
               Exportar carta
             </CardTitle>
@@ -113,6 +82,21 @@ export default async function AjustesPage() {
           </CardHeader>
           <CardContent>
             <ExportMenuButton />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-serif text-xl">
+              <Shield className="h-5 w-5 text-primary" />
+              Seguridad
+            </CardTitle>
+            <CardDescription>
+              Actualiza la contraseña de tu cuenta
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PasswordChangeForm />
           </CardContent>
         </Card>
       </div>
