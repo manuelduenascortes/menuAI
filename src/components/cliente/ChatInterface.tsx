@@ -213,7 +213,20 @@ export default function ChatInterface({
         signal: controller.signal,
       })
 
-      if (!res.ok) throw new Error('Error en la respuesta')
+      if (!res.ok) {
+        if (res.status === 429) {
+          const msg = await res.text()
+          const userFriendly = msg === 'Too Many Requests'
+            ? 'Has enviado demasiados mensajes seguidos. Espera un momento e inténtalo de nuevo.'
+            : msg
+          setMessages(prev => [
+            ...prev.slice(0, -1),
+            { role: 'assistant', content: userFriendly },
+          ])
+          return
+        }
+        throw new Error('Error en la respuesta')
+      }
       if (!res.body) throw new Error('No response body')
 
       const reader = res.body.getReader()

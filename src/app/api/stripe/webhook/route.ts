@@ -3,6 +3,15 @@ import { getStripe } from '@/lib/stripe'
 import { createAdminSupabase } from '@/lib/supabase'
 import Stripe from 'stripe'
 
+function derivePlanStatus(subscription: Stripe.Subscription): string {
+  const item = subscription.items.data[0]
+  const interval = item?.price.recurring?.interval
+  const count = item?.price.recurring?.interval_count ?? 1
+  if (interval === 'year') return 'active_annual'
+  if (count >= 6) return 'active_semestral'
+  return 'active_monthly'
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')
@@ -30,7 +39,6 @@ export async function POST(request: NextRequest) {
       const subscriptionId = session.subscription as string
       const customerId = session.customer as string
 
-      // Get restaurant_id from subscription metadata
       const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
       const restaurantId = subscription.metadata.restaurant_id
 
@@ -40,7 +48,7 @@ export async function POST(request: NextRequest) {
           .update({
             stripe_customer_id: customerId,
             stripe_subscription_id: subscriptionId,
-            subscription_status: subscription.status,
+            subscription_status: derivePlanStatus(subscription),
           })
           .eq('id', restaurantId)
       }
@@ -54,7 +62,7 @@ export async function POST(request: NextRequest) {
       if (restaurantId) {
         await admin
           .from('restaurants')
-          .update({ subscription_status: subscription.status })
+          .update({ subscription_status: derivePlanStatus(subscription) })
           .eq('id', restaurantId)
       }
       break

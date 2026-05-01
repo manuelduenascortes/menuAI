@@ -120,6 +120,14 @@ export default function CartaManager({
   }>({ open: false, title: '', description: '', onConfirm: () => {} })
   const totalItems = categories.reduce((acc, category) => acc + category.menu_items.length, 0)
 
+  function invalidateCache() {
+    fetch('/api/admin/menu/invalidate-cache', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: restaurant.slug }),
+    }).catch(() => {})
+  }
+
   useEffect(() => {
     setCategories(initialCategories)
   }, [initialCategories])
@@ -208,6 +216,7 @@ export default function CartaManager({
           toast.error('Ocurrió un error al borrar algunos elementos')
         } else {
           toast.success('Elementos seleccionados eliminados')
+          invalidateCache()
         }
 
         setCategories((previous) =>
@@ -243,6 +252,41 @@ export default function CartaManager({
     if (results.some((result) => result.error)) {
       toast.error('Error al guardar el orden. Recargando...')
       router.refresh()
+    } else {
+      invalidateCache()
+    }
+  }
+
+  async function handleItemDragEnd(event: DragEndEvent, categoryId: string) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const category = categories.find((c) => c.id === categoryId)
+    if (!category) return
+
+    const oldIndex = category.menu_items.findIndex((i) => i.id === active.id)
+    const newIndex = category.menu_items.findIndex((i) => i.id === over.id)
+    const newItems = arrayMove(category.menu_items, oldIndex, newIndex)
+
+    setCategories((prev) =>
+      prev.map((c) =>
+        c.id === categoryId
+          ? { ...c, menu_items: newItems.map((item, idx) => ({ ...item, display_order: idx })) }
+          : c,
+      ),
+    )
+
+    const results = await Promise.all(
+      newItems.map((item, idx) =>
+        supabase.from('menu_items').update({ display_order: idx }).eq('id', item.id),
+      ),
+    )
+
+    if (results.some((r) => r.error)) {
+      toast.error('Error al guardar el orden. Recargando...')
+      router.refresh()
+    } else {
+      invalidateCache()
     }
   }
 
@@ -267,6 +311,7 @@ export default function CartaManager({
       setNewCategory({ name: '', emoji: '', description: '' })
       setAddingCategory(false)
       toast.success('Categoría añadida')
+      invalidateCache()
     } else {
       toast.error('Error al añadir categoría')
     }
@@ -289,6 +334,7 @@ export default function CartaManager({
 
         setCategories((previous) => previous.filter((category) => category.id !== categoryId))
         toast.success('Categoría eliminada')
+        invalidateCache()
       },
     })
   }
@@ -314,6 +360,7 @@ export default function CartaManager({
     )
 
     toast.success(available ? `${itemSingularTitle} disponible` : `${itemSingularTitle} no disponible`)
+    invalidateCache()
   }
 
   async function updateItemImage(itemId: string, categoryId: string, newUrl: string | null) {
@@ -399,6 +446,7 @@ export default function CartaManager({
       if (error) throw error
       setItemImage(itemId, categoryId, data.url)
       toast.success('Imagen actualizada')
+      invalidateCache()
     } catch {
       toast.error('Error subiendo imagen')
     } finally {
@@ -413,6 +461,7 @@ export default function CartaManager({
       if (error) throw error
       setItemImage(itemId, categoryId, null)
       toast.success('Imagen eliminada')
+      invalidateCache()
     } catch {
       toast.error('Error eliminando imagen')
     } finally {
@@ -575,7 +624,7 @@ export default function CartaManager({
                             venueType={restaurant.venue_type}
                             allergens={allergens}
                             dietaryTags={dietaryTags}
-                            onSave={(item) =>
+                            onSave={(item) => {
                               setCategories((previous) =>
                                 previous.map((currentCategory) =>
                                   currentCategory.id === category.id
@@ -583,7 +632,8 @@ export default function CartaManager({
                                     : currentCategory,
                                 ),
                               )
-                            }
+                              invalidateCache()
+                            }}
                           />
                           <Tooltip>
                             <TooltipTrigger
@@ -622,7 +672,7 @@ export default function CartaManager({
                             venueType={restaurant.venue_type}
                             allergens={allergens}
                             dietaryTags={dietaryTags}
-                            onSave={(item) =>
+                            onSave={(item) => {
                               setCategories((previous) =>
                                 previous.map((currentCategory) =>
                                   currentCategory.id === category.id
@@ -630,123 +680,144 @@ export default function CartaManager({
                                     : currentCategory,
                                 ),
                               )
-                            }
+                              invalidateCache()
+                            }}
                           />
                         </div>
                       ) : (
-                        <div className="space-y-2">
-                          {category.menu_items.map((item) => (
-                            <div key={item.id} className="flex items-start justify-between rounded-lg bg-muted/50 p-3">
-                              <div className="flex min-w-0 flex-1 items-start gap-3">
-                                <Checkbox
-                                  checked={selectedItems.has(item.id)}
-                                  onCheckedChange={() => toggleItemSelection(item.id)}
-                                  className="mt-1"
-                                />
-                                <ItemImageThumb
-                                  imageUrl={item.image_url}
-                                  itemName={item.name}
-                                  restaurantId={restaurant.id}
-                                  onChange={(newUrl) => updateItemImage(item.id, category.id, newUrl)}
-                                />
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <span className="font-medium text-foreground">{item.name}</span>
-                                    <span className="font-semibold tabular-nums text-primary">
-                                      {item.price.toFixed(2)} EUR
-                                    </span>
-                                    {!item.available && (
-                                      <Badge variant="destructive" className="text-xs">
-                                        No disponible
-                                      </Badge>
-                                    )}
-                                  </div>
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={(event) => handleItemDragEnd(event, category.id)}
+                          modifiers={[restrictToVerticalAxis]}
+                        >
+                          <SortableContext items={category.menu_items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                            <div className="space-y-2">
+                              {category.menu_items.map((item) => (
+                                <SortableItem key={item.id} itemId={item.id}>
+                                  {(dragHandleProps) => (
+                                    <div className="flex items-start justify-between rounded-lg bg-muted/50 p-3">
+                                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                                        <div
+                                          {...dragHandleProps}
+                                          className="mt-0.5 cursor-grab rounded p-0.5 text-muted-foreground hover:bg-muted"
+                                        >
+                                          <GripVertical className="h-4 w-4" />
+                                        </div>
+                                        <Checkbox
+                                          checked={selectedItems.has(item.id)}
+                                          onCheckedChange={() => toggleItemSelection(item.id)}
+                                          className="mt-1"
+                                        />
+                                        <ItemImageThumb
+                                          imageUrl={item.image_url}
+                                          itemName={item.name}
+                                          restaurantId={restaurant.id}
+                                          onChange={(newUrl) => updateItemImage(item.id, category.id, newUrl)}
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex flex-wrap items-center gap-2">
+                                            <span className="font-medium text-foreground">{item.name}</span>
+                                            <span className="font-semibold tabular-nums text-primary">
+                                              {item.price.toFixed(2)} EUR
+                                            </span>
+                                            {!item.available && (
+                                              <Badge variant="destructive" className="text-xs">
+                                                No disponible
+                                              </Badge>
+                                            )}
+                                          </div>
 
-                                  {item.description && (
-                                    <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-                                  )}
+                                          {item.description && (
+                                            <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+                                          )}
 
-                                  <div className="mt-2 flex flex-wrap gap-1">
-                                    {item.menu_item_allergens.map((menuAllergen) => (
-                                      <Badge key={menuAllergen.allergen_id} variant="outline" className="text-xs">
-                                        <AlertTriangle className="mr-1 h-3 w-3" />
-                                        {menuAllergen.allergens.name}
-                                      </Badge>
-                                    ))}
-                                    {item.menu_item_tags.map((menuTag) => (
-                                      <Badge
-                                        key={menuTag.tag_id}
-                                        className="border-0 bg-secondary text-xs text-secondary-foreground"
-                                      >
-                                        <Leaf className="mr-1 h-3 w-3" />
-                                        {menuTag.dietary_tags.name}
-                                      </Badge>
-                                    ))}
-                                  </div>
+                                          <div className="mt-2 flex flex-wrap gap-1">
+                                            {item.menu_item_allergens.map((menuAllergen) => (
+                                              <Badge key={menuAllergen.allergen_id} variant="outline" className="text-xs">
+                                                <AlertTriangle className="mr-1 h-3 w-3" />
+                                                {menuAllergen.allergens.name}
+                                              </Badge>
+                                            ))}
+                                            {item.menu_item_tags.map((menuTag) => (
+                                              <Badge
+                                                key={menuTag.tag_id}
+                                                className="border-0 bg-secondary text-xs text-secondary-foreground"
+                                              >
+                                                <Leaf className="mr-1 h-3 w-3" />
+                                                {menuTag.dietary_tags.name}
+                                              </Badge>
+                                            ))}
+                                          </div>
 
-                                  {item.ingredients.length > 0 && (
-                                    <p className="mt-1.5 text-xs text-muted-foreground">
-                                      {item.ingredients.map((ingredient) => ingredient.name).join(', ')}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
+                                          {item.ingredients.length > 0 && (
+                                            <p className="mt-1.5 text-xs text-muted-foreground">
+                                              {item.ingredients.map((ingredient) => ingredient.name).join(', ')}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
 
-                              <div className="ml-3 flex shrink-0 items-center gap-2">
-                                <ItemFormDialog
-                                  mode="edit"
-                                  item={item}
-                                  restaurantId={restaurant.id}
-                                  venueType={restaurant.venue_type}
-                                  allergens={allergens}
-                                  dietaryTags={dietaryTags}
-                                  onSave={(updatedItem) =>
-                                    setCategories((previous) =>
-                                      previous.map((currentCategory) =>
-                                        currentCategory.id === category.id
-                                          ? {
-                                              ...currentCategory,
-                                              menu_items: currentCategory.menu_items.map((currentItem) =>
-                                                currentItem.id === updatedItem.id ? updatedItem : currentItem,
+                                      <div className="ml-3 flex shrink-0 items-center gap-2">
+                                        <ItemFormDialog
+                                          mode="edit"
+                                          item={item}
+                                          restaurantId={restaurant.id}
+                                          venueType={restaurant.venue_type}
+                                          allergens={allergens}
+                                          dietaryTags={dietaryTags}
+                                          onSave={(updatedItem) => {
+                                            setCategories((previous) =>
+                                              previous.map((currentCategory) =>
+                                                currentCategory.id === category.id
+                                                  ? {
+                                                      ...currentCategory,
+                                                      menu_items: currentCategory.menu_items.map((currentItem) =>
+                                                        currentItem.id === updatedItem.id ? updatedItem : currentItem,
+                                                      ),
+                                                    }
+                                                  : currentCategory,
                                               ),
+                                            )
+                                            invalidateCache()
+                                          }}
+                                        />
+                                        <Tooltip>
+                                          <TooltipTrigger
+                                            render={
+                                              <Switch
+                                                checked={item.available}
+                                                onCheckedChange={(value) =>
+                                                  toggleItemAvailable(item.id, value, category.id)
+                                                }
+                                              />
                                             }
-                                          : currentCategory,
-                                      ),
-                                    )
-                                  }
-                                />
-                                <Tooltip>
-                                  <TooltipTrigger
-                                    render={
-                                      <Switch
-                                        checked={item.available}
-                                        onCheckedChange={(value) =>
-                                          toggleItemAvailable(item.id, value, category.id)
-                                        }
-                                      />
-                                    }
-                                  />
-                                  <TooltipContent>{item.available ? 'Disponible' : 'No disponible'}</TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger
-                                    render={
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 w-7 cursor-pointer p-0 text-destructive hover:text-destructive"
-                                        onClick={() => deleteItem(item.id, category.id)}
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    }
-                                  />
-                                  <TooltipContent>{`Eliminar ${itemSingular}`}</TooltipContent>
-                                </Tooltip>
-                              </div>
+                                          />
+                                          <TooltipContent>{item.available ? 'Disponible' : 'No disponible'}</TooltipContent>
+                                        </Tooltip>
+                                        <Tooltip>
+                                          <TooltipTrigger
+                                            render={
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 w-7 cursor-pointer p-0 text-destructive hover:text-destructive"
+                                                onClick={() => deleteItem(item.id, category.id)}
+                                              >
+                                                <X className="h-4 w-4" />
+                                              </Button>
+                                            }
+                                          />
+                                          <TooltipContent>{`Eliminar ${itemSingular}`}</TooltipContent>
+                                        </Tooltip>
+                                      </div>
+                                    </div>
+                                  )}
+                                </SortableItem>
+                              ))}
                             </div>
-                          ))}
-                        </div>
+                          </SortableContext>
+                        </DndContext>
                       )}
                     </CardContent>
                   </Card>
@@ -1187,6 +1258,11 @@ function ItemFormDialog({
         </DialogTitle>
       </DialogHeader>
 
+      <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+        <AlertTriangle className="h-4 w-4 shrink-0" />
+        <span>Las descripciones, fotos y alérgenos pueden ser incorrectos debido al uso de IA. Revisa siempre antes de publicar.</span>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label>Imagen</Label>
@@ -1574,6 +1650,31 @@ function SortableCategory({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: categoryId,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    position: 'relative' as const,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className={isDragging ? 'opacity-50' : ''}>
+      {children({ ...attributes, ...listeners })}
+    </div>
+  )
+}
+
+function SortableItem({
+  itemId,
+  children,
+}: {
+  itemId: string
+  children: (dragHandleProps: Record<string, unknown>) => ReactNode
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: itemId,
   })
 
   const style = {

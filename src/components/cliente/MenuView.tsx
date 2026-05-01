@@ -70,6 +70,7 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
   const [showAssistantTip, setShowAssistantTip] = useState(false)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [cartOpen, setCartOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const { cartButtonRef, cartBumpControls, badgePulseControls, flyToCart } = useCartAnimation()
 
@@ -107,12 +108,13 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
     ...category,
     menu_items: category.menu_items.filter(item => {
       if (!item.available) return false
+      if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
       if (activeFilters.length === 0) return true
       return activeFilters.every(filterName =>
         item.menu_item_tags.some(entry => entry.dietary_tags.name === filterName)
       )
     }),
-  })).filter(category => category.menu_items.length > 0), [activeFilters, categories])
+  })).filter(category => category.menu_items.length > 0), [activeFilters, categories, searchQuery])
 
   const activeCategory = filteredCategories.some(category => category.id === selectedCategory)
     ? selectedCategory
@@ -242,6 +244,26 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
             </div>
           )}
 
+          <div className="relative mt-2.5">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Buscar en la carta..."
+              className="w-full rounded-full border border-border bg-card py-2 pl-9 pr-9 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[var(--restaurant-primary)]"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                aria-label="Limpiar búsqueda"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
           <nav aria-label="Categorías de la carta" className="flex gap-1.5 mt-2.5 overflow-x-auto pb-0.5 scrollbar-hide">
             {filteredCategories.map(category => (
               <button
@@ -273,14 +295,18 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
         {filteredCategories.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <Search className="w-8 h-8 mx-auto mb-3 opacity-40" />
-            <p className="font-medium">No hay productos con los filtros seleccionados</p>
-            <button
-              onClick={() => setActiveFilters([])}
-              className="text-sm mt-3 underline underline-offset-4 cursor-pointer"
-              style={{ color: 'var(--restaurant-primary-readable)' }}
-            >
-              Quitar filtros
-            </button>
+            <p className="font-medium">
+              {searchQuery ? 'No se encontraron platos para tu búsqueda' : 'No hay productos con los filtros seleccionados'}
+            </p>
+            {!searchQuery && (
+              <button
+                onClick={() => setActiveFilters([])}
+                className="text-sm mt-3 underline underline-offset-4 cursor-pointer"
+                style={{ color: 'var(--restaurant-primary-readable)' }}
+              >
+                Quitar filtros
+              </button>
+            )}
           </div>
         ) : (
           filteredCategories.map(category => (

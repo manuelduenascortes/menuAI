@@ -36,7 +36,11 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/restaurante-inexistente)",
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$|^d\")",
       "Bash(xargs -I {} basename {})",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npx tsc *)",
+      "Bash(node --test)",
+      "Bash(npm list *)",
+      "Bash(npm show *)"
     ]
   }
 }

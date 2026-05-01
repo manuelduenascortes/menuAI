@@ -243,6 +243,11 @@ export default function AIEnrichPanel({ restaurant, categories, allergens, onClo
         </Button>
       </div>
 
+      <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+        <AlertCircle className="h-4 w-4 shrink-0" />
+        <span>Las descripciones, fotos y alérgenos pueden ser incorrectos debido al uso de IA. Revisa siempre antes de publicar.</span>
+      </div>
+
       <div className="rounded-lg border border-border p-4 space-y-3">
         <p className="text-sm font-medium">¿Qué rellenar? <span className="font-normal text-muted-foreground">(solo campos vacíos)</span></p>
         <div className="flex flex-wrap gap-4">
