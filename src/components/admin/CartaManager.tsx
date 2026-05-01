@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   DndContext,
@@ -57,6 +57,12 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface Props {
   restaurant: Restaurant
@@ -308,6 +314,33 @@ export default function CartaManager({
     )
 
     toast.success(available ? `${itemSingularTitle} disponible` : `${itemSingularTitle} no disponible`)
+  }
+
+  async function updateItemImage(itemId: string, categoryId: string, newUrl: string | null) {
+    const { error } = await supabase
+      .from('menu_items')
+      .update({ image_url: newUrl })
+      .eq('id', itemId)
+
+    if (error) {
+      toast.error('Error al actualizar imagen')
+      return
+    }
+
+    setCategories((previous) =>
+      previous.map((category) =>
+        category.id === categoryId
+          ? {
+              ...category,
+              menu_items: category.menu_items.map((item) =>
+                item.id === itemId ? { ...item, image_url: newUrl ?? undefined } : item,
+              ),
+            }
+          : category,
+      ),
+    )
+
+    toast.success(newUrl ? 'Imagen actualizada' : 'Imagen eliminada')
   }
 
   function deleteItem(itemId: string, categoryId: string) {
@@ -610,57 +643,12 @@ export default function CartaManager({
                                   onCheckedChange={() => toggleItemSelection(item.id)}
                                   className="mt-1"
                                 />
-                                {uploadingItems.has(item.id) ? (
-                                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-muted">
-                                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                  </div>
-                                ) : item.image_url ? (
-                                  <div className="group relative h-14 w-14 shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                      src={item.image_url}
-                                      alt={item.name}
-                                      className="h-14 w-14 rounded-md object-cover"
-                                    />
-                                    <div className="absolute inset-0 hidden items-center justify-center gap-1.5 rounded-md bg-black/55 group-hover:flex">
-                                      <label className="cursor-pointer rounded p-1 transition-colors hover:bg-white/20" title="Cambiar foto">
-                                        <Pencil className="h-3.5 w-3.5 text-white" />
-                                        <input
-                                          type="file"
-                                          accept="image/*"
-                                          className="hidden"
-                                          onChange={(e) => {
-                                            const file = e.target.files?.[0]
-                                            if (file) handleQuickImageUpload(item.id, category.id, file)
-                                            e.target.value = ''
-                                          }}
-                                        />
-                                      </label>
-                                      <button
-                                        type="button"
-                                        className="rounded p-1 transition-colors hover:bg-white/20"
-                                        title="Eliminar foto"
-                                        onClick={() => handleQuickImageDelete(item.id, category.id)}
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5 text-white" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <label className="flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-md bg-muted transition-colors hover:bg-muted/60" title="Añadir foto">
-                                    <ImagePlus className="h-5 w-5 text-muted-foreground/40" />
-                                    <input
-                                      type="file"
-                                      accept="image/*"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0]
-                                        if (file) handleQuickImageUpload(item.id, category.id, file)
-                                        e.target.value = ''
-                                      }}
-                                    />
-                                  </label>
-                                )}
+                                <ItemImageThumb
+                                  imageUrl={item.image_url}
+                                  itemName={item.name}
+                                  restaurantId={restaurant.id}
+                                  onChange={(newUrl) => updateItemImage(item.id, category.id, newUrl)}
+                                />
                                 <div className="min-w-0 flex-1">
                                   <div className="flex flex-wrap items-center gap-2">
                                     <span className="font-medium text-foreground">{item.name}</span>
@@ -1455,6 +1443,124 @@ function ItemFormDialog({
       <Dialog open={open} onOpenChange={handleOpenChange}>
         {dialogContent}
       </Dialog>
+    </>
+  )
+}
+
+function ItemImageThumb({
+  imageUrl,
+  itemName,
+  restaurantId,
+  onChange,
+}: {
+  imageUrl?: string
+  itemName: string
+  restaurantId: string
+  onChange: (newUrl: string | null) => void | Promise<void>
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+
+  function openPicker() {
+    fileInputRef.current?.click()
+  }
+
+  async function handleFile(file: File) {
+    setUploading(true)
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      body.append('restaurantId', restaurantId)
+
+      const response = await fetch('/api/upload', { method: 'POST', body })
+      const data = await response.json()
+
+      if (!response.ok) throw new Error(data.error)
+
+      await onChange(data.url)
+    } catch {
+      toast.error('Error subiendo imagen')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const hiddenInput = (
+    <input
+      ref={fileInputRef}
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(event) => {
+        const file = event.target.files?.[0]
+        if (file) handleFile(file)
+        event.target.value = ''
+      }}
+    />
+  )
+
+  if (!imageUrl) {
+    return (
+      <>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                onClick={openPicker}
+                disabled={uploading}
+                className="flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/30 bg-background transition-colors hover:border-primary/60 hover:bg-primary/5"
+              >
+                {uploading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                )}
+              </button>
+            }
+          />
+          <TooltipContent>Añadir imagen</TooltipContent>
+        </Tooltip>
+        {hiddenInput}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              disabled={uploading}
+              className="relative h-14 w-14 shrink-0 cursor-pointer overflow-hidden rounded-md border border-border transition-opacity hover:opacity-90"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={imageUrl} alt={itemName} className="h-full w-full object-cover" />
+              {uploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/70">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </button>
+          }
+        />
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={openPicker} className="cursor-pointer">
+            <Pencil className="mr-2 h-4 w-4" />
+            Cambiar imagen
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => onChange(null)}
+            className="cursor-pointer text-destructive focus:text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Eliminar imagen
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {hiddenInput}
     </>
   )
 }

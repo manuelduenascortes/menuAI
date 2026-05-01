@@ -44,7 +44,6 @@ function LoginForm() {
     setSuccess('')
 
     try {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
       if (mode === 'reset') {
         const res = await fetch('/api/auth/recover', {
           method: 'POST',
@@ -62,26 +61,19 @@ function LoginForm() {
         router.push('/admin/dashboard')
         router.refresh()
       } else {
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${siteUrl}/auth/confirm?next=${encodeURIComponent('/admin/dashboard')}`,
-          },
-        })
+        const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
         if (signUpError) {
           if (signUpError.message.toLowerCase().includes('already')) {
             throw new Error('Este email ya está registrado. Inicia sesión.')
           }
           throw signUpError
         }
-        if (data.user && !data.session) {
-          setSuccess('Cuenta creada. Te hemos enviado un email de confirmación. Revisa tu bandeja de entrada y haz clic en el enlace para activarla.')
-          setPassword('')
-        } else if (data.session) {
-          router.push('/admin/dashboard')
-          router.refresh()
+        if (!data.session) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+          if (signInError) throw signInError
         }
+        router.push('/admin/dashboard')
+        router.refresh()
       }
     } catch (err: unknown) {
       console.error('Auth error:', err)
