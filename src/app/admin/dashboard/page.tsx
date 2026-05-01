@@ -4,11 +4,13 @@ import Link from 'next/link'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import RestaurantSetupForm from '@/components/admin/RestaurantSetupForm'
 import OnboardingChecklist from '@/components/admin/OnboardingChecklist'
-import { BookOpen, QrCode, CheckCircle2, ExternalLink, MapPin, Phone, Store, CreditCard } from 'lucide-react'
+import { BookOpen, QrCode, CheckCircle2, ExternalLink, ImageOff, MapPin, MessageSquare, Phone, Store, CreditCard, Type } from 'lucide-react'
 import SubscriptionCard from '@/components/admin/SubscriptionCard'
 import EditBusinessDialog from '@/components/admin/EditBusinessDialog'
 import { getAccessManagementTitle, getAccessModeLabel, getVenueConfig, supportsTableQr } from '@/lib/venue-config'
 import { getRestaurantFontClassMap } from '@/lib/restaurant-fonts'
+import { getChatUsage, getChatLimit } from '@/lib/usage'
+import { Progress } from '@/components/ui/progress'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabase()
@@ -37,6 +39,30 @@ export default async function DashboardPage() {
     .select('id', { count: 'exact' })
     .eq('restaurant_id', restaurant?.id ?? '')
 
+  const [noPhotoRes, noDescRes, chatUsage] = restaurant
+    ? await Promise.all([
+        supabase
+          .from('menu_items')
+          .select('id', { count: 'exact' })
+          .in(
+            'category_id',
+            (await supabase.from('categories').select('id').eq('restaurant_id', restaurant.id)).data?.map(c => c.id) ?? [],
+          )
+          .is('image_url', null),
+        supabase
+          .from('menu_items')
+          .select('id', { count: 'exact' })
+          .in(
+            'category_id',
+            (await supabase.from('categories').select('id').eq('restaurant_id', restaurant.id)).data?.map(c => c.id) ?? [],
+          )
+          .is('description', null),
+        getChatUsage(restaurant.id),
+      ])
+    : [{ count: 0 }, { count: 0 }, 0]
+
+  const chatLimit = getChatLimit(restaurant?.subscription_status ?? null)
+
   return (
     <div className="max-w-5xl mx-auto px-5 py-10">
       <div className="mb-10">
@@ -63,6 +89,10 @@ export default async function DashboardPage() {
           restaurant={restaurant}
           itemCount={itemCount ?? 0}
           tableCount={tableCount ?? 0}
+          noPhotoCount={noPhotoRes.count ?? 0}
+          noDescCount={noDescRes.count ?? 0}
+          chatUsage={chatUsage as number}
+          chatLimit={chatLimit}
         />
       )}
     </div>
@@ -73,6 +103,10 @@ function DashboardContent({
   restaurant,
   itemCount,
   tableCount,
+  noPhotoCount,
+  noDescCount,
+  chatUsage,
+  chatLimit,
 }: {
   restaurant: {
     id: string
@@ -93,6 +127,10 @@ function DashboardContent({
   }
   itemCount: number
   tableCount: number
+  noPhotoCount: number
+  noDescCount: number
+  chatUsage: number
+  chatLimit: number
 }) {
   const venueConfig = getVenueConfig(restaurant.venue_type)
   const accessTitle = getAccessManagementTitle(restaurant.menu_access_mode)
@@ -148,6 +186,56 @@ function DashboardContent({
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="transition-all hover:border-primary/30 hover:shadow-md">
+          <CardContent className="pt-6 pb-5">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="text-3xl font-semibold text-foreground tabular-nums">{chatUsage}</p>
+                <p className="text-sm text-muted-foreground mt-1">consultas IA este mes</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                <MessageSquare className="w-5 h-5 text-primary" />
+              </div>
+            </div>
+            <Progress value={Math.min(Math.round((chatUsage / chatLimit) * 100), 100)} className="h-1.5" />
+            <p className="text-xs text-muted-foreground mt-1">{chatUsage} / {chatLimit}</p>
+          </CardContent>
+        </Card>
+
+        <Link href="/admin/carta" className="block outline-none cursor-pointer">
+          <Card className={`transition-all hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 ${noPhotoCount > 0 ? 'border-amber-200' : ''}`}>
+            <CardContent className="pt-6 pb-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className={`text-3xl font-semibold tabular-nums ${noPhotoCount > 0 ? 'text-amber-600' : 'text-foreground'}`}>{noPhotoCount}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{venueConfig.itemPlural} sin foto</p>
+                </div>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${noPhotoCount > 0 ? 'bg-amber-100' : 'bg-secondary'}`}>
+                  <ImageOff className={`w-5 h-5 ${noPhotoCount > 0 ? 'text-amber-600' : 'text-primary'}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/carta" className="block outline-none cursor-pointer">
+          <Card className={`transition-all hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 ${noDescCount > 0 ? 'border-amber-200' : ''}`}>
+            <CardContent className="pt-6 pb-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className={`text-3xl font-semibold tabular-nums ${noDescCount > 0 ? 'text-amber-600' : 'text-foreground'}`}>{noDescCount}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{venueConfig.itemPlural} sin descripción</p>
+                </div>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${noDescCount > 0 ? 'bg-amber-100' : 'bg-secondary'}`}>
+                  <Type className={`w-5 h-5 ${noDescCount > 0 ? 'text-amber-600' : 'text-primary'}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <SubscriptionCard

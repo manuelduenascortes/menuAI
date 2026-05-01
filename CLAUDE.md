@@ -73,9 +73,9 @@ Schema is in `supabase/schema.sql`. Main tables: `restaurants`, `categories`, `m
 
 `src/proxy.ts` acts as Next.js middleware (non-standard filename — accepted by Next.js 16). Protects `/admin/*` routes and redirects already-logged-in users away from `/admin/login`.
 
-### Known issue — subscription chat limits
+### Subscription chat limits
 
-`src/lib/usage.ts` defines chat limits for `active_monthly` (1500), `active_semestral` (2500), and `active_annual` (4000), but the Stripe webhook only ever writes the standard Stripe statuses (`active`, `trialing`, `canceled`) to `subscription_status`. The custom keys are never stored, so all active subscribers fall through to the `active` fallback (1500 msg/month). Semestral and annual limits are dead code until the webhook is updated to also persist the plan type.
+`src/lib/usage.ts` defines chat limits: `active_monthly` (1500), `active_semestral` (2500), `active_annual` (4000), `trialing` (200). The Stripe webhook (`src/app/api/stripe/webhook/route.ts`) correctly derives and persists these statuses via `derivePlanStatus()` based on the Stripe price interval. Existing users with legacy `"active"` status fall through to the 1500 fallback — they can be migrated by triggering a `customer.subscription.updated` event or via a one-time SQL update.
 
 ## Language
 

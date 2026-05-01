@@ -40,7 +40,10 @@
       "Bash(npx tsc *)",
       "Bash(node --test)",
       "Bash(npm list *)",
-      "Bash(npm show *)"
+      "Bash(npm show *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(test -f \"C:\\\\Users\\\\manue\\\\Documents\\\\GitHub\\\\menuAI\\\\src\\\\app\\\\[restaurantSlug]\\\\not-found.tsx\")",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
     ]
   }
 }

@@ -155,6 +155,11 @@ export default function AIEnrichPanel({ restaurant, categories, allergens, onClo
       }
     }
 
+    await fetch('/api/admin/menu/invalidate-cache', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: restaurant.slug }),
+    }).catch(() => {})
     setPhase('done')
   }
 

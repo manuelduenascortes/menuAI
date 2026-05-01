@@ -25,6 +25,7 @@ create table if not exists restaurants (
   stripe_subscription_id text,
   subscription_status text,
   establishment_type text,
+  opening_hours text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -40,6 +41,7 @@ create table if not exists restaurants (
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS establishment_type text;
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS primary_color text NOT NULL DEFAULT '#8B5E3C';
 -- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS font_style text NOT NULL DEFAULT 'clasico';
+-- ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS opening_hours text;
 
 -- ============================================
 -- TABLA: tables (mesas)

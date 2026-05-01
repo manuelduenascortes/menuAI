@@ -22,12 +22,16 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { CSS } from '@dnd-kit/utilities'
 import {
   AlertTriangle,
+  Check,
+  Eye,
+  EyeOff,
   GripVertical,
   ImagePlus,
   Leaf,
   Loader2,
   Pencil,
   Plus,
+  Search,
   Sparkles,
   Trash2,
   X,
@@ -109,6 +113,10 @@ export default function CartaManager({
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [uploadingItems, setUploadingItems] = useState<Set<string>>(new Set())
+  const [searchTerm, setSearchTerm] = useState('')
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
+  const [editingCategoryData, setEditingCategoryData] = useState({ name: '', emoji: '', description: '' })
+  const [bulkPriceDialog, setBulkPriceDialog] = useState({ open: false, price: '' })
   const [newCategory, setNewCategory] = useState({ name: '', emoji: '', description: '' })
   const [addingCategory, setAddingCategory] = useState(false)
   const [loadingCategory, setLoadingCategory] = useState(false)
@@ -119,6 +127,85 @@ export default function CartaManager({
     onConfirm: () => void
   }>({ open: false, title: '', description: '', onConfirm: () => {} })
   const totalItems = categories.reduce((acc, category) => acc + category.menu_items.length, 0)
+
+  const filteredCategories = searchTerm.trim()
+    ? categories
+        .map((cat) => ({
+          ...cat,
+          menu_items: cat.menu_items.filter((item) =>
+            item.name.toLowerCase().includes(searchTerm.toLowerCase()),
+          ),
+        }))
+        .filter((cat) => cat.menu_items.length > 0)
+    : categories
+
+  async function saveEditCategory(categoryId: string) {
+    const { name, emoji, description } = editingCategoryData
+    if (!name.trim()) return
+    const { error } = await supabase
+      .from('categories')
+      .update({ name: name.trim(), emoji: emoji || null, description: description || null })
+      .eq('id', categoryId)
+    if (error) {
+      toast.error('Error al guardar categoría')
+      return
+    }
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.id === categoryId ? { ...cat, name: name.trim(), emoji, description } : cat,
+      ),
+    )
+    setEditingCategoryId(null)
+    toast.success('Categoría actualizada')
+    invalidateCache()
+  }
+
+  async function handleBulkPrice() {
+    const price = parseFloat(bulkPriceDialog.price)
+    if (isNaN(price) || price < 0) return
+    const ids = Array.from(selectedItems)
+    const { error } = await supabase.from('menu_items').update({ price }).in('id', ids)
+    if (error) {
+      toast.error('Error al actualizar precios')
+      return
+    }
+    setCategories((prev) =>
+      prev.map((cat) => ({
+        ...cat,
+        menu_items: cat.menu_items.map((item) =>
+          selectedItems.has(item.id) ? { ...item, price } : item,
+        ),
+      })),
+    )
+    setBulkPriceDialog({ open: false, price: '' })
+    setSelectedItems(new Set())
+    toast.success(`Precio actualizado en ${ids.length} ${ids.length === 1 ? itemSingular : itemPlural}`)
+    invalidateCache()
+  }
+
+  async function handleBulkAvailability(available: boolean) {
+    const ids = Array.from(selectedItems)
+    const { error } = await supabase.from('menu_items').update({ available }).in('id', ids)
+    if (error) {
+      toast.error('Error al cambiar disponibilidad')
+      return
+    }
+    setCategories((prev) =>
+      prev.map((cat) => ({
+        ...cat,
+        menu_items: cat.menu_items.map((item) =>
+          selectedItems.has(item.id) ? { ...item, available } : item,
+        ),
+      })),
+    )
+    setSelectedItems(new Set())
+    toast.success(
+      available
+        ? `${ids.length} ${ids.length === 1 ? itemSingular : itemPlural} marcados como disponibles`
+        : `${ids.length} ${ids.length === 1 ? itemSingular : itemPlural} marcados como no disponibles`,
+    )
+    invalidateCache()
+  }
 
   function invalidateCache() {
     fetch('/api/admin/menu/invalidate-cache', {
@@ -388,6 +475,7 @@ export default function CartaManager({
     )
 
     toast.success(newUrl ? 'Imagen actualizada' : 'Imagen eliminada')
+    invalidateCache()
   }
 
   function deleteItem(itemId: string, categoryId: string) {
@@ -414,6 +502,7 @@ export default function CartaManager({
           ),
         )
         toast.success(`${itemSingularTitle} eliminado`)
+        invalidateCache()
       },
     })
   }
@@ -471,38 +560,82 @@ export default function CartaManager({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="flex flex-wrap items-center gap-3">
-          <p className="mr-2 text-sm text-muted-foreground">
-            {categories.length} categorías · {categories.reduce((acc, category) => acc + category.menu_items.length, 0)} {itemPlural}
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleSelectAll}
-            className="hidden h-8 cursor-pointer text-xs sm:flex"
-          >
-            {selectedCategories.size === categories.length && selectedItems.size === totalItems && categories.length > 0
-              ? 'Deseleccionar todo'
-              : 'Seleccionar todo'}
-          </Button>
-          {(selectedCategories.size > 0 || selectedItems.size > 0) && (
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="mr-2 text-sm text-muted-foreground">
+              {categories.length} categorías · {categories.reduce((acc, category) => acc + category.menu_items.length, 0)} {itemPlural}
+            </p>
             <Button
-              variant="destructive"
+              variant="outline"
               size="sm"
-              onClick={handleBulkDelete}
-              className="h-8 cursor-pointer text-xs"
+              onClick={toggleSelectAll}
+              className="hidden h-8 cursor-pointer text-xs sm:flex"
             >
-              <Trash2 className="mr-1 h-3.5 w-3.5" />
-              Borrar ({selectedCategories.size + selectedItems.size})
+              {selectedCategories.size === categories.length && selectedItems.size === totalItems && categories.length > 0
+                ? 'Deseleccionar todo'
+                : 'Seleccionar todo'}
             </Button>
-          )}
+            {(selectedCategories.size > 0 || selectedItems.size > 0) && (
+              <>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  className="h-8 cursor-pointer text-xs"
+                >
+                  <Trash2 className="mr-1 h-3.5 w-3.5" />
+                  Borrar ({selectedCategories.size + selectedItems.size})
+                </Button>
+                {selectedItems.size > 0 && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setBulkPriceDialog({ open: true, price: '' })}
+                      className="h-8 cursor-pointer text-xs"
+                    >
+                      Cambiar precio
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleBulkAvailability(true)}
+                      className="h-8 cursor-pointer text-xs"
+                    >
+                      <Eye className="mr-1 h-3.5 w-3.5" />
+                      Activar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleBulkAvailability(false)}
+                      className="h-8 cursor-pointer text-xs"
+                    >
+                      <EyeOff className="mr-1 h-3.5 w-3.5" />
+                      Desactivar
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+
+          <Button onClick={() => setAddingCategory((current) => !current)} className="cursor-pointer">
+            <Plus className="mr-1.5 h-4 w-4" />
+            Añadir categoría
+          </Button>
         </div>
 
-        <Button onClick={() => setAddingCategory((current) => !current)} className="cursor-pointer">
-          <Plus className="mr-1.5 h-4 w-4" />
-          Añadir categoría
-        </Button>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar ítem..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </div>
 
       {addingCategory && (
@@ -559,6 +692,38 @@ export default function CartaManager({
         </div>
       )}
 
+      <Dialog open={bulkPriceDialog.open} onOpenChange={(open) => !open && setBulkPriceDialog({ open: false, price: '' })}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Cambiar precio</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Nuevo precio para {selectedItems.size} {selectedItems.size === 1 ? itemSingular : itemPlural} seleccionados
+          </p>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            value={bulkPriceDialog.price}
+            onChange={(e) => setBulkPriceDialog((prev) => ({ ...prev, price: e.target.value }))}
+            autoFocus
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" className="cursor-pointer" onClick={() => setBulkPriceDialog({ open: false, price: '' })}>
+              Cancelar
+            </Button>
+            <Button
+              className="cursor-pointer"
+              disabled={!bulkPriceDialog.price || isNaN(parseFloat(bulkPriceDialog.price))}
+              onClick={handleBulkPrice}
+            >
+              Aplicar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <AlertDialog
         open={confirmDialog.open}
         onOpenChange={(open) => !open && setConfirmDialog((previous) => ({ ...previous, open: false }))}
@@ -589,9 +754,9 @@ export default function CartaManager({
         onDragEnd={handleDragEnd}
         modifiers={[restrictToVerticalAxis]}
       >
-        <SortableContext items={categories.map((category) => category.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={filteredCategories.map((category) => category.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-6">
-            {categories.map((category) => (
+            {filteredCategories.map((category) => (
               <SortableCategory key={category.id} categoryId={category.id}>
                 {(dragHandleProps) => (
                   <Card>
@@ -600,6 +765,7 @@ export default function CartaManager({
                         <CardTitle className="flex items-center gap-2 font-serif text-xl">
                           <div
                             {...dragHandleProps}
+                            suppressHydrationWarning
                             className="mr-1 cursor-grab rounded p-1 text-muted-foreground hover:bg-muted md:-ml-2"
                           >
                             <GripVertical className="h-5 w-5" />
@@ -617,6 +783,28 @@ export default function CartaManager({
                         </CardTitle>
 
                         <div className="flex gap-2">
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="cursor-pointer"
+                                  onClick={() => {
+                                    setEditingCategoryId(category.id)
+                                    setEditingCategoryData({
+                                      name: category.name,
+                                      emoji: category.emoji ?? '',
+                                      description: category.description ?? '',
+                                    })
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              }
+                            />
+                            <TooltipContent>Editar categoría</TooltipContent>
+                          </Tooltip>
                           <ItemFormDialog
                             mode="add"
                             categoryId={category.id}
@@ -653,8 +841,51 @@ export default function CartaManager({
                         </div>
                       </div>
 
-                      {category.description && (
-                        <p className="text-sm text-muted-foreground">{category.description}</p>
+                      {editingCategoryId === category.id ? (
+                        <div className="mt-2 space-y-2">
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Emoji"
+                              value={editingCategoryData.emoji}
+                              onChange={(e) => setEditingCategoryData((p) => ({ ...p, emoji: e.target.value }))}
+                              className="w-24"
+                            />
+                            <Input
+                              placeholder="Nombre *"
+                              value={editingCategoryData.name}
+                              onChange={(e) => setEditingCategoryData((p) => ({ ...p, name: e.target.value }))}
+                              className="flex-1"
+                            />
+                          </div>
+                          <Input
+                            placeholder="Descripción (opcional)"
+                            value={editingCategoryData.description}
+                            onChange={(e) => setEditingCategoryData((p) => ({ ...p, description: e.target.value }))}
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="cursor-pointer"
+                              disabled={!editingCategoryData.name.trim()}
+                              onClick={() => saveEditCategory(category.id)}
+                            >
+                              <Check className="mr-1 h-3.5 w-3.5" />
+                              Guardar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="cursor-pointer"
+                              onClick={() => setEditingCategoryId(null)}
+                            >
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        category.description && (
+                          <p className="text-sm text-muted-foreground">{category.description}</p>
+                        )
                       )}
                     </CardHeader>
 
@@ -700,6 +931,7 @@ export default function CartaManager({
                                       <div className="flex min-w-0 flex-1 items-start gap-3">
                                         <div
                                           {...dragHandleProps}
+                                          suppressHydrationWarning
                                           className="mt-0.5 cursor-grab rounded p-0.5 text-muted-foreground hover:bg-muted"
                                         >
                                           <GripVertical className="h-4 w-4" />

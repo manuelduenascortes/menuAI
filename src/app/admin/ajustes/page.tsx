@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import RestaurantEditForm from '@/components/admin/RestaurantEditForm'
 import PasswordChangeForm from '@/components/admin/PasswordChangeForm'
-import { Settings, Shield, MessageSquare } from 'lucide-react'
+import OpeningHoursForm from '@/components/admin/OpeningHoursForm'
+import ExportMenuButton from '@/components/admin/ExportMenuButton'
+import { Settings, Shield, MessageSquare, Clock, Download } from 'lucide-react'
 import { getChatUsage, getChatLimit } from '@/lib/usage'
 import { Progress } from '@/components/ui/progress'
 import { getRestaurantFontClassMap } from '@/lib/restaurant-fonts'
@@ -16,7 +18,7 @@ export default async function AjustesPage() {
 
   const { data: restaurant } = await supabase
     .from('restaurants')
-    .select('id, name, slug, venue_type, menu_access_mode, description, logo_url, primary_color, font_style, address, phone, establishment_type, subscription_status')
+    .select('*')
     .eq('user_id', user.id)
     .single()
 
@@ -81,6 +83,36 @@ export default async function AjustesPage() {
               {Math.min(chatCount, chatLimit)} de {chatLimit} consultas usadas este mes
               {chatCount >= chatLimit && ' - límite alcanzado'}
             </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-serif text-xl">
+              <Clock className="h-5 w-5 text-primary" />
+              Horarios del local
+            </CardTitle>
+            <CardDescription>
+              Se muestra en la carta pública debajo del nombre
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <OpeningHoursForm restaurantId={restaurant.id} initialValue={restaurant.opening_hours ?? ''} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-serif text-xl">
+              <Download className="h-5 w-5 text-primary" />
+              Exportar carta
+            </CardTitle>
+            <CardDescription>
+              Descarga tu carta completa como archivo JSON (útil como copia de seguridad)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ExportMenuButton />
           </CardContent>
         </Card>
       </div>

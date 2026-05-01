@@ -22,7 +22,9 @@ export default async function CartaPage() {
 
   const venueConfig = getVenueConfig(restaurant.venue_type)
 
-  const [categoriesRes, allergenRes, tagsRes] = await Promise.all([
+  const categoryIds = (await supabase.from('categories').select('id').eq('restaurant_id', restaurant.id)).data?.map(c => c.id) ?? []
+
+  const [categoriesRes, allergenRes, tagsRes, noPhotoRes, noDescRes, noPriceRes] = await Promise.all([
     supabase
       .from('categories')
       .select(`
@@ -38,6 +40,9 @@ export default async function CartaPage() {
       .order('display_order'),
     supabase.from('allergens').select('*').order('name'),
     supabase.from('dietary_tags').select('*').order('name'),
+    supabase.from('menu_items').select('id', { count: 'exact' }).in('category_id', categoryIds).is('image_url', null),
+    supabase.from('menu_items').select('id', { count: 'exact' }).in('category_id', categoryIds).is('description', null),
+    supabase.from('menu_items').select('id', { count: 'exact' }).in('category_id', categoryIds).eq('price', 0),
   ])
 
   return (
@@ -61,6 +66,11 @@ export default async function CartaPage() {
         initialCategories={categoriesRes.data ?? []}
         allergens={allergenRes.data ?? []}
         dietaryTags={tagsRes.data ?? []}
+        validationStats={{
+          noPhoto: noPhotoRes.count ?? 0,
+          noDescription: noDescRes.count ?? 0,
+          noPrice: noPriceRes.count ?? 0,
+        }}
       />
     </div>
   )

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { AlertTriangle, Leaf, Search, ShoppingCart, Sparkles, X } from 'lucide-react'
+import { AlertTriangle, Clock, Leaf, Search, ShoppingCart, Sparkles, X } from 'lucide-react'
 import ChatInterface, { type ChatMenuItem } from './ChatInterface'
 import CartDrawer from './CartDrawer'
 import ThemeToggle from '@/components/ThemeToggle'
@@ -193,6 +193,12 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
                   <p className="text-xs text-muted-foreground">Mesa {tableNumber}</p>
                 )}
               </div>
+              {restaurant.opening_hours && (
+                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3 shrink-0" />
+                  {restaurant.opening_hours}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle variant="ghost" size="icon" />

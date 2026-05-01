@@ -33,6 +33,7 @@ export async function getFullMenuBySlug(
     )
     .eq('restaurant_id', restaurant.id)
     .order('display_order')
+    .order('display_order', { foreignTable: 'menu_items' })
 
   return { restaurant, categories: categories ?? [] }
 }
