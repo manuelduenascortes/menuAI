@@ -10,16 +10,14 @@ interface Props {
   subscriptionStatus: string | null
   trialEndsAt: string | null
   stripeCustomerId: string | null
+  daysLeft: number
 }
 
-export default function SubscriptionCard({ subscriptionStatus, trialEndsAt, stripeCustomerId }: Props) {
+export default function SubscriptionCard({ subscriptionStatus, trialEndsAt, stripeCustomerId, daysLeft }: Props) {
   const [loading, setLoading] = useState(false)
 
   const isActive = subscriptionStatus === 'active'
   const isTrial = !isActive && trialEndsAt && new Date(trialEndsAt) > new Date()
-  const daysLeft = isTrial
-    ? Math.max(0, Math.ceil((new Date(trialEndsAt!).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : 0
 
   async function openPortal() {
     setLoading(true)

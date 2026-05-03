@@ -11,6 +11,11 @@ import { getAccessModeLabel, getVenueConfig, supportsTableQr } from '@/lib/venue
 import { getChatUsage, getChatLimit } from '@/lib/usage'
 import { Progress } from '@/components/ui/progress'
 
+function calcTrialDaysLeft(trialEndsAt: string | null): number {
+  if (!trialEndsAt) return 0
+  return Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+}
+
 export default async function DashboardPage() {
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
@@ -93,6 +98,7 @@ export default async function DashboardPage() {
           noDescCount={noDescRes.count ?? 0}
           chatUsage={chatUsage as number}
           chatLimit={chatLimit}
+          trialDaysLeft={calcTrialDaysLeft(restaurant.trial_ends_at ?? null)}
         />
       )}
     </div>
@@ -107,6 +113,7 @@ function DashboardContent({
   noDescCount,
   chatUsage,
   chatLimit,
+  trialDaysLeft,
 }: {
   restaurant: {
     id: string
@@ -131,6 +138,7 @@ function DashboardContent({
   noDescCount: number
   chatUsage: number
   chatLimit: number
+  trialDaysLeft: number
 }) {
   const venueConfig = getVenueConfig(restaurant.venue_type)
   const accessDescription = getAccessModeLabel(restaurant.menu_access_mode)
@@ -261,6 +269,7 @@ function DashboardContent({
           subscriptionStatus={restaurant.subscription_status ?? null}
           trialEndsAt={restaurant.trial_ends_at ?? null}
           stripeCustomerId={restaurant.stripe_customer_id ?? null}
+          daysLeft={trialDaysLeft}
         />
         <OnboardingChecklist
           hasRestaurant

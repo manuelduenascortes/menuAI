@@ -165,7 +165,6 @@ export async function POST(req: NextRequest) {
 
     let imageUrl: string | null = null
     let allergenNames: string[] = []
-    let productContext: string | undefined
     let offImageUrl: string | undefined
 
     // Open Food Facts (alérgenos + foto de producto) + descripción IA — en paralelo
@@ -183,7 +182,6 @@ export async function POST(req: NextRequest) {
           .filter((n): n is string => Boolean(n))
       }
 
-      if (product.product_name) productContext = product.product_name
       if (product.image_url) offImageUrl = product.image_url
     }
 

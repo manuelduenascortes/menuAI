@@ -112,7 +112,6 @@ export default function CartaManager({
   const [categories, setCategories] = useState<CategoryWithItems[]>(initialCategories)
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
-  const [uploadingItems, setUploadingItems] = useState<Set<string>>(new Set())
   const [searchTerm, setSearchTerm] = useState('')
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
   const [editingCategoryData, setEditingCategoryData] = useState({ name: '', emoji: '', description: '' })
@@ -505,57 +504,6 @@ export default function CartaManager({
         invalidateCache()
       },
     })
-  }
-
-  function setItemImage(itemId: string, categoryId: string, imageUrl: string | null) {
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.id === categoryId
-          ? {
-              ...cat,
-              menu_items: cat.menu_items.map((item) =>
-                item.id === itemId ? { ...item, image_url: imageUrl ?? undefined } : item,
-              ),
-            }
-          : cat,
-      ),
-    )
-  }
-
-  async function handleQuickImageUpload(itemId: string, categoryId: string, file: File) {
-    setUploadingItems((prev) => new Set(prev).add(itemId))
-    try {
-      const body = new FormData()
-      body.append('file', file)
-      body.append('restaurantId', restaurant.id)
-      const response = await fetch('/api/upload', { method: 'POST', body })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error)
-      const { error } = await supabase.from('menu_items').update({ image_url: data.url }).eq('id', itemId)
-      if (error) throw error
-      setItemImage(itemId, categoryId, data.url)
-      toast.success('Imagen actualizada')
-      invalidateCache()
-    } catch {
-      toast.error('Error subiendo imagen')
-    } finally {
-      setUploadingItems((prev) => { const next = new Set(prev); next.delete(itemId); return next })
-    }
-  }
-
-  async function handleQuickImageDelete(itemId: string, categoryId: string) {
-    setUploadingItems((prev) => new Set(prev).add(itemId))
-    try {
-      const { error } = await supabase.from('menu_items').update({ image_url: null }).eq('id', itemId)
-      if (error) throw error
-      setItemImage(itemId, categoryId, null)
-      toast.success('Imagen eliminada')
-      invalidateCache()
-    } catch {
-      toast.error('Error eliminando imagen')
-    } finally {
-      setUploadingItems((prev) => { const next = new Set(prev); next.delete(itemId); return next })
-    }
   }
 
   return (

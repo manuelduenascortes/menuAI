@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,10 +19,11 @@ interface Props {
 }
 
 export default function OnboardingChecklist({ hasRestaurant, hasItems, hasTables, accessMode }: Props) {
-  const [hidden, setHidden] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem(STORAGE_KEY) === 'true'
-  })
+  const [hidden, setHidden] = useState(false)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHidden(localStorage.getItem(STORAGE_KEY) === 'true')
+  }, [])
 
   if (hidden) return null
 

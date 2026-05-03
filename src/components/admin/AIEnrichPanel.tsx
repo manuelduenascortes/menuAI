@@ -5,7 +5,6 @@ import { AlertCircle, CheckCircle2, Clock, Loader2, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
 import type { Allergen, DietaryTag, Restaurant } from '@/lib/types'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
@@ -163,7 +162,6 @@ export default function AIEnrichPanel({ restaurant, categories, allergens, onClo
     setPhase('done')
   }
 
-  const queue = allItems.filter((i) => selectedItems.has(i.id))
   const resultsList = Object.values(results)
   const doneCount = resultsList.filter((r) => r.status === 'done' && r.filled.length > 0).length
   const unchangedCount = resultsList.filter((r) => r.status === 'done' && r.filled.length === 0).length
