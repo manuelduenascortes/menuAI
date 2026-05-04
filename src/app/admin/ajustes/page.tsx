@@ -31,7 +31,7 @@ export default async function AjustesPage() {
   return (
     <div className="mx-auto max-w-5xl px-5 py-10">
       <div className="mb-8">
-        <h1 className="font-serif text-3xl text-foreground">Ajustes</h1>
+        <h1 className="font-serif text-2xl sm:text-3xl text-foreground">Ajustes</h1>
         <p className="mt-1 text-muted-foreground">Edita los datos de tu local</p>
       </div>
 
@@ -42,7 +42,7 @@ export default async function AjustesPage() {
               <Settings className="h-5 w-5 text-primary" />
               Datos del negocio
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="break-all">
               URL pública: <span className="font-mono">/{restaurant.slug}</span>
             </CardDescription>
           </CardHeader>

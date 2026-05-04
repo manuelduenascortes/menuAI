@@ -24,6 +24,7 @@ export default function CartAnimationProvider({ children }: Props) {
   const [dots, setDots] = useState<FlyingDot[]>([])
   const dotIdRef = useRef(0)
   const [mounted, setMounted] = useState(false)
+  const cachedColorRef = useRef<string | null>(null)
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -54,9 +55,11 @@ export default function CartAnimationProvider({ children }: Props) {
     const destination = getElementCenter(destRect)
 
     const id = `dot-${dotIdRef.current++}`
-    // Theme CSS vars live on the MenuView wrapper, not document root, so read from cartEl
-    // (which inherits them via cascade) — falls back to a neutral color if unresolved.
-    const color = getComputedStyle(cartEl).getPropertyValue('--restaurant-primary').trim() || '#000'
+    // Theme CSS vars live on the MenuView wrapper — read once and cache since the color never changes at runtime.
+    if (!cachedColorRef.current) {
+      cachedColorRef.current = getComputedStyle(cartEl).getPropertyValue('--restaurant-primary').trim() || '#000'
+    }
+    const color = cachedColorRef.current
 
     setDots(prev => [...prev, { id, origin, destination, color }])
   }, [triggerLandingFx])

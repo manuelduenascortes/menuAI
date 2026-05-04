@@ -33,7 +33,7 @@ export default async function MesasPage() {
         { label: accessTitle },
       ]} />
       <div className="mb-8">
-        <h1 className="font-serif text-3xl text-foreground">{accessTitle}</h1>
+        <h1 className="font-serif text-2xl sm:text-3xl text-foreground">{accessTitle}</h1>
         <p className="text-muted-foreground mt-1">{getAccessModeDescription(restaurant.menu_access_mode)}</p>
       </div>
       <MesasManager restaurant={restaurant} initialTables={tables ?? []} />

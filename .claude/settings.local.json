@@ -50,7 +50,9 @@
       "Bash(grep -n \"useCallback\\\\|useMemo\" \"C:\\\\\\\\Users\\\\\\\\manue\\\\\\\\Documents\\\\\\\\GitHub\\\\\\\\menuAI\\\\\\\\src\\\\\\\\components\\\\\\\\cliente\\\\\\\\ChatInterface.tsx\")",
       "Bash(Select-String '\"version\"')",
       "PowerShell($content = Get-Content \"C:\\\\Users\\\\manue\\\\Documents\\\\GitHub\\\\menuAI\\\\node_modules\\\\next-themes\\\\dist\\\\index.js\" -Raw; $content -split ';' | Where-Object { $_ -match 'script|scriptProps' } | Select-Object -First 10)",
-      "PowerShell(npm show *)"
+      "PowerShell(npm show *)",
+      "Bash(Select-Object -First 20)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\manue\\\\Documents\\\\GitHub\\\\menuAI\" -Directory | Select-Object -First 20 | ForEach-Object { $_.Name })"
     ]
   }
 }

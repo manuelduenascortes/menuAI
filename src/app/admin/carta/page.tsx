@@ -37,7 +37,8 @@ export default async function CartaPage() {
         )
       `)
       .eq('restaurant_id', restaurant.id)
-      .order('display_order'),
+      .order('display_order')
+      .order('display_order', { foreignTable: 'menu_items' }),
     supabase.from('allergens').select('*').order('name'),
     supabase.from('dietary_tags').select('*').order('name'),
     supabase.from('menu_items').select('id', { count: 'exact' }).in('category_id', categoryIds).is('image_url', null),
@@ -55,7 +56,7 @@ export default async function CartaPage() {
       />
 
       <div className="mb-8">
-        <h1 className="font-serif text-3xl text-foreground">Gestion de carta</h1>
+        <h1 className="font-serif text-2xl sm:text-3xl text-foreground">Gestion de carta</h1>
         <p className="mt-1 text-muted-foreground">
           {`Añade y edita categorías, ${venueConfig.itemPlural}, ingredientes, imágenes y alérgenos.`}
         </p>

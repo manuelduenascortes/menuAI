@@ -72,7 +72,7 @@ export default async function DashboardPage() {
       {!restaurant ? (
         <>
           <div className="mb-8">
-            <h1 className="font-serif text-3xl text-foreground">Dashboard</h1>
+            <h1 className="font-serif text-2xl sm:text-3xl text-foreground">Dashboard</h1>
             <p className="text-muted-foreground mt-1">Gestiona tu local desde aquí</p>
           </div>
           <div className="max-w-xl">
@@ -148,17 +148,18 @@ function DashboardContent({
     <div className="space-y-4">
 
       {/* Cabecera compacta */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-3xl text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-serif text-2xl sm:text-3xl text-foreground">Dashboard</h1>
+          <p className="truncate text-sm text-muted-foreground mt-0.5">
             {restaurant.name} · <span className="font-mono text-xs">/{restaurant.slug}</span>
           </p>
         </div>
-        <Link href={`/${restaurant.slug}`} target="_blank">
+        <Link href={`/${restaurant.slug}`} target="_blank" className="shrink-0">
           <Button variant="outline" size="sm" className="gap-2 cursor-pointer">
             <ExternalLink className="w-4 h-4" />
-            Ver como cliente
+            <span className="hidden sm:inline">Ver como cliente</span>
+            <span className="sm:hidden">Ver</span>
           </Button>
         </Link>
       </div>

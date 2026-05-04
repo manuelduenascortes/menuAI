@@ -347,7 +347,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                 <p className="text-sm font-medium text-foreground">Acceso directo a la carta pública</p>
                 <p className="mt-1 text-xs text-muted-foreground">{getAccessModeLabel(restaurant.menu_access_mode)}</p>
               </div>
-              <p className="break-all font-mono text-xs text-muted-foreground">{generalUrl}</p>
+              <p className="truncate font-mono text-xs text-muted-foreground">{generalUrl}</p>
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
@@ -393,7 +393,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                     className="w-28"
                   />
                 </div>
-                <div className="min-w-32 flex-1 space-y-1.5">
+                <div className="min-w-0 flex-1 space-y-1.5">
                   <Label>Etiqueta (opcional)</Label>
                   <Input
                     placeholder="Ej: Terraza, VIP..."
@@ -401,11 +401,11 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                     onChange={(event) => setNewLabel(event.target.value)}
                   />
                 </div>
-                <Button onClick={addTable} disabled={loading || !newNumber} className="cursor-pointer">
+                <Button onClick={addTable} disabled={loading || !newNumber} className="flex-1 cursor-pointer sm:flex-none">
                   <Plus className="mr-1.5 h-4 w-4" />
                   {loading ? 'Generando...' : 'Añadir mesa'}
                 </Button>
-                <Button variant="outline" onClick={() => setMultiDialog(true)} disabled={loading} className="cursor-pointer">
+                <Button variant="outline" onClick={() => setMultiDialog(true)} disabled={loading} className="flex-1 cursor-pointer sm:flex-none">
                   <Plus className="mr-1.5 h-4 w-4" />
                   Añadir varias
                 </Button>
@@ -414,9 +414,9 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
             </CardContent>
           </Card>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">{tables.length} mesas configuradas</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="min-w-0 truncate text-xs text-muted-foreground">
               URL: <span className="font-mono">{baseUrl}/{restaurant.slug}/mesa/[id]</span>
             </p>
           </div>
@@ -488,7 +488,7 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {tables.map((table) => {
                 const isSelected = selectionState.selectedTableIds.includes(table.id)
 
@@ -514,13 +514,13 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                         : undefined
                     }
                   >
-                    <div className="relative border-b border-border bg-secondary p-4 text-center">
+                    <div className="relative border-b border-border bg-secondary p-3 text-center">
                       {selectionMode && isSelected && (
-                        <Badge className="absolute left-3 top-3 bg-primary text-primary-foreground">
-                          Seleccionada
+                        <Badge className="absolute left-2 top-2 bg-primary text-primary-foreground text-[10px] px-1.5">
+                          Sel.
                         </Badge>
                       )}
-                      <div className="font-serif text-xl text-foreground">Mesa {table.number}</div>
+                      <div className="font-serif text-base sm:text-xl text-foreground">Mesa {table.number}</div>
                       {table.label && (
                         <Badge variant="secondary" className="mt-1.5 text-xs">
                           {table.label}
@@ -528,24 +528,24 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                       )}
                     </div>
 
-                    <CardContent className="space-y-3 p-4">
+                    <CardContent className="space-y-2 p-3 sm:p-4">
                       {table.qr_code_url ? (
                         <div className="flex justify-center">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={table.qr_code_url}
                             alt={`QR Mesa ${table.number}`}
-                            className="h-32 w-32 rounded-lg"
+                            className="h-24 w-24 rounded-lg sm:h-32 sm:w-32"
                           />
                         </div>
                       ) : (
-                        <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground">
+                        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-lg bg-muted text-xs text-muted-foreground sm:h-32 sm:w-32">
                           Sin QR
                         </div>
                       )}
 
                       <div className="flex items-center justify-center gap-1">
-                        <p className="break-all text-center font-mono text-[10px] leading-relaxed text-muted-foreground">
+                        <p className="min-w-0 flex-1 truncate text-center font-mono text-xs text-muted-foreground">
                           {getTableUrl(table.id)}
                         </p>
                         <Tooltip>
@@ -588,8 +588,8 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                                 }}
                                 disabled={!table.qr_code_url}
                               >
-                                <Download className="mr-1.5 h-3.5 w-3.5" />
-                                Descargar
+                                <Download className="h-3.5 w-3.5 sm:mr-1.5" />
+                                <span className="hidden sm:inline">Descargar</span>
                               </Button>
                             }
                           />

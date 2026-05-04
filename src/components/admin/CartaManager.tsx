@@ -67,6 +67,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
 interface Props {
   restaurant: Restaurant
@@ -125,6 +126,17 @@ export default function CartaManager({
     description: string
     onConfirm: () => void
   }>({ open: false, title: '', description: '', onConfirm: () => {} })
+  const [expandedDescs, setExpandedDescs] = useState<Set<string>>(new Set())
+
+  function toggleDesc(id: string) {
+    setExpandedDescs((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const totalItems = categories.reduce((acc, category) => acc + category.menu_items.length, 0)
 
   const filteredCategories = searchTerm.trim()
@@ -725,35 +737,36 @@ export default function CartaManager({
                 {(dragHandleProps) => (
                   <Card>
                     <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <CardTitle className="flex min-w-0 items-center gap-2 font-serif text-xl truncate">
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="flex min-w-0 flex-1 items-start gap-1.5 font-serif text-lg leading-snug sm:text-xl">
                           <div
                             {...dragHandleProps}
                             suppressHydrationWarning
-                            className="mr-1 cursor-grab rounded p-1 text-muted-foreground hover:bg-muted md:-ml-2"
+                            className="mt-0.5 shrink-0 cursor-grab rounded p-1 text-muted-foreground hover:bg-muted"
                           >
                             <GripVertical className="h-5 w-5" />
                           </div>
                           <Checkbox
                             checked={selectedCategories.has(category.id)}
                             onCheckedChange={() => toggleCategorySelection(category.id)}
-                            className="mr-1"
+                            className="mt-1 shrink-0"
                           />
-                          {category.emoji && <span>{category.emoji}</span>}
-                          {category.name}
-                          <Badge variant="secondary" className="text-xs font-normal">
-                            {category.menu_items.length} {itemPlural}
-                          </Badge>
+                          {category.emoji && <span className="shrink-0">{category.emoji}</span>}
+                          <span>{category.name}</span>
                         </CardTitle>
 
-                        <div className="flex shrink-0 gap-2">
+                        <div className="flex shrink-0 items-center gap-1 pt-0.5">
+                          <Badge variant="secondary" className="text-xs font-normal tabular-nums">
+                            {category.menu_items.length}
+                            <span className="hidden sm:inline"> {itemPlural}</span>
+                          </Badge>
                           <Tooltip>
                             <TooltipTrigger
                               render={
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="shrink-0 cursor-pointer"
+                                  className="h-8 w-8 cursor-pointer p-0"
                                   onClick={() => {
                                     setEditingCategoryId(category.id)
                                     setEditingCategoryData({
@@ -793,7 +806,7 @@ export default function CartaManager({
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="shrink-0 cursor-pointer text-destructive hover:text-destructive"
+                                  className="h-8 w-8 cursor-pointer p-0 text-destructive hover:text-destructive"
                                   onClick={() => deleteCategory(category.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -891,19 +904,20 @@ export default function CartaManager({
                               {category.menu_items.map((item) => (
                                 <SortableItem key={item.id} itemId={item.id}>
                                   {(dragHandleProps) => (
-                                    <div className="flex items-start justify-between rounded-lg bg-muted/50 p-3">
-                                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                                    <div className="rounded-lg bg-muted/50 p-3">
+                                      {/* Fila superior: drag + checkbox + imagen + nombre/precio + acciones */}
+                                      <div className="flex items-center gap-2">
                                         <div
                                           {...dragHandleProps}
                                           suppressHydrationWarning
-                                          className="mt-0.5 cursor-grab rounded p-0.5 text-muted-foreground hover:bg-muted"
+                                          className="shrink-0 cursor-grab rounded p-0.5 text-muted-foreground hover:bg-muted"
                                         >
                                           <GripVertical className="h-4 w-4" />
                                         </div>
                                         <Checkbox
                                           checked={selectedItems.has(item.id)}
                                           onCheckedChange={() => toggleItemSelection(item.id)}
-                                          className="mt-1"
+                                          className="shrink-0"
                                         />
                                         <ItemImageThumb
                                           imageUrl={item.image_url}
@@ -912,7 +926,7 @@ export default function CartaManager({
                                           onChange={(newUrl) => updateItemImage(item.id, category.id, newUrl)}
                                         />
                                         <div className="min-w-0 flex-1">
-                                          <div className="flex flex-wrap items-center gap-2">
+                                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                             <span className="font-medium text-foreground">{item.name}</span>
                                             <span className="font-semibold tabular-nums text-primary">
                                               {item.price.toFixed(2)} EUR
@@ -923,90 +937,109 @@ export default function CartaManager({
                                               </Badge>
                                             )}
                                           </div>
+                                        </div>
+                                        <div className="flex shrink-0 items-center gap-1">
+                                          <ItemFormDialog
+                                            mode="edit"
+                                            item={item}
+                                            restaurantId={restaurant.id}
+                                            venueType={restaurant.venue_type}
+                                            allergens={allergens}
+                                            dietaryTags={dietaryTags}
+                                            onSave={(updatedItem) => {
+                                              setCategories((previous) =>
+                                                previous.map((currentCategory) =>
+                                                  currentCategory.id === category.id
+                                                    ? {
+                                                        ...currentCategory,
+                                                        menu_items: currentCategory.menu_items.map((currentItem) =>
+                                                          currentItem.id === updatedItem.id ? updatedItem : currentItem,
+                                                        ),
+                                                      }
+                                                    : currentCategory,
+                                                ),
+                                              )
+                                              invalidateCache()
+                                            }}
+                                          />
+                                          <Tooltip>
+                                            <TooltipTrigger
+                                              render={
+                                                <Switch
+                                                  checked={item.available}
+                                                  onCheckedChange={(value) =>
+                                                    toggleItemAvailable(item.id, value, category.id)
+                                                  }
+                                                />
+                                              }
+                                            />
+                                            <TooltipContent>{item.available ? 'Disponible' : 'No disponible'}</TooltipContent>
+                                          </Tooltip>
+                                          <Tooltip>
+                                            <TooltipTrigger
+                                              render={
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="h-8 w-8 min-h-[32px] min-w-[32px] cursor-pointer touch-manipulation p-0 text-destructive hover:text-destructive"
+                                                  onClick={() => deleteItem(item.id, category.id)}
+                                                >
+                                                  <X className="h-4 w-4" />
+                                                </Button>
+                                              }
+                                            />
+                                            <TooltipContent>{`Eliminar ${itemSingular}`}</TooltipContent>
+                                          </Tooltip>
+                                        </div>
+                                      </div>
 
+                                      {/* Contenido a ancho completo debajo */}
+                                      {(item.description || item.menu_item_allergens.length > 0 || item.menu_item_tags.length > 0 || item.ingredients.length > 0) && (
+                                        <div className="mt-2 space-y-1.5">
                                           {item.description && (
-                                            <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+                                            <div>
+                                              <p className={cn('text-sm text-muted-foreground', !expandedDescs.has(item.id) && 'line-clamp-2')}>
+                                                {item.description}
+                                              </p>
+                                              {item.description.length > 80 && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => toggleDesc(item.id)}
+                                                  className="mt-0.5 text-xs text-muted-foreground underline underline-offset-2"
+                                                >
+                                                  {expandedDescs.has(item.id) ? 'ver menos' : 'ver más'}
+                                                </button>
+                                              )}
+                                            </div>
                                           )}
 
-                                          <div className="mt-2 flex flex-wrap gap-1">
-                                            {item.menu_item_allergens.map((menuAllergen) => (
-                                              <Badge key={menuAllergen.allergen_id} variant="outline" className="text-xs">
-                                                <AlertTriangle className="mr-1 h-3 w-3" />
-                                                {menuAllergen.allergens.name}
-                                              </Badge>
-                                            ))}
-                                            {item.menu_item_tags.map((menuTag) => (
-                                              <Badge
-                                                key={menuTag.tag_id}
-                                                className="border-0 bg-secondary text-xs text-secondary-foreground"
-                                              >
-                                                <Leaf className="mr-1 h-3 w-3" />
-                                                {menuTag.dietary_tags.name}
-                                              </Badge>
-                                            ))}
-                                          </div>
+                                          {(item.menu_item_allergens.length > 0 || item.menu_item_tags.length > 0) && (
+                                            <div className="flex flex-wrap gap-1">
+                                              {item.menu_item_allergens.map((menuAllergen) => (
+                                                <Badge key={menuAllergen.allergen_id} variant="outline" className="text-xs">
+                                                  <AlertTriangle className="mr-1 h-3 w-3" />
+                                                  {menuAllergen.allergens.name}
+                                                </Badge>
+                                              ))}
+                                              {item.menu_item_tags.map((menuTag) => (
+                                                <Badge
+                                                  key={menuTag.tag_id}
+                                                  className="border-0 bg-secondary text-xs text-secondary-foreground"
+                                                >
+                                                  <Leaf className="mr-1 h-3 w-3" />
+                                                  {menuTag.dietary_tags.name}
+                                                </Badge>
+                                              ))}
+                                            </div>
+                                          )}
 
                                           {item.ingredients.length > 0 && (
-                                            <p className="mt-1.5 text-xs text-muted-foreground">
+                                            <p className="text-xs text-muted-foreground">
                                               {item.ingredients.map((ingredient) => ingredient.name).join(', ')}
                                             </p>
                                           )}
                                         </div>
-                                      </div>
-
-                                      <div className="ml-3 flex shrink-0 items-center gap-2">
-                                        <ItemFormDialog
-                                          mode="edit"
-                                          item={item}
-                                          restaurantId={restaurant.id}
-                                          venueType={restaurant.venue_type}
-                                          allergens={allergens}
-                                          dietaryTags={dietaryTags}
-                                          onSave={(updatedItem) => {
-                                            setCategories((previous) =>
-                                              previous.map((currentCategory) =>
-                                                currentCategory.id === category.id
-                                                  ? {
-                                                      ...currentCategory,
-                                                      menu_items: currentCategory.menu_items.map((currentItem) =>
-                                                        currentItem.id === updatedItem.id ? updatedItem : currentItem,
-                                                      ),
-                                                    }
-                                                  : currentCategory,
-                                              ),
-                                            )
-                                            invalidateCache()
-                                          }}
-                                        />
-                                        <Tooltip>
-                                          <TooltipTrigger
-                                            render={
-                                              <Switch
-                                                checked={item.available}
-                                                onCheckedChange={(value) =>
-                                                  toggleItemAvailable(item.id, value, category.id)
-                                                }
-                                              />
-                                            }
-                                          />
-                                          <TooltipContent>{item.available ? 'Disponible' : 'No disponible'}</TooltipContent>
-                                        </Tooltip>
-                                        <Tooltip>
-                                          <TooltipTrigger
-                                            render={
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 w-8 min-h-[32px] min-w-[32px] cursor-pointer touch-manipulation p-0 text-destructive hover:text-destructive"
-                                                onClick={() => deleteItem(item.id, category.id)}
-                                              >
-                                                <X className="h-4 w-4" />
-                                              </Button>
-                                            }
-                                          />
-                                          <TooltipContent>{`Eliminar ${itemSingular}`}</TooltipContent>
-                                        </Tooltip>
-                                      </div>
+                                      )}
                                     </div>
                                   )}
                                 </SortableItem>
@@ -1448,7 +1481,7 @@ function ItemFormDialog({
   }
 
   const dialogContent = (
-    <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+    <DialogContent className="max-h-[90vh] sm:max-w-lg overflow-y-auto">
       <DialogHeader>
         <DialogTitle className="font-serif text-xl">
           {mode === 'add' ? `Añadir ${itemSingular}` : `Editar ${itemSingular}`}
@@ -1710,9 +1743,21 @@ function ItemFormDialog({
 
   return (
     <>
-      <Button size="sm" className="shrink-0 cursor-pointer" onClick={() => handleOpenChange(true)}>
-        Añadir <Plus className="ml-1 h-3.5 w-3.5" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 min-h-[32px] min-w-[32px] cursor-pointer touch-manipulation p-0"
+              onClick={() => handleOpenChange(true)}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          }
+        />
+        <TooltipContent>{`Añadir ${itemSingular}`}</TooltipContent>
+      </Tooltip>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         {dialogContent}
       </Dialog>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, Clock, Leaf, Search, ShoppingCart, Sparkles, X } from 'lucide-react'
 import ChatInterface, { type ChatMenuItem } from './ChatInterface'
@@ -101,14 +101,15 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
   const venueType = normalizeVenueType(restaurant.venue_type)
   const venueConfig = getVenueConfig(venueType)
   const assistantTutorial = ASSISTANT_TUTORIAL_COPY[venueType]
-  const theme = getRestaurantTheme(restaurant.primary_color)
-  const themeStyle = {
+  const theme = useMemo(() => getRestaurantTheme(restaurant.primary_color), [restaurant.primary_color])
+  const themeStyle = useMemo(() => ({
     '--restaurant-primary': theme.primary,
     '--restaurant-primary-light': theme.primaryLight,
     '--restaurant-primary-foreground': theme.primaryForeground,
     '--restaurant-primary-readable-light': theme.primaryReadableOnLight,
     '--restaurant-primary-readable-dark': theme.primaryReadableOnDark,
-  } as CSSProperties
+  } as CSSProperties), [theme])
+
   const availableFilterTags = useMemo(() => {
     if (venueType !== 'restaurant') return []
     return RESTAURANT_FILTER_TAGS.filter(tag =>
@@ -156,7 +157,7 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
     return () => window.clearTimeout(timeout)
   }, [assistantTipStorageKey])
 
-  function addToCart(item: { id: string; name: string; image_url?: string; price: number }) {
+  const addToCart = useCallback((item: { id: string; name: string; image_url?: string; price: number }) => {
     setCartItems(prev => {
       const existing = prev.find(i => i.id === item.id)
       if (existing) {
@@ -164,53 +165,63 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
       }
       return [...prev, { id: item.id, name: item.name, image_url: item.image_url, price: item.price, quantity: 1 }]
     })
-  }
+  }, [])
 
-  function handleAddToCart(itemId: string) {
+  const handleAddToCart = useCallback((itemId: string) => {
     const source = chatMenuItems.find(i => i.id === itemId)
     if (source) addToCart(source)
-  }
+  }, [chatMenuItems, addToCart])
 
-  function handleUpdateQuantity(itemId: string, delta: number) {
+  const handleUpdateQuantity = useCallback((itemId: string, delta: number) => {
     setCartItems(prev =>
       prev
         .map(i => i.id === itemId ? { ...i, quantity: i.quantity + delta } : i)
         .filter(i => i.quantity > 0)
     )
-  }
+  }, [])
 
-  function handleClearCart() {
+  const handleClearCart = useCallback(() => {
     setCartItems([])
-  }
+  }, [])
 
-  function toggleFilter(name: string) {
+  const toggleFilter = useCallback((name: string) => {
     setActiveFilters(prev =>
       prev.includes(name) ? prev.filter(value => value !== name) : [...prev, name]
     )
-  }
+  }, [])
 
-  function dismissAssistantTip() {
+  const dismissAssistantTip = useCallback(() => {
     setShowAssistantTip(false)
     try {
       window.localStorage.setItem(assistantTipStorageKey, 'seen')
     } catch {}
-  }
+  }, [assistantTipStorageKey])
 
-  function openChat() {
+  const openChat = useCallback(() => {
     dismissAssistantTip()
     setChatOpen(true)
-  }
+  }, [dismissAssistantTip])
+
+  const cartItemsMap = useMemo(
+    () => new Map(cartItems.map(i => [i.id, i.quantity])),
+    [cartItems]
+  )
+
+  const handleCartAddFromCard = useCallback((item: MenuItem, originEl: HTMLElement) => {
+    flyToCart(originEl)
+    addToCart(item)
+  }, [flyToCart, addToCart])
 
   return (
     <div
       className={`min-h-screen bg-background [--restaurant-primary-readable:var(--restaurant-primary-readable-light)] dark:[--restaurant-primary-readable:var(--restaurant-primary-readable-dark)] ${fontClasses.body}`}
       style={themeStyle}
     >
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
+      <header className="sticky top-0 z-30 bg-background border-b border-border">
         <div className="max-w-2xl mx-auto px-5 pt-3 pb-2">
           <div className="flex items-center justify-between mb-3">
-            <div>
-              <h1 className={`${fontClasses.heading} text-xl text-foreground`}>{restaurant.name}</h1>
+            <div className="min-w-0">
+              <h1 className={`${fontClasses.heading} text-xl text-foreground truncate`}>{restaurant.name}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-0.5">
                 <p className="text-xs text-muted-foreground">{venueConfig.label}</p>
                 {tableNumber && (
@@ -227,13 +238,15 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
                 ) : null
               })()}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <ThemeToggle variant="ghost" size="icon" />
               {restaurant.logo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={restaurant.logo_url}
                   alt={restaurant.name}
+                  loading="eager"
+                  decoding="async"
                   className="h-10 w-10 rounded-full object-cover border border-border"
                 />
               ) : (
@@ -284,7 +297,7 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Buscar en la carta..."
-              className="w-full rounded-full border border-border bg-card py-2 pl-9 pr-9 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[var(--restaurant-primary)]"
+              className="w-full rounded-full border border-border bg-card py-2 pl-9 pr-9 text-base placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[var(--restaurant-primary)]"
             />
             {searchQuery && (
               <button
@@ -360,11 +373,8 @@ function MenuViewInner({ restaurant, categories, tableId: _tableId, tableNumber,
                     <MenuItemCard
                       item={item}
                       fontClasses={fontClasses}
-                      cartCount={cartItems.find(c => c.id === item.id)?.quantity ?? 0}
-                      onAddToCart={(originEl: HTMLElement) => {
-                        flyToCart(originEl)
-                        addToCart(item)
-                      }}
+                      cartCount={cartItemsMap.get(item.id) ?? 0}
+                      onAddToCart={handleCartAddFromCard}
                     />
                   </li>
                 ))}
@@ -486,11 +496,11 @@ export default function MenuView(props: Props) {
   )
 }
 
-function MenuItemCard({ item, fontClasses, cartCount = 0, onAddToCart }: {
+const MenuItemCard = memo(function MenuItemCard({ item, fontClasses, cartCount = 0, onAddToCart }: {
   item: MenuItem
   fontClasses: RestaurantFontClasses
   cartCount?: number
-  onAddToCart?: (originEl: HTMLElement) => void
+  onAddToCart?: (item: MenuItem, originEl: HTMLElement) => void
 }) {
   const [expanded, setExpanded] = useState(false)
 
@@ -516,7 +526,9 @@ function MenuItemCard({ item, fontClasses, cartCount = 0, onAddToCart }: {
               <img
                 src={item.image_url}
                 alt={item.name}
-                className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500 [@media(hover:hover)]:hover:scale-105"
               />
             </div>
           </div>
@@ -529,8 +541,8 @@ function MenuItemCard({ item, fontClasses, cartCount = 0, onAddToCart }: {
                 {item.price.toFixed(2)} €
               </span>
               <button
-                onClick={e => { e.stopPropagation(); onAddToCart?.(e.currentTarget) }}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold leading-none cursor-pointer transition-all active:scale-90"
+                onClick={e => { e.stopPropagation(); onAddToCart?.(item, e.currentTarget) }}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold leading-none cursor-pointer transition-transform active:scale-90"
                 style={cartCount > 0 ? {
                   backgroundColor: 'var(--restaurant-primary)',
                   color: 'var(--restaurant-primary-foreground)',
@@ -617,4 +629,4 @@ function MenuItemCard({ item, fontClasses, cartCount = 0, onAddToCart }: {
       )}
     </div>
   )
-}
+})
