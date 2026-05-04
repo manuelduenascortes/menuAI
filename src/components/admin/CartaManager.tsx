@@ -138,7 +138,7 @@ export default function CartaManager({
       .update({ name: name.trim(), emoji: emoji || null, description: description || null })
       .eq('id', categoryId)
     if (error) {
-      toast.error('Error al guardar categorÃ­a')
+      toast.error('Error al guardar categoría')
       return
     }
     setCategories((prev) =>
@@ -147,7 +147,7 @@ export default function CartaManager({
       ),
     )
     setEditingCategoryId(null)
-    toast.success('CategorÃ­a actualizada')
+    toast.success('Categoría actualizada')
     invalidateCache()
   }
 
@@ -206,7 +206,7 @@ export default function CartaManager({
     }).catch(() => {})
   }
 
-  // Sincroniza con el servidor solo cuando los IDs cambian â€” evitar machacar
+  // Sincroniza con el servidor solo cuando los IDs cambian — evitar machacar
   // ediciones locales si el padre rerenderiza con la misma referencia distinta.
   const initialCategoriesSignature = useMemo(
     () =>
@@ -269,8 +269,8 @@ export default function CartaManager({
 
     setConfirmDialog({
       open: true,
-      title: 'Â¿Borrar selecciÃ³n?',
-      description: `Se eliminarÃ¡n ${selectedCategories.size} categorÃ­as y ${selectedItems.size} ${itemPlural}. Esta acciÃ³n no se puede deshacer.`,
+      title: '¿Borrar selección?',
+      description: `Se eliminarán ${selectedCategories.size} categorías y ${selectedItems.size} ${itemPlural}. Esta acción no se puede deshacer.`,
       onConfirm: async () => {
         let errorOccurred = false
 
@@ -303,7 +303,7 @@ export default function CartaManager({
         }
 
         if (errorOccurred) {
-          toast.error('OcurriÃ³ un error al borrar algunos elementos')
+          toast.error('Ocurrió un error al borrar algunos elementos')
         } else {
           toast.success('Elementos seleccionados eliminados')
           invalidateCache()
@@ -400,10 +400,10 @@ export default function CartaManager({
       setCategories([...categories, { ...data, menu_items: [] }])
       setNewCategory({ name: '', emoji: '', description: '' })
       setAddingCategory(false)
-      toast.success('CategorÃ­a aÃ±adida')
+      toast.success('Categoría añadida')
       invalidateCache()
     } else {
-      toast.error('Error al aÃ±adir categorÃ­a')
+      toast.error('Error al añadir categoría')
     }
 
     setLoadingCategory(false)
@@ -412,30 +412,25 @@ export default function CartaManager({
   function deleteCategory(categoryId: string) {
     setConfirmDialog({
       open: true,
-      title: 'Â¿Eliminar esta categorÃ­a?',
-      description: `Se eliminarÃ¡n tambiÃ©n todos los ${itemPlural} de esta categorÃ­a. Esta acciÃ³n no se puede deshacer.`,
+      title: '¿Eliminar esta categoría?',
+      description: `Se eliminarán también todos los ${itemPlural} de esta categoría. Esta acción no se puede deshacer.`,
       onConfirm: async () => {
         const { error } = await supabase.from('categories').delete().eq('id', categoryId)
 
         if (error) {
-          toast.error('Error al eliminar categorÃ­a')
+          toast.error('Error al eliminar categoría')
           return
         }
 
         setCategories((previous) => previous.filter((category) => category.id !== categoryId))
-        toast.success('CategorÃ­a eliminada')
+        toast.success('Categoría eliminada')
         invalidateCache()
       },
     })
   }
 
   async function toggleItemAvailable(itemId: string, available: boolean, categoryId: string) {
-    const { error } = await supabase.from('menu_items').update({ available }).eq('id', itemId)
-    if (error) {
-      toast.error('Error al cambiar disponibilidad')
-      return
-    }
-
+    // Optimistic update: el switch se mueve al instante; revertimos si el server falla.
     setCategories((previous) =>
       previous.map((category) =>
         category.id === categoryId
@@ -449,7 +444,25 @@ export default function CartaManager({
       ),
     )
 
-    toast.success(available ? `${itemSingularTitle} disponible` : `${itemSingularTitle} no disponible`)
+    const { error } = await supabase.from('menu_items').update({ available }).eq('id', itemId)
+    if (error) {
+      // Revertir
+      setCategories((previous) =>
+        previous.map((category) =>
+          category.id === categoryId
+            ? {
+                ...category,
+                menu_items: category.menu_items.map((item) =>
+                  item.id === itemId ? { ...item, available: !available } : item,
+                ),
+              }
+            : category,
+        ),
+      )
+      toast.error('Error al cambiar disponibilidad')
+      return
+    }
+
     invalidateCache()
   }
 
@@ -485,7 +498,7 @@ export default function CartaManager({
     setConfirmDialog({
       open: true,
       title: `Eliminar este ${itemSingular}?`,
-      description: `El ${itemSingular} se eliminarÃ¡ permanentemente. Esta acciÃ³n no se puede deshacer.`,
+      description: `El ${itemSingular} se eliminará permanentemente. Esta acción no se puede deshacer.`,
       onConfirm: async () => {
         const { error } = await supabase.from('menu_items').delete().eq('id', itemId)
 
@@ -575,7 +588,7 @@ export default function CartaManager({
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-2">
             <p className="mr-2 shrink-0 text-sm text-muted-foreground">
-              {categories.length} categorÃ­as Â· {categories.reduce((acc, category) => acc + category.menu_items.length, 0)} {itemPlural}
+              {categories.length} categorías · {categories.reduce((acc, category) => acc + category.menu_items.length, 0)} {itemPlural}
             </p>
             <Button
               variant="outline"
@@ -591,14 +604,14 @@ export default function CartaManager({
 
           <Button onClick={() => setAddingCategory((current) => !current)} className="cursor-pointer">
             <Plus className="mr-1.5 h-4 w-4" />
-            AÃ±adir categorÃ­a
+            Añadir categoría
           </Button>
         </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar Ã­tem..."
+            placeholder="Buscar ítem..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             type="search"
@@ -619,14 +632,14 @@ export default function CartaManager({
                 className="w-24"
               />
               <Input
-                placeholder="Nombre de la categorÃ­a *"
+                placeholder="Nombre de la categoría *"
                 value={newCategory.name}
                 onChange={(event) => setNewCategory({ ...newCategory, name: event.target.value })}
                 className="flex-1"
               />
             </div>
             <Input
-              placeholder="DescripciÃ³n (opcional)"
+              placeholder="Descripción (opcional)"
               value={newCategory.description}
               onChange={(event) => setNewCategory({ ...newCategory, description: event.target.value })}
             />
@@ -636,7 +649,7 @@ export default function CartaManager({
                 disabled={loadingCategory || !newCategory.name.trim()}
                 className="cursor-pointer"
               >
-                {loadingCategory ? 'Guardando...' : 'Guardar categorÃ­a'}
+                {loadingCategory ? 'Guardando...' : 'Guardar categoría'}
               </Button>
               <Button variant="outline" onClick={() => setAddingCategory(false)} className="cursor-pointer">
                 Cancelar
@@ -651,13 +664,13 @@ export default function CartaManager({
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
             <BookOpenIcon className="h-8 w-8 text-primary" />
           </div>
-          <p className="mb-2 font-serif text-xl text-foreground">Tu carta estÃ¡ vacÃ­a</p>
+          <p className="mb-2 font-serif text-xl text-foreground">Tu carta está vacía</p>
           <p className="mx-auto mb-6 max-w-xs text-sm text-muted-foreground">
-            Empieza creando tu primera categorÃ­a. Por ejemplo: {categoryExamples.join(', ')}.
+            Empieza creando tu primera categoría. Por ejemplo: {categoryExamples.join(', ')}.
           </p>
           <Button onClick={() => setAddingCategory(true)} className="cursor-pointer">
             <Plus className="mr-1.5 h-4 w-4" />
-            AÃ±adir primera categorÃ­a
+            Añadir primera categoría
           </Button>
         </div>
       )}
@@ -737,7 +750,7 @@ export default function CartaManager({
                             {...dragHandleProps}
                             suppressHydrationWarning
                             style={{ touchAction: 'none' }}
-                            aria-label="Arrastrar para reordenar categorÃ­a"
+                            aria-label="Arrastrar para reordenar categoría"
                             className="mt-0.5 shrink-0 cursor-grab touch-none rounded p-2 text-muted-foreground hover:bg-muted active:cursor-grabbing"
                           >
                             <GripVertical className="h-5 w-5" />
@@ -776,7 +789,7 @@ export default function CartaManager({
                                 </Button>
                               }
                             />
-                            <TooltipContent>Editar categorÃ­a</TooltipContent>
+                            <TooltipContent>Editar categoría</TooltipContent>
                           </Tooltip>
                           <ItemFormDialog
                             mode="add"
@@ -809,7 +822,7 @@ export default function CartaManager({
                                 </Button>
                               }
                             />
-                            <TooltipContent>Eliminar categorÃ­a</TooltipContent>
+                            <TooltipContent>Eliminar categoría</TooltipContent>
                           </Tooltip>
                         </div>
                       </div>
@@ -831,7 +844,7 @@ export default function CartaManager({
                             />
                           </div>
                           <Input
-                            placeholder="DescripciÃ³n (opcional)"
+                            placeholder="Descripción (opcional)"
                             value={editingCategoryData.description}
                             onChange={(e) => setEditingCategoryData((p) => ({ ...p, description: e.target.value }))}
                           />
@@ -865,9 +878,9 @@ export default function CartaManager({
                     <CardContent>
                       {category.menu_items.length === 0 ? (
                         <div className="py-8 text-center">
-                          <p className="mb-1 font-serif text-base text-foreground">Sin {itemPlural} todavÃ­a</p>
+                          <p className="mb-1 font-serif text-base text-foreground">Sin {itemPlural} todavía</p>
                           <p className="mb-3 text-sm text-muted-foreground">
-                            AÃ±ade el primer {itemSingular} a esta categorÃ­a
+                            Añade el primer {itemSingular} a esta categoría
                           </p>
                           <ItemFormDialog
                             mode="add"
@@ -1005,7 +1018,7 @@ export default function CartaManager({
                                                   onClick={() => toggleDesc(item.id)}
                                                   className="mt-0.5 text-xs text-muted-foreground underline underline-offset-2"
                                                 >
-                                                  {expandedDescs.has(item.id) ? 'ver menos' : 'ver mÃ¡s'}
+                                                  {expandedDescs.has(item.id) ? 'ver menos' : 'ver más'}
                                                 </button>
                                               )}
                                             </div>
