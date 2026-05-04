@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import type { ReactNode } from 'react'
+import Image from 'next/image'
 import { Send, X, MessageCircle, ShoppingCart } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
@@ -321,10 +322,7 @@ export default function ChatInterface({
         </div>
       </div>
 
-      <div
-        className="flex-1 overflow-y-auto px-5 py-5 space-y-4"
-        onTouchStart={() => inputRef.current?.blur()}
-      >
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
         {messages.map((msg, i) => (
           <div
             key={i}
@@ -347,12 +345,16 @@ export default function ChatInterface({
                     const inCart = cartItems.find(c => c.id === img.id)
                     return (
                       <div key={img.id} className="shrink-0 flex flex-col items-center gap-1.5 w-20">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={img.url}
-                          alt={img.name}
-                          className="w-20 h-20 rounded-lg object-cover border border-border/50"
-                        />
+                        <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-border/50">
+                          <Image
+                            src={img.url!}
+                            alt={img.name}
+                            fill
+                            loading="lazy"
+                            sizes="80px"
+                            className="object-cover"
+                          />
+                        </div>
                         <span className="text-[10px] text-muted-foreground text-center max-w-[80px] leading-tight line-clamp-2">
                           {img.name}
                         </span>

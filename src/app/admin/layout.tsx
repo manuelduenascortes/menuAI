@@ -25,7 +25,8 @@ export default async function AdminLayout({
     .eq('user_id', user.id)
     .single()
 
-  const hasActiveSubscription = ['active', 'trialing'].includes(restaurant?.subscription_status ?? '')
+  const status = restaurant?.subscription_status ?? ''
+  const hasActiveSubscription = status === 'active' || status === 'trialing' || status.startsWith('active_')
   const trialValid = restaurant?.trial_ends_at ? new Date(restaurant.trial_ends_at) > new Date() : false
 
   if (restaurant && !hasActiveSubscription && !trialValid) {

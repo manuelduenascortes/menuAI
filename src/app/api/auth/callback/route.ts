@@ -4,23 +4,22 @@ import { createServerSupabase } from '@/lib/supabase'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/admin/dashboard'
+  const nextParam = searchParams.get('next') ?? '/admin/dashboard'
+  // Solo permitimos rutas internas /admin/* para evitar open-redirect a rutas no admin
+  const next = /^\/admin(\/|$)/.test(nextParam) ? nextParam : '/admin/dashboard'
 
   if (code) {
     const supabase = await createServerSupabase()
-    
-    // Intercambiamos el código por una sesión (necesario en flujo PKCE)
+
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    
+
     if (!error) {
-      // Redirigimos a la URL destino
       return NextResponse.redirect(`${origin}${next}`)
     } else {
-      console.error('Error exchanging code:', error)
-      return NextResponse.redirect(`${origin}/admin/login?error=Enlace%20caducado%20o%20inválido`)
+      console.error('Error exchanging auth code:', error.message)
+      return NextResponse.redirect(`${origin}/admin/login?error=Enlace%20caducado%20o%20inv%C3%A1lido`)
     }
   }
 
-  // Si no hay código, volvemos al inicio
   return NextResponse.redirect(`${origin}/admin/login`)
 }

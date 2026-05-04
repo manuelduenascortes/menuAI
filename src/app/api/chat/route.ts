@@ -88,11 +88,10 @@ export async function POST(req: NextRequest) {
       temperature: 0.1,
     }, abortController.signal)
 
-    await incrementChatUsage(restaurantId).catch(() => {})
-
     const encoder = new TextEncoder()
     const readable = new ReadableStream({
       async start(controller) {
+        let streamSucceeded = false
         try {
           for await (const chunk of stream) {
             if (req.signal.aborted) break
@@ -102,6 +101,7 @@ export async function POST(req: NextRequest) {
               controller.enqueue(encoder.encode(text))
             }
           }
+          streamSucceeded = !req.signal.aborted
         } catch (streamError: unknown) {
           if (streamError instanceof Error && streamError.name !== 'AbortError') {
             console.error(JSON.stringify({
@@ -113,6 +113,11 @@ export async function POST(req: NextRequest) {
           }
         } finally {
           controller.close()
+
+          // Solo contamos uso si el stream produjo contenido o terminó OK
+          if (streamSucceeded || charsOut > 0) {
+            await incrementChatUsage(restaurantId).catch(() => {})
+          }
 
           const event = req.signal.aborted ? 'chat_aborted' : 'chat_success'
           console.log(JSON.stringify({

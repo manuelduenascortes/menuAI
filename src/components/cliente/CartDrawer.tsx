@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import type { CartItem } from '@/lib/types'
 import type { CSSProperties } from 'react'
 import { Trash2 } from 'lucide-react'
@@ -40,12 +41,15 @@ export default function CartDrawer({
           {cartItems.map(item => (
             <div key={item.id} className="flex items-center gap-3">
               {item.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={item.image_url}
-                  alt={item.name}
-                  className="w-12 h-12 rounded-lg object-cover border border-border/50 shrink-0"
-                />
+                <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-border/50 shrink-0">
+                  <Image
+                    src={item.image_url}
+                    alt={item.name}
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
+                </div>
               ) : (
                 <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center shrink-0 border border-border/50">
                   <span className="text-lg font-medium text-muted-foreground">{item.name.charAt(0)}</span>
@@ -58,13 +62,13 @@ export default function CartDrawer({
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => onUpdateQuantity(item.id, -1)}
-                  className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center text-sm font-bold cursor-pointer hover:bg-muted transition-colors"
+                  className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-base font-bold cursor-pointer hover:bg-muted transition-colors"
                   aria-label={`Quitar un ${item.name}`}
                 >−</button>
-                <span className="text-sm font-semibold w-4 text-center tabular-nums">{item.quantity}</span>
+                <span className="text-sm font-semibold w-5 text-center tabular-nums">{item.quantity}</span>
                 <button
                   onClick={() => onUpdateQuantity(item.id, +1)}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold cursor-pointer transition-colors"
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-base font-bold cursor-pointer transition-colors"
                   style={{
                     backgroundColor: 'var(--restaurant-primary)',
                     color: 'var(--restaurant-primary-foreground)',

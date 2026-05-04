@@ -33,6 +33,38 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminSupabase()
 
+  // Idempotencia: si ya procesamos este event.id, salimos.
+  // Si la tabla stripe_events no existe aún, ignoramos el error y seguimos
+  // (el SQL de migración está en supabase/schema.sql).
+  const insertedEvent = await admin
+    .from('stripe_events')
+    .insert({ id: event.id, type: event.type })
+    .select('id')
+    .maybeSingle()
+
+  if (insertedEvent.error) {
+    const code = insertedEvent.error.code
+    // 23505 = unique_violation (ya procesado) — evitamos reprocesarlo
+    if (code === '23505') {
+      return NextResponse.json({ received: true, duplicate: true })
+    }
+    // 42P01 = undefined_table (migración pendiente) — degradamos sin idempotencia
+    if (code !== '42P01') {
+      console.error('stripe_events insert error:', insertedEvent.error.message)
+    }
+  }
+
+  // Helper: confirma que restaurantId pertenece al customerId antes de mutar
+  async function isCustomerOwner(restaurantId: string, customerId: string): Promise<boolean> {
+    const { data } = await admin
+      .from('restaurants')
+      .select('id')
+      .eq('id', restaurantId)
+      .eq('stripe_customer_id', customerId)
+      .maybeSingle()
+    return Boolean(data)
+  }
+
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
@@ -58,8 +90,9 @@ export async function POST(request: NextRequest) {
     case 'customer.subscription.updated': {
       const subscription = event.data.object as Stripe.Subscription
       const restaurantId = subscription.metadata.restaurant_id
+      const customerId = subscription.customer as string
 
-      if (restaurantId) {
+      if (restaurantId && (await isCustomerOwner(restaurantId, customerId))) {
         await admin
           .from('restaurants')
           .update({ subscription_status: derivePlanStatus(subscription) })
@@ -71,8 +104,9 @@ export async function POST(request: NextRequest) {
     case 'customer.subscription.deleted': {
       const subscription = event.data.object as Stripe.Subscription
       const restaurantId = subscription.metadata.restaurant_id
+      const customerId = subscription.customer as string
 
-      if (restaurantId) {
+      if (restaurantId && (await isCustomerOwner(restaurantId, customerId))) {
         await admin
           .from('restaurants')
           .update({

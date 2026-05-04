@@ -109,7 +109,7 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
-      <div className="md:w-1/2 bg-gradient-to-br from-primary/10 via-secondary/30 to-primary/5 flex flex-col justify-between p-8 md:p-16 border-b md:border-b-0 md:border-r border-border relative">
+      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-primary/10 via-secondary/30 to-primary/5 flex-col justify-between p-8 md:p-16 md:border-r border-border relative">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground transition-colors cursor-pointer self-start animate-fade-up z-10"
@@ -132,6 +132,20 @@ function LoginForm() {
 
         <div className="hidden md:block text-sm text-muted-foreground text-center">
           © {new Date().getFullYear()} MenuAI. Todos los derechos reservados.
+        </div>
+      </div>
+
+      <div className="md:hidden border-b border-border px-4 py-3 flex items-center justify-between">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Inicio</span>
+        </Link>
+        <div className="inline-flex items-center gap-2">
+          <UtensilsCrossed className="w-4 h-4 text-primary" />
+          <span className="font-serif text-base text-foreground">MenuAI</span>
         </div>
       </div>
 

@@ -1,24 +1,93 @@
 import { createAdminSupabase } from '@/lib/supabase'
 import type { FullMenu } from '@/lib/types'
+import type { Redis as UpstashRedis } from '@upstash/redis'
 
-const menuCache = new Map<string, { data: FullMenu; ts: number }>()
-const CACHE_TTL = 5 * 60 * 1000
+const CACHE_TTL_SECONDS = 5 * 60
+const CACHE_TTL_MS = CACHE_TTL_SECONDS * 1000
 
-export function invalidateMenuCache(slug: string) {
-  menuCache.delete(slug)
+// ---------- Upstash Redis (multi-instance safe) ----------
+let redisClient: UpstashRedis | null = null
+let redisInitTried = false
+
+async function getRedis(): Promise<UpstashRedis | null> {
+  if (redisInitTried) return redisClient
+  redisInitTried = true
+
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) return null
+
+  try {
+    const { Redis } = await import('@upstash/redis')
+    redisClient = new Redis({ url, token })
+    return redisClient
+  } catch (err) {
+    console.error('menu-cache: failed to init Upstash Redis', err)
+    return null
+  }
+}
+
+const redisKey = (slug: string) => `menuai:menu:${slug}`
+
+// ---------- Fallback in-memory (dev / when Upstash is not configured) ----------
+const memoryCache = new Map<string, { data: FullMenu; ts: number }>()
+
+function readMemory(slug: string): FullMenu | null {
+  const entry = memoryCache.get(slug)
+  if (!entry) return null
+  if (Date.now() - entry.ts > CACHE_TTL_MS) {
+    memoryCache.delete(slug)
+    return null
+  }
+  return entry.data
+}
+
+function writeMemory(slug: string, data: FullMenu) {
+  if (memoryCache.size > 50) {
+    const now = Date.now()
+    for (const [key, entry] of memoryCache) {
+      if (now - entry.ts > CACHE_TTL_MS) memoryCache.delete(key)
+    }
+  }
+  memoryCache.set(slug, { data, ts: Date.now() })
+}
+
+// ---------- Public API ----------
+export async function invalidateMenuCache(slug: string): Promise<void> {
+  memoryCache.delete(slug)
+  const redis = await getRedis()
+  if (redis) {
+    try {
+      await redis.del(redisKey(slug))
+    } catch (err) {
+      console.error('menu-cache: redis del failed', err)
+    }
+  }
 }
 
 export async function getFullMenu(slug: string): Promise<FullMenu | null> {
-  const cached = menuCache.get(slug)
-  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data
+  // 1) Memory cache (process-local, sub-ms)
+  const fromMemory = readMemory(slug)
+  if (fromMemory) return fromMemory
 
-  if (menuCache.size > 50) {
-    const now = Date.now()
-    for (const [key, entry] of menuCache) {
-      if (now - entry.ts > CACHE_TTL) menuCache.delete(key)
+  // 2) Redis cache (cross-instance)
+  const redis = await getRedis()
+  if (redis) {
+    try {
+      const cached = await redis.get(redisKey(slug))
+      if (cached) {
+        // Upstash REST returns parsed JSON when stored via `set` with object,
+        // and string when stored as plain string. Handle both.
+        const parsed: FullMenu = typeof cached === 'string' ? JSON.parse(cached) : (cached as FullMenu)
+        writeMemory(slug, parsed)
+        return parsed
+      }
+    } catch (err) {
+      console.error('menu-cache: redis get failed', err)
     }
   }
 
+  // 3) DB fetch
   const supabase = createAdminSupabase()
 
   const { data: restaurant } = await supabase
@@ -57,6 +126,16 @@ export async function getFullMenu(slug: string): Promise<FullMenu | null> {
   }))
 
   const menu: FullMenu = { restaurant, categories: normalizedCategories }
-  menuCache.set(slug, { data: menu, ts: Date.now() })
+
+  writeMemory(slug, menu)
+
+  if (redis) {
+    try {
+      await redis.set(redisKey(slug), JSON.stringify(menu), { ex: CACHE_TTL_SECONDS })
+    } catch (err) {
+      console.error('menu-cache: redis set failed', err)
+    }
+  }
+
   return menu
 }

@@ -381,16 +381,17 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
         <>
           <Card>
             <CardContent className="pt-5">
-              <div className="flex flex-wrap items-end gap-3">
-                <div className="space-y-1.5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+                <div className="space-y-1.5 sm:w-32">
                   <Label>Número de mesa</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="1"
                     placeholder="1"
                     value={newNumber}
                     onChange={(event) => setNewNumber(event.target.value)}
-                    className="w-28"
                   />
                 </div>
                 <div className="min-w-0 flex-1 space-y-1.5">
@@ -401,14 +402,16 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                     onChange={(event) => setNewLabel(event.target.value)}
                   />
                 </div>
-                <Button onClick={addTable} disabled={loading || !newNumber} className="flex-1 cursor-pointer sm:flex-none">
-                  <Plus className="mr-1.5 h-4 w-4" />
-                  {loading ? 'Generando...' : 'Añadir mesa'}
-                </Button>
-                <Button variant="outline" onClick={() => setMultiDialog(true)} disabled={loading} className="flex-1 cursor-pointer sm:flex-none">
-                  <Plus className="mr-1.5 h-4 w-4" />
-                  Añadir varias
-                </Button>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button onClick={addTable} disabled={loading || !newNumber} className="cursor-pointer">
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    {loading ? 'Generando...' : 'Añadir mesa'}
+                  </Button>
+                  <Button variant="outline" onClick={() => setMultiDialog(true)} disabled={loading} className="cursor-pointer">
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    Añadir varias
+                  </Button>
+                </div>
               </div>
               {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
             </CardContent>
@@ -599,9 +602,10 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
                           <TooltipTrigger
                             render={
                               <Button
-                                size="sm"
+                                size="icon"
                                 variant="ghost"
-                                className="cursor-pointer text-destructive hover:text-destructive"
+                                aria-label="Eliminar mesa"
+                                className="h-9 w-9 cursor-pointer text-destructive hover:text-destructive"
                                 onClick={(event) => {
                                   event.stopPropagation()
                                   deleteTable(table.id)
@@ -684,6 +688,8 @@ export default function MesasManager({ restaurant, initialTables }: Props) {
             <p className="text-sm text-muted-foreground">Se añadirán a partir de la última mesa existente.</p>
             <Input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               min="1"
               max="50"
               placeholder="Ej: 10"

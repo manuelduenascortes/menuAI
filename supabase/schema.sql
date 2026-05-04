@@ -409,3 +409,15 @@ on conflict (id) do nothing;
 create policy "Public read restaurant-logos"
   on storage.objects for select
   using (bucket_id = 'restaurant-logos');
+
+-- ============================================
+-- TABLA: stripe_events (idempotencia del webhook de Stripe)
+-- ============================================
+create table if not exists stripe_events (
+  id text primary key,
+  type text not null,
+  received_at timestamptz default now()
+);
+
+-- Solo el service-role accede; ninguna política => deny por defecto bajo RLS
+alter table stripe_events enable row level security;

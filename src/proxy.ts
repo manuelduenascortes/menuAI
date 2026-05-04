@@ -27,17 +27,16 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  const pathname = request.nextUrl.pathname
+  const isLoginPath = pathname === '/admin/login' || pathname.startsWith('/admin/login/')
+
   // Proteger rutas /admin (excepto /admin/login)
-  if (
-    request.nextUrl.pathname.startsWith('/admin') &&
-    !request.nextUrl.pathname.startsWith('/admin/login') &&
-    !user
-  ) {
+  if (pathname.startsWith('/admin') && !isLoginPath && !user) {
     return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 
   // Si ya está logado y va al login, redirigir al dashboard
-  if (request.nextUrl.pathname === '/admin/login' && user) {
+  if (isLoginPath && user) {
     return NextResponse.redirect(new URL('/admin/dashboard', request.url))
   }
 

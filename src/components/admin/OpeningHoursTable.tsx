@@ -43,9 +43,9 @@ export default function OpeningHoursTable({
   }
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       {value.map((row, index) => (
-        <div key={row.day} className="flex items-center gap-3">
+        <div key={row.day} className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="w-8 shrink-0 text-sm font-medium text-foreground">{row.day}</span>
 
           <Switch
@@ -54,29 +54,31 @@ export default function OpeningHoursTable({
             aria-label={`${row.day} abierto`}
           />
 
-          <span className={`text-xs w-12 shrink-0 ${row.open ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
+          <span className={`text-xs w-14 shrink-0 ${row.open ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
             {row.open ? 'Abierto' : 'Cerrado'}
           </span>
 
-          <input
-            type="time"
-            value={row.from}
-            disabled={!row.open}
-            onChange={(e) => update(index, { from: e.target.value })}
-            className="h-8 w-28 rounded-md border border-border bg-background px-2 text-sm disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-ring"
-            aria-label={`${row.day} hora de apertura`}
-          />
+          <div className="flex items-center gap-2 ml-auto sm:ml-0">
+            <input
+              type="time"
+              value={row.from}
+              disabled={!row.open}
+              onChange={(e) => update(index, { from: e.target.value })}
+              className="h-9 w-[7.5rem] rounded-md border border-border bg-background px-2 text-sm disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-ring"
+              aria-label={`${row.day} hora de apertura`}
+            />
 
-          <span className={`text-xs shrink-0 ${row.open ? 'text-muted-foreground' : 'text-muted-foreground/30'}`}>–</span>
+            <span className={`text-xs shrink-0 ${row.open ? 'text-muted-foreground' : 'text-muted-foreground/30'}`}>–</span>
 
-          <input
-            type="time"
-            value={row.to}
-            disabled={!row.open}
-            onChange={(e) => update(index, { to: e.target.value })}
-            className="h-8 w-28 rounded-md border border-border bg-background px-2 text-sm disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-ring"
-            aria-label={`${row.day} hora de cierre`}
-          />
+            <input
+              type="time"
+              value={row.to}
+              disabled={!row.open}
+              onChange={(e) => update(index, { to: e.target.value })}
+              className="h-9 w-[7.5rem] rounded-md border border-border bg-background px-2 text-sm disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-ring"
+              aria-label={`${row.day} hora de cierre`}
+            />
+          </div>
         </div>
       ))}
     </div>

@@ -16,17 +16,27 @@ interface Props {
 export default function SubscriptionCard({ subscriptionStatus, trialEndsAt, stripeCustomerId, daysLeft }: Props) {
   const [loading, setLoading] = useState(false)
 
-  const isActive = subscriptionStatus === 'active'
+  const isActive =
+    subscriptionStatus === 'active' || (subscriptionStatus?.startsWith('active_') ?? false)
   const isTrial = !isActive && trialEndsAt && new Date(trialEndsAt) > new Date()
 
   async function openPortal() {
     setLoading(true)
     try {
       const res = await fetch('/api/stripe/portal', { method: 'POST' })
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: null }))
+        throw new Error(error || `Error ${res.status}`)
+      }
       const { url } = await res.json()
-      if (url) window.location.href = url
-    } catch {
-      // silently fail
+      if (url) {
+        window.location.href = url
+        return
+      }
+      throw new Error('No se pudo abrir el portal de facturación')
+    } catch (err) {
+      const { toast } = await import('sonner')
+      toast.error(err instanceof Error ? err.message : 'No se pudo abrir el portal de facturación')
     } finally {
       setLoading(false)
     }

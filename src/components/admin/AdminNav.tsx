@@ -100,7 +100,7 @@ export default function AdminNav({ user, restaurant }: AdminNavProps) {
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer ${
+                className={`flex min-h-11 items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors cursor-pointer ${
                   isActive
                     ? 'text-foreground font-medium bg-secondary'
                     : 'text-muted-foreground hover:text-foreground'
@@ -115,7 +115,7 @@ export default function AdminNav({ user, restaurant }: AdminNavProps) {
             <p className="text-xs text-muted-foreground px-3 mb-2 truncate">{user.email}</p>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-2 w-full text-sm text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg transition-colors cursor-pointer"
+              className="flex min-h-11 items-center gap-2 w-full text-sm text-muted-foreground hover:text-foreground px-3 py-3 rounded-lg transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               Cerrar sesión

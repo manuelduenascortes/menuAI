@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { Resend } from 'resend'
 import { createAdminSupabase } from '@/lib/supabase'
+import { checkRateLimit } from '@/lib/redis'
 
 export const runtime = 'nodejs'
 
@@ -15,7 +16,25 @@ async function loadTemplate(): Promise<string> {
   return cachedTemplate
 }
 
-export async function POST(request: Request) {
+// Igualar latencias para no exponer un timing oracle de existencia de cuenta.
+const MIN_RESPONSE_MS = 600
+
+async function withMinDelay<T>(startedAt: number, value: T): Promise<T> {
+  const elapsed = Date.now() - startedAt
+  const remaining = MIN_RESPONSE_MS - elapsed
+  if (remaining > 0) await new Promise((r) => setTimeout(r, remaining))
+  return value
+}
+
+export async function POST(request: NextRequest) {
+  const startedAt = Date.now()
+  const ip = (request.headers.get('x-forwarded-for') ?? 'unknown-ip').split(',')[0].trim()
+
+  // Rate-limit por IP: 5 req/min compartido con la clave 'auth-recover'.
+  if (!(await checkRateLimit(ip, 'auth-recover'))) {
+    return NextResponse.json({ error: 'Demasiados intentos. Espera un momento.' }, { status: 429 })
+  }
+
   let email: string | undefined
   try {
     const body = await request.json()
@@ -48,18 +67,19 @@ export async function POST(request: Request) {
 
   if (error) {
     const msg = error.message?.toLowerCase() ?? ''
-    // No leak: si el usuario no existe, respondemos OK sin enviar email.
+    // No leak: si el usuario no existe, respondemos OK sin enviar email
+    // y aplicamos el delay mínimo para no exponer la diferencia.
     if (msg.includes('not found') || msg.includes('user not found') || msg.includes('no user')) {
-      return NextResponse.json({ ok: true })
+      return withMinDelay(startedAt, NextResponse.json({ ok: true }))
     }
-    console.error('Recovery generateLink error:', error)
-    return NextResponse.json({ error: 'No se pudo generar el enlace' }, { status: 500 })
+    console.error('Recovery generateLink error:', error.message)
+    return withMinDelay(startedAt, NextResponse.json({ error: 'No se pudo generar el enlace' }, { status: 500 }))
   }
 
   const actionLink = data?.properties?.action_link
   if (!actionLink) {
     console.error('Recovery: action_link missing in generateLink response')
-    return NextResponse.json({ error: 'Respuesta inválida del proveedor de auth' }, { status: 500 })
+    return withMinDelay(startedAt, NextResponse.json({ error: 'Respuesta inválida del proveedor de auth' }, { status: 500 }))
   }
 
   let template: string
@@ -67,7 +87,7 @@ export async function POST(request: Request) {
     template = await loadTemplate()
   } catch (err) {
     console.error('Recovery: failed to load email template', err)
-    return NextResponse.json({ error: 'Template not available' }, { status: 500 })
+    return withMinDelay(startedAt, NextResponse.json({ error: 'Template not available' }, { status: 500 }))
   }
 
   const html = template.replaceAll('{{ .ConfirmationURL }}', actionLink)
@@ -82,8 +102,8 @@ export async function POST(request: Request) {
 
   if (sendError) {
     console.error('Recovery: Resend send error', sendError)
-    return NextResponse.json({ error: 'No se pudo enviar el email' }, { status: 500 })
+    return withMinDelay(startedAt, NextResponse.json({ error: 'No se pudo enviar el email' }, { status: 500 }))
   }
 
-  return NextResponse.json({ ok: true })
+  return withMinDelay(startedAt, NextResponse.json({ ok: true }))
 }
