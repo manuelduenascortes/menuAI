@@ -111,6 +111,7 @@ export async function getFullMenu(slug: string): Promise<FullMenu | null> {
     `)
     .eq('restaurant_id', restaurant.id)
     .order('display_order')
+    .order('display_order', { foreignTable: 'menu_items' })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const normalizedCategories = (categories ?? []).map((category: any) => ({

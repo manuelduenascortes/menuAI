@@ -89,6 +89,8 @@ export interface FullMenu {
       ingredients: Ingredient[]
       allergens: Allergen[]
       dietary_tags: DietaryTag[]
+      menu_item_allergens: { allergen_id: string; allergens: Allergen }[]
+      menu_item_tags: { tag_id: string; dietary_tags: DietaryTag }[]
     })[]
   })[]
 }

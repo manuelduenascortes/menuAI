@@ -1,12 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion'
 
 import { CartAnimationContext } from '@/hooks/useCartAnimation'
 import { buildArcKeyframes, getElementCenter, prefersReducedMotion } from '@/lib/cart-animation/path'
 import type { FlyingDot } from '@/lib/cart-animation/types'
+import { useHydrated } from '@/lib/use-hydrated'
 
 const DOT_SIZE = 14
 const ARC_LIFT = 80
@@ -23,10 +24,8 @@ export default function CartAnimationProvider({ children }: Props) {
   const badgePulseControls = useAnimationControls()
   const [dots, setDots] = useState<FlyingDot[]>([])
   const dotIdRef = useRef(0)
-  const [mounted, setMounted] = useState(false)
+  const mounted = useHydrated()
   const cachedColorRef = useRef<string | null>(null)
-
-  useEffect(() => { setMounted(true) }, [])
 
   const triggerLandingFx = useCallback(() => {
     cartBumpControls.start({

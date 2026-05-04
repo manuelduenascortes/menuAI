@@ -14,6 +14,7 @@ import { getVenueConfig, normalizeVenueType } from '@/lib/venue-config'
 import { motion } from 'framer-motion'
 import CartAnimationProvider from './CartAnimationProvider'
 import { useCartAnimation } from '@/hooks/useCartAnimation'
+import { useHydrated } from '@/lib/use-hydrated'
 import { parseOpeningHours, type DayHours } from '@/components/admin/OpeningHoursTable'
 
 function formatHoursForDisplay(raw: string): string {
@@ -70,6 +71,8 @@ interface Props {
 }
 
 const RESTAURANT_FILTER_TAGS = ['Vegetariano', 'Vegano', 'Sin gluten', 'Sin lactosa', 'Halal']
+const CART_TTL_MS = 4 * 60 * 60 * 1000
+const EMPTY_CART_ITEMS: CartItem[] = []
 
 const ASSISTANT_TUTORIAL_COPY = {
   restaurant: {
@@ -86,33 +89,34 @@ const ASSISTANT_TUTORIAL_COPY = {
   },
 } satisfies Record<string, { title: string; body: string }>
 
+function readStoredCart(cartStorageKey: string): CartItem[] {
+  try {
+    const raw = window.localStorage.getItem(cartStorageKey)
+    if (!raw) return []
+
+    const parsed = JSON.parse(raw) as { items?: CartItem[]; savedAt?: number }
+    if (Array.isArray(parsed.items) && typeof parsed.savedAt === 'number' && Date.now() - parsed.savedAt < CART_TTL_MS) {
+      return parsed.items
+    }
+
+    window.localStorage.removeItem(cartStorageKey)
+  } catch {}
+
+  return []
+}
+
 function MenuViewInner({ restaurant, categories, tableId, tableNumber, fontClasses }: Props) {
   const assistantTipStorageKey = `menuai-assistant-tip:${restaurant.slug}`
   const cartStorageKey = `menuai-cart:${restaurant.slug}:${tableId ?? 'general'}`
-  const CART_TTL_MS = 4 * 60 * 60 * 1000
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categories[0]?.id ?? null)
   const [activeFilters, setActiveFilters] = useState<string[]>([])
   const [chatOpen, setChatOpen] = useState(false)
   const [showAssistantTip, setShowAssistantTip] = useState(false)
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [cartHydrated, setCartHydrated] = useState(false)
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => readStoredCart(cartStorageKey))
+  const cartHydrated = useHydrated()
   const [cartOpen, setCartOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(cartStorageKey)
-      if (raw) {
-        const parsed = JSON.parse(raw) as { items: CartItem[]; savedAt: number }
-        if (parsed && Array.isArray(parsed.items) && Date.now() - parsed.savedAt < CART_TTL_MS) {
-          setCartItems(parsed.items)
-        } else {
-          window.localStorage.removeItem(cartStorageKey)
-        }
-      }
-    } catch {}
-    setCartHydrated(true)
-  }, [cartStorageKey, CART_TTL_MS])
+  const visibleCartItems = cartHydrated ? cartItems : EMPTY_CART_ITEMS
 
   useEffect(() => {
     if (!cartHydrated) return
@@ -235,8 +239,8 @@ function MenuViewInner({ restaurant, categories, tableId, tableNumber, fontClass
   }, [dismissAssistantTip])
 
   const cartItemsMap = useMemo(
-    () => new Map(cartItems.map(i => [i.id, i.quantity])),
-    [cartItems]
+    () => new Map(visibleCartItems.map(i => [i.id, i.quantity])),
+    [visibleCartItems]
   )
 
   const handleCartAddFromCard = useCallback((item: MenuItem, originEl: HTMLElement) => {
@@ -425,8 +429,8 @@ function MenuViewInner({ restaurant, categories, tableId, tableNumber, fontClass
         )}
       </main>
 
-      {cartItems.length > 0 && (() => {
-        const totalCartCount = cartItems.reduce((s, i) => s + i.quantity, 0)
+      {visibleCartItems.length > 0 && (() => {
+        const totalCartCount = visibleCartItems.reduce((s, i) => s + i.quantity, 0)
         return (
           <motion.button
             ref={cartButtonRef}
@@ -514,7 +518,7 @@ function MenuViewInner({ restaurant, categories, tableId, tableNumber, fontClass
           venueType={restaurant.venue_type}
           onClose={() => setChatOpen(false)}
           menuItems={chatMenuItems}
-          cartItems={cartItems}
+          cartItems={visibleCartItems}
           onAddToCart={handleAddToCart}
           onUpdateQuantity={handleUpdateQuantity}
           onOpenCart={() => setCartOpen(true)}
@@ -524,7 +528,7 @@ function MenuViewInner({ restaurant, categories, tableId, tableNumber, fontClass
       <CartDrawer
         open={cartOpen}
         onOpenChange={setCartOpen}
-        cartItems={cartItems}
+        cartItems={visibleCartItems}
         onUpdateQuantity={handleUpdateQuantity}
         onClear={handleClearCart}
         themeVars={themeStyle}
@@ -534,8 +538,10 @@ function MenuViewInner({ restaurant, categories, tableId, tableNumber, fontClass
 }
 
 export default function MenuView(props: Props) {
+  const cartScope = `${props.restaurant.slug}:${props.tableId ?? 'general'}`
+
   return (
-    <CartAnimationProvider>
+    <CartAnimationProvider key={cartScope}>
       <MenuViewInner {...props} />
     </CartAnimationProvider>
   )
