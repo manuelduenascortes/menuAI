@@ -43,7 +43,14 @@
       "Bash(npm show *)",
       "Bash(Get-ChildItem *)",
       "Bash(test -f \"C:\\\\Users\\\\manue\\\\Documents\\\\GitHub\\\\menuAI\\\\src\\\\app\\\\[restaurantSlug]\\\\not-found.tsx\")",
-      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(find \"C:\\\\\\\\Users\\\\\\\\manue\\\\\\\\Documents\\\\\\\\GitHub\\\\\\\\menuAI\\\\\\\\src\" -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.jsx\" -o -name \"*.js\" \\\\\\))",
+      "Bash(grep -r \"use client\\\\|use server\" \"C:\\\\\\\\Users\\\\\\\\manue\\\\\\\\Documents\\\\\\\\GitHub\\\\\\\\menuAI\\\\\\\\src\" --include=\"*.tsx\" --include=\"*.ts\")",
+      "Bash(grep -l \"window\\\\|document\\\\|localStorage\\\\|sessionStorage\" \"C:\\\\\\\\Users\\\\\\\\manue\\\\\\\\Documents\\\\\\\\GitHub\\\\\\\\menuAI\\\\\\\\src\\\\\\\\components\"/*.tsx)",
+      "Bash(grep -n \"useCallback\\\\|useMemo\" \"C:\\\\\\\\Users\\\\\\\\manue\\\\\\\\Documents\\\\\\\\GitHub\\\\\\\\menuAI\\\\\\\\src\\\\\\\\components\\\\\\\\cliente\\\\\\\\ChatInterface.tsx\")",
+      "Bash(Select-String '\"version\"')",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\manue\\\\Documents\\\\GitHub\\\\menuAI\\\\node_modules\\\\next-themes\\\\dist\\\\index.js\" -Raw; $content -split ';' | Where-Object { $_ -match 'script|scriptProps' } | Select-Object -First 10)",
+      "PowerShell(npm show *)"
     ]
   }
 }

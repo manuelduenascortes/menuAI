@@ -52,7 +52,6 @@ export default function UpdatePasswordPage() {
       setSuccess('Contraseña actualizada correctamente. Redirigiendo...')
       setTimeout(() => { window.location.href = '/admin/dashboard' }, 1500)
     } catch (err: unknown) {
-      console.error('Update password error:', err)
       setError(err instanceof Error ? err.message : 'Error desconocido')
     } finally {
       setLoading(false)

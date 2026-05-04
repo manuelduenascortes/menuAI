@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion'
 
@@ -23,6 +23,9 @@ export default function CartAnimationProvider({ children }: Props) {
   const badgePulseControls = useAnimationControls()
   const [dots, setDots] = useState<FlyingDot[]>([])
   const dotIdRef = useRef(0)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   const triggerLandingFx = useCallback(() => {
     cartBumpControls.start({
@@ -92,7 +95,7 @@ export default function CartAnimationProvider({ children }: Props) {
   return (
     <CartAnimationContext.Provider value={value}>
       {children}
-      {typeof document !== 'undefined' && createPortal(
+      {mounted && createPortal(
         <div className="pointer-events-none fixed inset-0 z-[60]" aria-hidden="true">
           <AnimatePresence>
             {dots.map(dot => {

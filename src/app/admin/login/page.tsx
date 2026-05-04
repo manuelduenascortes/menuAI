@@ -18,6 +18,15 @@ export default function LoginPage() {
   )
 }
 
+function mapAuthError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err)
+  if (/invalid login credentials/i.test(msg)) return 'Email o contraseña incorrectos.'
+  if (/email not confirmed/i.test(msg)) return 'Debes confirmar tu email antes de iniciar sesión.'
+  if (/too many requests/i.test(msg)) return 'Demasiados intentos. Espera un momento e inténtalo de nuevo.'
+  if (/user already registered/i.test(msg) || /already/i.test(msg)) return 'Este email ya está registrado. Inicia sesión.'
+  return err instanceof Error ? err.message : JSON.stringify(err)
+}
+
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -76,8 +85,7 @@ function LoginForm() {
         router.refresh()
       }
     } catch (err: unknown) {
-      console.error('Auth error:', err)
-      setError(err instanceof Error ? err.message : JSON.stringify(err))
+      setError(mapAuthError(err))
     } finally {
       setLoading(false)
     }
