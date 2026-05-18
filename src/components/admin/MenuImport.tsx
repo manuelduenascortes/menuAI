@@ -291,9 +291,12 @@ export default function MenuImport({
           if (response.ok) {
             pageResult = await response.json()
             break
+          } else {
+            const errorData = await response.json().catch(() => ({}))
+            console.warn(`PDF page ${pageNum} attempt ${attempt + 1} failed:`, response.status, errorData)
           }
-        } catch {
-          // retry
+        } catch (err) {
+          console.warn(`PDF page ${pageNum} attempt ${attempt + 1} error:`, err)
         }
       }
 

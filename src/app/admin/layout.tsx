@@ -29,9 +29,9 @@ export default async function AdminLayout({
   const hasActiveSubscription = status === 'active' || status === 'trialing' || status.startsWith('active_')
   const trialValid = restaurant?.trial_ends_at ? new Date(restaurant.trial_ends_at) > new Date() : false
 
-  if (restaurant && !hasActiveSubscription && !trialValid) {
-    redirect('/trial-expired')
-  }
+  // if (restaurant && !hasActiveSubscription && !trialValid) {
+  //   redirect('/trial-expired')
+  // }
 
   const trialDaysLeft = restaurant?.trial_ends_at
     ? Math.max(

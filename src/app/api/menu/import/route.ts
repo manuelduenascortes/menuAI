@@ -86,10 +86,10 @@ export async function POST(req: NextRequest) {
     }
 
     const completion = await createOpenRouterChatCompletion({
-      model: OR_MODEL,
+      model: 'openai/gpt-4o',
       messages,
       temperature: 0.1,
-      max_tokens: 4096,
+      max_tokens: 8192,
     })
 
     const raw = completion.choices?.[0]?.message?.content ?? ''
